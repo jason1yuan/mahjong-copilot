@@ -22,6 +22,7 @@ Tauri 2 + Rust + React / TypeScript，模型用 ONNX Runtime 推理。选型理�
 | [app/](app/) | Tauri 2 应用：Rust 外壳（窗口、快捷键、把各模块串成流水线）和网页界面（React + TypeScript） |
 | [perception/](perception/) | 采集与识别（Rust）：按平台实现的窗口采集、ONNX Runtime 推理 |
 | [core/](core/) | 状态与决策（Rust）：牌局状态引擎、向听 / 进张、打点、防守 |
+| [third_party/](third_party/) | 原样引入的上游代码：Mortal 的 libriichi（向听、和牌、算点） |
 | [ml/](ml/) | 模型（Python / PyTorch）：训练认牌、版面检测、数字和按钮识别；决策模型用 Mortal，只做格式转换。都导出为 ONNX |
 | [profiles/](profiles/) | 游戏适配包：各游戏的版面模板、牌面样本、按钮文字 |
 | [docs/](docs/) | 设计文档 |
@@ -34,6 +35,10 @@ Tauri 2 + Rust + React / TypeScript，模型用 ONNX Runtime 推理。选型理�
 | P1 MVP | 牌河 / 副露 / 宝牌识别，状态引擎，鸣牌和立直建议，基础防守，目标牌型，叠加模式，首次启动引导 |
 | P2 | 接入 Mortal 策略模型（四麻），雀姬，三麻，Steam 客户端，皮肤自适应，Windows 支持 |
 | P3 | 国标 / 四川 / 广东 / 台湾等规则包，通用版面模型 |
+
+## 许可
+
+AGPL-3.0-or-later，见 [LICENSE](LICENSE)。项目复用了 Mortal 的 libriichi 等第三方代码，来源和许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ## 使用须知
 

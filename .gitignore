@@ -11,6 +11,9 @@ target/
 # Tauri 生成的权限 schema
 app/src-tauri/gen/
 
+# 单独跑上游测试时生成的锁文件
+third_party/*/Cargo.lock
+
 # Python
 __pycache__/
 *.pyc

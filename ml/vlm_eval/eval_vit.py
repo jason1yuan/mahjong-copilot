@@ -27,6 +27,7 @@ from transformers import AutoImageProcessor, AutoModelForImageClassification
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 from eval_llamacpp import DATASET_TO_MJAI, load_samples, summarize  # noqa: E402
+from red_five import refine  # noqa: E402
 
 CONFIG_PATH = pathlib.Path(__file__).with_name("config.toml")
 
@@ -59,6 +60,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--split", choices=["test", "train"], default="test")
     parser.add_argument("--simulated", type=pathlib.Path, help="evaluate hand tiles of simulate.py output instead")
+    parser.add_argument("--red-rule", action="store_true", help="tell red fives apart by stroke colour (red_five.py)")
     parser.add_argument("--device", default="mps" if torch.backends.mps.is_available() else "cpu")
     args = parser.parse_args()
 
@@ -83,7 +85,7 @@ def main() -> None:
     id2label = model.config.id2label
 
     items = simulated_items(args.simulated) if args.simulated else dataset_items(cfg, args.split)
-    name = args.simulated.name if args.simulated else args.split
+    name = (args.simulated.name if args.simulated else args.split) + ("_redrule" if args.red_rule else "")
     rows: list[dict[str, Any]] = []
     with torch.inference_mode():
         for image, label, split, source in items:
@@ -98,7 +100,7 @@ def main() -> None:
                     "path": source,
                     "split": split,
                     "label": label,
-                    "pred": DATASET_TO_MJAI.get(raw, "?"),
+                    "pred": refine(DATASET_TO_MJAI.get(raw, "?"), image) if args.red_rule else DATASET_TO_MJAI.get(raw, "?"),
                     "answer": raw,
                     "seconds": seconds,
                     "prompt_tokens": None,
@@ -118,7 +120,7 @@ def main() -> None:
             "server_args": [f"vit on {args.device}"],
             "answers": "classifier",
             "split": name,
-            "kind_accuracy": sum(r["pred"] == r["label"].removesuffix("r") for r in rows) / len(rows),
+            "kind_accuracy": sum(r["pred"].removesuffix("r") == r["label"].removesuffix("r") for r in rows) / len(rows),
         },
     )
     out = pathlib.Path(cfg["results_dir"]) / f"vit-{name}.json"

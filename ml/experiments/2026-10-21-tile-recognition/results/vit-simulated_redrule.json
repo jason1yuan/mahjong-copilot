@@ -1,0 +1,4785 @@
+{
+ "summary": {
+  "model": "mahjong_soul_vision",
+  "n": 520,
+  "accuracy": 0.9134615384615384,
+  "accuracy_by_split": {
+   "simulated": 0.9134615384615384
+  },
+  "accuracy_by_label": {
+   "2s": 1.0,
+   "3s": 0.9,
+   "4p": 0.975,
+   "4s": 0.7,
+   "5p": 0.95,
+   "5sr": 0.775,
+   "6p": 0.975,
+   "6s": 0.9,
+   "7s": 0.875,
+   "8m": 1.0,
+   "8s": 0.9125,
+   "9m": 1.0
+  },
+  "top_confusions": [
+   {
+    "label": "4s",
+    "pred": "7s",
+    "count": 10
+   },
+   {
+    "label": "5sr",
+    "pred": "9s",
+    "count": 9
+   },
+   {
+    "label": "7s",
+    "pred": "9s",
+    "count": 5
+   },
+   {
+    "label": "8s",
+    "pred": "7s",
+    "count": 5
+   },
+   {
+    "label": "3s",
+    "pred": "7s",
+    "count": 4
+   },
+   {
+    "label": "6s",
+    "pred": "9s",
+    "count": 3
+   },
+   {
+    "label": "8s",
+    "pred": "6s",
+    "count": 2
+   },
+   {
+    "label": "4s",
+    "pred": "9s",
+    "count": 2
+   },
+   {
+    "label": "5p",
+    "pred": "9p",
+    "count": 2
+   },
+   {
+    "label": "6s",
+    "pred": "7s",
+    "count": 1
+   },
+   {
+    "label": "6p",
+    "pred": "9p",
+    "count": 1
+   },
+   {
+    "label": "4p",
+    "pred": "9p",
+    "count": 1
+   }
+  ],
+  "first_request_s": 0.06547604099614546,
+  "latency_s": {
+   "mean": 0.03762024052388184,
+   "median": 0.037303166987840086,
+   "p95": 0.03903987497324124
+  },
+  "load_s": 0.07920125004602596,
+  "peak_rss_mb": 830.734375,
+  "files_gb": 0.343369642,
+  "repo": "pjura/mahjong_soul_vision",
+  "license": "Apache-2.0",
+  "server_args": [
+   "vit on cpu"
+  ],
+  "answers": "classifier",
+  "split": "simulated_redrule",
+  "kind_accuracy": 0.9134615384615384
+ },
+ "rows": [
+  {
+   "path": "majsoul_01_000#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.06547604099614546,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_000#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03908683400368318,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_000#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.040590916003566235,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_000#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.04026933299610391,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_000#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.04214900004444644,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_000#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.043837916979100555,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_000#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.07586941705085337,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_000#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.0400525419972837,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_000#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.039010958978906274,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_000#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03899887501029298,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_000#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03955079201841727,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_000#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03721420798683539,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_000#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03899224998895079,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#0",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.038095584022812545,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#1",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03825449995929375,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#2",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.0387543750111945,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#3",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.04071150004165247,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#4",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.040937166020739824,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#5",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.040240875037852675,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#6",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.041233416995964944,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#7",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03842579200863838,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#8",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03894566697999835,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#9",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03731233300641179,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#10",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03803508298005909,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#11",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.037541541969403625,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_001#12",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03793004102772102,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#0",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.037108125048689544,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#1",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.036654041963629425,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#2",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.038245083997026086,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#3",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03771362500265241,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#4",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03729829203803092,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#5",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.037060583010315895,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#6",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03848029096843675,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#7",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03809170896420255,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#8",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.0377855830010958,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#9",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03804370801663026,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.037497000012081116,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#11",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.037579166993964463,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_002#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03756575001170859,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#0",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.0384725839830935,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#1",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.038275041966699064,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#2",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03727912501199171,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#3",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03790995804592967,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#4",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.037720791005995125,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#5",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.0383592089638114,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#6",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.037730167037807405,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03814708400750533,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#8",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03741654101759195,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#9",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03748495801119134,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#10",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.03759449999779463,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#11",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03747995803132653,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_003#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03819295804714784,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.037157292012125254,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.0380742090055719,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03765049995854497,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.037217707955278456,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.037527167005464435,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.037107708980329335,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03678341704653576,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.037524707964621484,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03690775000723079,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.037120541965123266,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03726420801831409,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03759825002634898,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_004#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.038151957967784256,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#0",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.03784208296565339,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#1",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03827683301642537,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#2",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03781037498265505,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#3",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.0383912090328522,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#4",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03954316698946059,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#5",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.038147374987602234,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#6",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.036551208002492785,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#7",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03701512498082593,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#8",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.0378894999739714,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#9",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.037638874957337976,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#10",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03835399996023625,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#11",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03734666603850201,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_005#12",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03774941700976342,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03868079197127372,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03700883302371949,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03814387496095151,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03774845803854987,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03686129197012633,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.037377833970822394,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.037494458025321364,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.0367860829574056,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.0375119160162285,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.036712041997816414,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03760237502865493,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.038966207997873425,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_006#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03763375000562519,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#0",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03686495800502598,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#1",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03820045804604888,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#2",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.0387001660419628,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#3",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03875233395956457,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#4",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.037202582985628396,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#5",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.03768649999983609,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#6",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03815683297580108,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#7",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.037502791034057736,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#8",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03788999997777864,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#9",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03805654199095443,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#10",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03818837500875816,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#11",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03812766697956249,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_007#12",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03808191599091515,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#0",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.038688542030286044,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#1",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.037859334028325975,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#2",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.037214458046946675,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#3",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03690566698787734,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#4",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03686487500090152,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#5",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03770495799835771,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#6",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.035993499972391874,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#7",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03644812502898276,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#8",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03711891599232331,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#9",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.036623749998398125,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#10",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03734612499829382,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#11",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.036690249980892986,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_008#12",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03912574995774776,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#0",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03840212500654161,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#1",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03713004098972306,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#2",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03811479202704504,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#3",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03884220798499882,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#4",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.037579833006020635,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#5",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03872604202479124,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#6",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03718491597101092,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#7",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.038050166971515864,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#8",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03751983301481232,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#9",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.0367565419874154,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#10",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.036701750010252,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#11",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03745791601249948,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_009#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03818574995966628,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#0",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03794704203028232,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.037578958028461784,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#2",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03696804103674367,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#3",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03729962499346584,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#4",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03719712496967986,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#5",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03725845902226865,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#6",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03716366598382592,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#7",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03685212502023205,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#8",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03735704201972112,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#9",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.036371042020618916,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#10",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.037113458034582436,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.036770833015907556,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_010#12",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03734104201430455,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03695774998050183,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03719699999783188,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03693270799703896,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.037129207979887724,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03748574998462573,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03689137502806261,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03621591703267768,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03673958400031552,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.036911958013661206,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03721887501887977,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.037191790994256735,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03855395800201222,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_011#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03872791596222669,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03803979197982699,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03800675005186349,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03838162496685982,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03753908397629857,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03687095799250528,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.037266583007294685,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03765029099304229,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03753887501079589,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.036623625026550144,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03722545801429078,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.037138541985768825,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03723416698630899,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_012#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03652454196708277,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#0",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03733570798067376,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#1",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03693379199830815,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#2",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.036672167014330626,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#3",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03687941702082753,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#4",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03735612501623109,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#5",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03698466601781547,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#6",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03631916700396687,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#7",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03705108299618587,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#8",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03645041701383889,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#9",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.036780041991733015,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#10",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.037300625001080334,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#11",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.037488834001123905,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_013#12",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03730312496190891,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#0",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.037921582988929003,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#1",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.036966250045225024,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#2",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.037355042004492134,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#3",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03750833304366097,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#4",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.037381457979790866,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#5",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03671179199591279,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#6",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03762762498809025,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#7",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.037193541997112334,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#8",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03688829200109467,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#9",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.037524665996897966,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#10",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03716708399588242,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#11",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03714858304010704,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_014#12",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.037098374974448234,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#0",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.036617582954932004,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#1",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03705770801752806,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#2",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03683854197151959,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#3",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03754495800239965,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#4",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.0371246249997057,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#5",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03679045900935307,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#6",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03695833298843354,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#7",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03723879100289196,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#8",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03791254200041294,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#9",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.036694667011033744,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#10",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.037406541989184916,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#11",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.0387952079763636,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_015#12",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.037292915978468955,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03747537499293685,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.0370762079837732,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03888804104644805,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03687300003366545,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.037518042023293674,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03692425001645461,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03736374998698011,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03653583402046934,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.0378655000240542,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03749949997290969,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03694141696905717,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03679466602625325,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_016#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03773958300007507,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#0",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03652220900403336,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#1",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03677129204152152,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#2",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.037463707965798676,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#3",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03712779103079811,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#4",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03692845901241526,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.036670709028840065,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#6",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.04215012496570125,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#7",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.06699991598725319,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#8",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.042081792023964226,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#9",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03780887497123331,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#10",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.038315540994517505,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#11",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.039225583022926,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_017#12",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03820012498181313,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03888120804913342,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03795808297581971,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03819683298934251,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.038250916986726224,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03773304197238758,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03834262501914054,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.036972958012484014,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.037255958013702184,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03756812500068918,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.038426667044404894,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.040213208994828165,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.037683208007365465,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_018#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03804641601163894,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.037843208003323525,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03648641600739211,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.037471458024811,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03653650003252551,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03701516700675711,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03651333402376622,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.038158792012836784,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03814150003017858,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.03748608398018405,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03704754199134186,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.037263959005940706,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03743154200492427,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_019#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.0375485839904286,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03648729098495096,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.036988208012189716,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.037371500045992434,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03772899997420609,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.039686292002443224,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03903987497324124,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.037341457966249436,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03743695898447186,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03676450002240017,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.036845499998889863,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03711179195670411,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03705149999586865,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_020#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03643104201182723,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.037302249984350055,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03681929095182568,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.0377358749974519,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03639845800353214,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.036631541966926306,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03665075002936646,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.037555582995992154,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03723675000946969,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.037421374989207834,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03711970895528793,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.036647125030867755,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.036937833996489644,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_021#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03681933297775686,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.036906625027768314,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.036435750022064894,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03805516700958833,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03870499995537102,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03969795897137374,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.037879290990531445,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03887462499551475,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03832745901308954,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.037815499992575496,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03669425001135096,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03710329200839624,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.037034000037238,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_022#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.036357040982693434,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03668033401481807,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.037226166983600706,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03684149996843189,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.036442290991544724,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.036690249980892986,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03722183295758441,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03817254101159051,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.036869583011139184,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03703608404612169,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03641933301696554,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03771041700383648,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03605083405273035,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_023#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03693754196865484,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03738216700730845,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.037172375014051795,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03682508401107043,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03738424996845424,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.037179082981310785,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.036631082999520004,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03661429201019928,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.0372859169729054,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03658070898381993,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.037597833026666194,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03681679198052734,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.036918708006851375,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_024#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03725958400173113,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.036908833018969744,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03696995903737843,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.037027083977591246,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.036688667023554444,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.037126583978533745,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03785287495702505,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03727066598366946,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03679091698722914,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.03727366600651294,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03756812500068918,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03756258398061618,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.0376330420258455,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_025#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.036293249984737486,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03777129098307341,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03691241698106751,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03740441700210795,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.037368500023148954,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03828608297044411,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03900766605511308,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.04098487499868497,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03880616603419185,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03893170802621171,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03759975003777072,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03728458395926282,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03701025003101677,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_026#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.037345958000514656,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.037775916047394276,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.038243999995756894,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03705845802323893,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.037040958006400615,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03808737499639392,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.037771041970700026,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.036452958011068404,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.03660854196641594,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.03706033399794251,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.036436333029996604,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.0364033340010792,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.037055916036479175,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_027#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.037462125008460134,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03632145799929276,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.036541667010169476,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.037489040987566113,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03634404100012034,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03626962500857189,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03666862501995638,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03756675001932308,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.037093874998390675,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.037342833005823195,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.037659124995116144,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.037552708003204316,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03733791597187519,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_028#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03738875000271946,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03750683297403157,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03726470802212134,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03728708403650671,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.037794957985170186,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.036345417029224336,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03751566697610542,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03657637495780364,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03698620799696073,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03836574999149889,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03701212501619011,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.037311208026949316,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.037146583024878055,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_029#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03671795898117125,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.037405624985694885,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03718245803611353,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03756329196039587,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03720725001767278,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03825812495779246,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03705458395415917,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.037430666969157755,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03877812501741573,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03766258404357359,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03729287500027567,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03722033300437033,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03674445900833234,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_030#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03718129202025011,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#0",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03677224996499717,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#1",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.038584584021009505,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#2",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03954441595124081,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#3",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03877124999416992,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#4",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.038488625024911016,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#5",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03952433302765712,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#6",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03886158304521814,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#7",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03786049998598173,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#8",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03754637500969693,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#9",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.038618290971498936,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#10",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.0377631249721162,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#11",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03743195900460705,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_031#12",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03795837500365451,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.037631583982147276,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.037932374980300665,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.036687083018478006,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "9p",
+   "answer": "9p",
+   "seconds": 0.037358166999183595,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "9p",
+   "answer": "9p",
+   "seconds": 0.037305207981262356,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.037309042003471404,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03605441702529788,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.036767750047147274,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.03731450001941994,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.036740707990247756,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.037303166987840086,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03708666702732444,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_032#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03690533299231902,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03664366703014821,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.0373828339506872,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "9p",
+   "answer": "9p",
+   "seconds": 0.03675391699653119,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "9p",
+   "answer": "9p",
+   "seconds": 0.0371004999615252,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03667879197746515,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03618033300153911,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.036880791012663394,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03759208397241309,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.03708691702922806,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.036550541990436614,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.0362595830229111,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.037357082997914404,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_033#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03690725000342354,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03671258297981694,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03688050003256649,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.037241832993458956,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03637350001372397,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03699095803312957,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.037324875011108816,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03677100001368672,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.036267375049646944,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03693241596920416,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.037496125034522265,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.037111083045601845,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03701058303704485,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_034#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.036539041029755026,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03612591698765755,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.036070333037059754,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.037004916986916214,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03659900004277006,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03591141599463299,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.037214834010228515,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.037432749988511205,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.0362322079599835,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.03712808300042525,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.03680629201699048,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "9s",
+   "answer": "9b",
+   "seconds": 0.03696675004903227,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03905233304249123,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_035#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.037914832995738834,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#0",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.038515624997671694,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#1",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03728987503563985,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#2",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03757754201069474,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#3",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03778908296953887,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#4",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03762712504249066,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#5",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03738500003237277,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#6",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.0371183329843916,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#7",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03689112496795133,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#8",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03698054200503975,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#9",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03686237504007295,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#10",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.037586749996989965,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#11",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03691674995934591,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_036#12",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.036863624991383404,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#0",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03713116596918553,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#1",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.036982333986088634,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#2",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03768466698238626,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#3",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03790108399698511,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#4",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.03645258297910914,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#5",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03678295901045203,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#6",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.037596458045300096,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#7",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03749504097504541,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#8",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.036816582956817,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#9",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03780491603538394,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#10",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.037918791989795864,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#11",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03839912498369813,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_037#12",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.039400999958161265,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03807820798829198,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03696754097472876,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03768595797009766,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.036121291981544346,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.03693825000664219,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.03695045900531113,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03705658402759582,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.03697733301669359,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.03700141701847315,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.03667966602370143,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.03865583299193531,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03640595800243318,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_038#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03695320797851309,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#0",
+   "split": "simulated",
+   "label": "8m",
+   "pred": "8m",
+   "answer": "8n",
+   "seconds": 0.03672849998110905,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#1",
+   "split": "simulated",
+   "label": "9m",
+   "pred": "9m",
+   "answer": "9n",
+   "seconds": 0.03686775005189702,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#2",
+   "split": "simulated",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4p",
+   "seconds": 0.03753845900064334,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#3",
+   "split": "simulated",
+   "label": "5p",
+   "pred": "5p",
+   "answer": "5p",
+   "seconds": 0.037060792034026235,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#4",
+   "split": "simulated",
+   "label": "6p",
+   "pred": "6p",
+   "answer": "6p",
+   "seconds": 0.036510333011392504,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#5",
+   "split": "simulated",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2b",
+   "seconds": 0.036791417049244046,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#6",
+   "split": "simulated",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3b",
+   "seconds": 0.03710250003496185,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#7",
+   "split": "simulated",
+   "label": "4s",
+   "pred": "4s",
+   "answer": "4b",
+   "seconds": 0.037309750041458756,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#8",
+   "split": "simulated",
+   "label": "5sr",
+   "pred": "5sr",
+   "answer": "5b",
+   "seconds": 0.037149874959141016,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#9",
+   "split": "simulated",
+   "label": "6s",
+   "pred": "6s",
+   "answer": "6b",
+   "seconds": 0.037037791043985635,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#10",
+   "split": "simulated",
+   "label": "7s",
+   "pred": "7s",
+   "answer": "7b",
+   "seconds": 0.038003207999281585,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#11",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.03687337500741705,
+   "prompt_tokens": null
+  },
+  {
+   "path": "majsoul_01_039#12",
+   "split": "simulated",
+   "label": "8s",
+   "pred": "8s",
+   "answer": "8b",
+   "seconds": 0.036850875010713935,
+   "prompt_tokens": null
+  }
+ ]
+}

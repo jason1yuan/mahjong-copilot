@@ -1,8 +1,8 @@
 {
  "run_id": "2026-10-21-tile-recognition",
- "archived_at": "2026-10-21T22:26:57+00:00",
+ "archived_at": "2026-10-21T22:45:26+00:00",
  "git": {
-  "commit": "4ea22430fb6ce975a9401907fafdbf4a6b09bb90",
+  "commit": "88eda0cf5b8b53529a8da0c29c985578370498a4",
   "branch": "24-vlm-eval",
   "dirty": true
  },
@@ -234,7 +234,10 @@
   "results/smolvlm2-2.2b_pl5_free.json": "80164bece4eea339a53b738a3850bed6ef98c05785bc40c3c34a2302ea38cca6",
   "results/vit-simulated.json": "ba7c765066d027d1ac4300154afd40cf8ff45285b3e4b102f22573d163eeb9a9",
   "results/vit-simulated_multi.json": "0bddb1defce550ab6ffe7e4ddc32d90fac1268f27b637270f1aecc9acb938465",
+  "results/vit-simulated_multi_redrule.json": "696cb46b21c5ae9ab986cd253b7bd075657ec7555c22b715fdebb0d9170fe0e7",
+  "results/vit-simulated_redrule.json": "a2a09f6345ae1838009f6e6caef00841b635a88b8ac7c60b9aca1fe0e029f69e",
   "results/vit-source.json": "9776dddf3e59445e1e1e78c7d57af0de472c87cebc4b65f11aaf81684251f903",
+  "results/vit-source_redrule.json": "0e4ed82c65e40304da81327f322860407187b514bb2e20e4a7ed5837ea2b0814",
   "results/vit-test.json": "11e915416f0e2e8e22577364c5983b82cea47958189b7ae23babf514d6e081bf"
  },
  "local_inputs_sha256": {

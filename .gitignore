@@ -1,0 +1,32 @@
+# macOS
+.DS_Store
+
+# Xcode / Swift
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+.build/
+.swiftpm/
+
+# Rust
+target/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# 数据、训练产物和模型权重（体积大，之后用 Git LFS 或 Releases 管理）
+ml/data/
+ml/runs/
+*.pt
+*.pth
+*.onnx
+*.mlmodel
+*.mlpackage/
+
+# 本地录屏素材
+recordings/

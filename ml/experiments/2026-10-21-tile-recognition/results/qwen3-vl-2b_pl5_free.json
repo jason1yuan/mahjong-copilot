@@ -1,0 +1,1677 @@
+{
+ "summary": {
+  "model": "qwen3-vl-2b",
+  "n": 170,
+  "accuracy": 0.011764705882352941,
+  "accuracy_by_split": {
+   "test": 0.0,
+   "train": 0.013245033112582781
+  },
+  "accuracy_by_label": {
+   "1m": 0.0,
+   "1p": 0.0,
+   "1s": 0.0,
+   "2m": 0.0,
+   "2p": 0.0,
+   "2s": 0.0,
+   "3m": 0.0,
+   "3p": 0.0,
+   "3s": 0.4,
+   "4m": 0.0,
+   "4p": 0.0,
+   "4s": 0.0,
+   "5m": 0.0,
+   "5p": 0.0,
+   "5s": 0.0,
+   "6m": 0.0,
+   "6p": 0.0,
+   "6s": 0.0,
+   "7m": 0.0,
+   "7p": 0.0,
+   "7s": 0.0,
+   "8m": 0.0,
+   "8p": 0.0,
+   "8s": 0.0,
+   "9m": 0.0,
+   "9p": 0.0,
+   "9s": 0.0,
+   "C": 0.0,
+   "E": 0.0,
+   "F": 0.0,
+   "N": 0.0,
+   "P": 0.0,
+   "S": 0.0,
+   "W": 0.0
+  },
+  "top_confusions": [
+   {
+    "label": "1s",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "1m",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "1p",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "2s",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "2m",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "2p",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "3m",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "3p",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "4s",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "4m",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "4p",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "5s",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "5m",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "5p",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "6s",
+    "pred": "?",
+    "count": 5
+   }
+  ],
+  "first_request_s": 0.35165425000013784,
+  "latency_s": {
+   "mean": 0.3168640773961756,
+   "median": 0.30611520900856704,
+   "p95": 0.4885612500074785
+  },
+  "load_s": 1.0232022080163006,
+  "peak_rss_mb": 6258.890625,
+  "files_gb": 1.552463168,
+  "repo": "Qwen/Qwen3-VL-2B-Instruct-GGUF",
+  "files": [
+   "Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+   "mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf"
+  ],
+  "license": "Apache-2.0",
+  "min_long_side": 224,
+  "server_args": [],
+  "answers": "free",
+  "sample": null,
+  "per_label": 5,
+  "seed": 7
+ },
+ "rows": [
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/Screenshot 2023-10-17 102752.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.35165425000013784,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/Screenshot 2023-10-02 170616.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- The tile in the image is",
+   "seconds": 0.3373761250113603,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/Screenshot 2023-10-17 102759.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "bamboo: a bird",
+   "seconds": 0.21118387501337565,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/Screenshot 2023-10-17 102835.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- The tile in the image is",
+   "seconds": 0.3647236659890041,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/1b.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "1 發",
+   "seconds": 0.19865441697766073,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-02 034116.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "1 白",
+   "seconds": 0.19768558401847258,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-21 194257.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "1萬",
+   "seconds": 0.22461716600810178,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-02 193058.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "1萬",
+   "seconds": 0.21219949997612275,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-02 164001.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "1 發",
+   "seconds": 0.2242160000023432,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-02 183128.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "1 發",
+   "seconds": 0.22481008298927918,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1p/Screenshot 2023-10-17 102916.png",
+   "split": "train",
+   "label": "1p",
+   "pred": "?",
+   "answer": "1. characters: a Chinese numeral above the red character 萬\n2. circles: round dots; count them",
+   "seconds": 0.36665608300245367,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/1p/Screenshot 2023-10-17 102710.png",
+   "split": "test",
+   "label": "1p",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.33654558297712356,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1p/Screenshot 2023-10-17 102911.png",
+   "split": "train",
+   "label": "1p",
+   "pred": "?",
+   "answer": "1. characters: a Chinese numeral above the red character 萬\n2. circles: round dots; count them",
+   "seconds": 0.36448395799379796,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1p/Screenshot 2023-10-02 170411.png",
+   "split": "train",
+   "label": "1p",
+   "pred": "?",
+   "answer": "13",
+   "seconds": 0.21303279098356143,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/1p/Screenshot 2023-10-17 102715.png",
+   "split": "test",
+   "label": "1p",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.33504158398136497,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-17 105429.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.3632131250051316,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-17 105426.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.3652498750016093,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-02 170606.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.36708512500626966,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-17 105355.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: 2 sticks,",
+   "seconds": 0.33827212502365,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-02 170609.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "?",
+   "answer": "bamboo: sticks; count them; the one of bamboo shows a bird\n3",
+   "seconds": 0.281185166008072,
+   "prompt_tokens": 189
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/Screenshot 2023-10-02 193157.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "2萬",
+   "seconds": 0.20062583399703726,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/Screenshot 2023-10-02 193145.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "2萬",
+   "seconds": 0.22358804201940075,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/2n.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "2萬",
+   "seconds": 0.19679300001007505,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/Screenshot 2023-10-02 193201.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "2萬",
+   "seconds": 0.21964762499555945,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/Screenshot 2023-10-02 163433.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "2萬",
+   "seconds": 0.22077125002397224,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2p/Screenshot 2023-10-17 104912.png",
+   "split": "train",
+   "label": "2p",
+   "pred": "?",
+   "answer": "1. characters: a Chinese numeral above the red character 萬",
+   "seconds": 0.30611520900856704,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2p/Screenshot 2023-10-17 105214.png",
+   "split": "train",
+   "label": "2p",
+   "pred": "?",
+   "answer": "1: characters: a Chinese numeral above the red character 萬",
+   "seconds": 0.3124159580038395,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/2p/Screenshot 2023-10-17 104948.png",
+   "split": "test",
+   "label": "2p",
+   "pred": "?",
+   "answer": "1: characters",
+   "seconds": 0.22963674998027273,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2p/Screenshot 2023-10-17 105211.png",
+   "split": "train",
+   "label": "2p",
+   "pred": "?",
+   "answer": "1. characters: a Chinese numeral above the red character 萬\n2. circles: round dots; count them",
+   "seconds": 0.3871530840115156,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2p/Screenshot 2023-10-17 104959.png",
+   "split": "train",
+   "label": "2p",
+   "pred": "?",
+   "answer": "1. circles: 2\n2. bamboo: 1\n3. winds: north\n4. dragons:",
+   "seconds": 0.3713459580030758,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 170536.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.3712936250085477,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 205841.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3 bamboo",
+   "seconds": 0.22322383397840895,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 163949.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.3712660830060486,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 183637.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "?",
+   "answer": "1. The tile in the image has three green characters, each enclosed in a green bracket.\n2. The characters are",
+   "seconds": 0.385574291984085,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 205857.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "3s",
+   "answer": "3 bamboo",
+   "seconds": 0.20167554198997095,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-17 103247.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "3萬",
+   "seconds": 0.2217617909773253,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-02 163821.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "3萬",
+   "seconds": 0.199795541993808,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-17 103302.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "3萬",
+   "seconds": 0.22558379199472256,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-02 163444.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "3萬",
+   "seconds": 0.20642554201185703,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-17 103305.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.35665291600162163,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3p/Screenshot 2023-10-02 191559.png",
+   "split": "train",
+   "label": "3p",
+   "pred": "?",
+   "answer": "1. The tile in the image has three symbols: a red circle in the center, and two black circles with a",
+   "seconds": 0.38713737498619594,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3p/Screenshot 2023-10-02 213102.png",
+   "split": "train",
+   "label": "3p",
+   "pred": "?",
+   "answer": "1. The tile in the image has three symbols: a black circle with a pattern, a red circle with a pattern",
+   "seconds": 0.3811062919849064,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3p/Screenshot 2023-10-02 170408.png",
+   "split": "train",
+   "label": "3p",
+   "pred": "?",
+   "answer": "1. characters: a Chinese numeral above the red character 萬\n2. circles: round dots; count them",
+   "seconds": 0.38551804100279696,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/3p/Screenshot 2023-10-02 213129.png",
+   "split": "test",
+   "label": "3p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.24588529198081233,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3p/Screenshot 2023-10-02 213126.png",
+   "split": "train",
+   "label": "3p",
+   "pred": "?",
+   "answer": "1. characters: a Chinese numeral above the red character 萬\n2. circles: round dots; count them",
+   "seconds": 0.392231375008123,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 205927.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.3675554170040414,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 205934.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.387296333006816,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 193522.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "bamboo: sticks; count them; the one of bamboo shows a bird\n3",
+   "seconds": 0.3455492079956457,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 193538.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.3678292089898605,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 172140.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.3688097079866566,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4n/Screenshot 2023-10-17 103009.png",
+   "split": "train",
+   "label": "4m",
+   "pred": "?",
+   "answer": "4萬",
+   "seconds": 0.2173263330187183,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4n/Screenshot 2023-10-17 103026.png",
+   "split": "train",
+   "label": "4m",
+   "pred": "?",
+   "answer": "4萬",
+   "seconds": 0.24618300001020543,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/4n/Screenshot 2023-10-17 103154.png",
+   "split": "test",
+   "label": "4m",
+   "pred": "?",
+   "answer": "1. The image shows a Mahjong tile with a red character \"萬\" (wàn), which means \"ten",
+   "seconds": 0.4150319590116851,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4n/Screenshot 2023-10-17 103012.png",
+   "split": "train",
+   "label": "4m",
+   "pred": "?",
+   "answer": "4萬",
+   "seconds": 0.22298145800596103,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/4n/Screenshot 2023-10-17 103151.png",
+   "split": "test",
+   "label": "4m",
+   "pred": "?",
+   "answer": "4萬",
+   "seconds": 0.2606296660087537,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-02 191220.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "?",
+   "answer": "4, circles",
+   "seconds": 0.2387154169846326,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-17 104232.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "?",
+   "answer": "1. characters: a Chinese numeral above the red character 萬\n2. circles: round dots; count them",
+   "seconds": 0.42567787499865517,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-21 195924.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "?",
+   "answer": "1: characters",
+   "seconds": 0.276769707998028,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-17 104210.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "?",
+   "answer": "1: circles; count them: 4",
+   "seconds": 0.31256262501119636,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-17 104147.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "?",
+   "answer": "4, circles",
+   "seconds": 0.26420533400960267,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210216.png",
+   "split": "train",
+   "label": "5s",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile.\n2. It has a red character,",
+   "seconds": 0.4036299579893239,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-21 200119.png",
+   "split": "train",
+   "label": "5s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.43212129099993035,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210213.png",
+   "split": "train",
+   "label": "5s",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile.\n2. It is a red tile with",
+   "seconds": 0.42028091597603634,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224820.png",
+   "split": "train",
+   "label": "5s",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile.\n2. It has a red character in",
+   "seconds": 0.3994961659773253,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 212929.png",
+   "split": "train",
+   "label": "5s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.40198783300002106,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103431.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "?",
+   "answer": "13",
+   "seconds": 0.23235870801727287,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103411.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.4181256659794599,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-02 172159.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "?",
+   "answer": "13",
+   "seconds": 0.23589454099419527,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-21 195848.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "?",
+   "answer": "13",
+   "seconds": 0.27962299998034723,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103633.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Mahjong tile with the character \"萬\" (wàn) in red",
+   "seconds": 0.4387805830047,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 211645.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.239558291999856,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 211642.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.2678628339781426,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-21 195616.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.2784694999863859,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 211626.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.2695404999831226,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-21 193951.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.26844149999669753,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-17 104444.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.4223980829992797,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-17 104405.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.41296362501452677,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-17 104611.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.4087335839867592,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-02 170248.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.37875687499763444,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-02 170431.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.4115871250105556,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 191652.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "?",
+   "answer": "1. The tile shown is a Mahjong tile with the character \"萬\" (wàn), which is a Chinese",
+   "seconds": 0.4296161250094883,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 034150.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "?",
+   "answer": "6萬",
+   "seconds": 0.23671354199177586,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 191648.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.43554341699928045,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 191331.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "?",
+   "answer": "6萬",
+   "seconds": 0.2659950839879457,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 191656.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.4373531250166707,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6p/Screenshot 2023-10-16 221557.png",
+   "split": "train",
+   "label": "6p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.25979087498853914,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6p/Screenshot 2023-10-16 221203.png",
+   "split": "train",
+   "label": "6p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.2582512090157252,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/6p/Screenshot 2023-10-02 224643.png",
+   "split": "test",
+   "label": "6p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.22033475001808256,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6p/Screenshot 2023-10-22 134731.png",
+   "split": "train",
+   "label": "6p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.24339912499999627,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/6p/Screenshot 2023-10-02 224719.png",
+   "split": "test",
+   "label": "6p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.23469562499667518,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-16 233601.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.20726329102762975,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-16 233613.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.20688229199731722,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-02 163731.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.20882812500349246,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-15 152157.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "?",
+   "answer": "1 發",
+   "seconds": 0.22178166601224802,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-16 234154.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.2149563749844674,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183215.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "7萬",
+   "seconds": 0.24320254201302305,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183721.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.394139832991641,
+   "prompt_tokens": 196
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183707.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "7萬",
+   "seconds": 0.26815654200618155,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183718.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "1 發",
+   "seconds": 0.2539459590043407,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183704.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "7萬",
+   "seconds": 0.2759229580115061,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7p/7p.png",
+   "split": "train",
+   "label": "7p",
+   "pred": "?",
+   "answer": "7",
+   "seconds": 0.2400211250060238,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7p/Screenshot 2023-10-02 170329.png",
+   "split": "train",
+   "label": "7p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.2401093749795109,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7p/Screenshot 2023-10-02 193334.png",
+   "split": "train",
+   "label": "7p",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.43837874999735504,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7p/Screenshot 2023-10-02 210158.png",
+   "split": "train",
+   "label": "7p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.25702175000333227,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/7p/Screenshot 2023-10-02 210144.png",
+   "split": "test",
+   "label": "7p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.2520036250061821,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-02 224450.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.4123416249931324,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-02 224513.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: 2 sticks,",
+   "seconds": 0.4001500419981312,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-21 194531.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: 2 sticks,",
+   "seconds": 0.40350337501149625,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-02 224501.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.40488483299850486,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-02 182840.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.40503829199587926,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8n/Screenshot 2023-10-22 135124.png",
+   "split": "train",
+   "label": "8m",
+   "pred": "?",
+   "answer": "8萬",
+   "seconds": 0.24889437499223277,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8n/Screenshot 2023-10-17 105927.png",
+   "split": "train",
+   "label": "8m",
+   "pred": "?",
+   "answer": "8萬",
+   "seconds": 0.2552481250022538,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/8n/Screenshot 2023-10-17 105931.png",
+   "split": "test",
+   "label": "8m",
+   "pred": "?",
+   "answer": "8萬",
+   "seconds": 0.2173371670069173,
+   "prompt_tokens": 196
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8n/Screenshot 2023-10-17 105948.png",
+   "split": "train",
+   "label": "8m",
+   "pred": "?",
+   "answer": "8萬",
+   "seconds": 0.24940879200585186,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8n/Screenshot 2023-10-02 183344.png",
+   "split": "train",
+   "label": "8m",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.41561416699551046,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8p/Screenshot 2023-10-02 034206.png",
+   "split": "train",
+   "label": "8p",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.4099315409839619,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8p/Screenshot 2023-10-17 105827.png",
+   "split": "train",
+   "label": "8p",
+   "pred": "?",
+   "answer": "1. characters: a Chinese numeral above the red character 萬\n2. circles: round dots; count them",
+   "seconds": 0.4163550410012249,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/8p/Screenshot 2023-10-17 105740.png",
+   "split": "test",
+   "label": "8p",
+   "pred": "?",
+   "answer": "1: circles",
+   "seconds": 0.2482317500107456,
+   "prompt_tokens": 196
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8p/Screenshot 2023-10-02 211946.png",
+   "split": "train",
+   "label": "8p",
+   "pred": "?",
+   "answer": "1. characters: a Chinese numeral above the red character 萬\n2. circles: round dots; count them",
+   "seconds": 0.43493441698956303,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8p/Screenshot 2023-10-17 105729.png",
+   "split": "train",
+   "label": "8p",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.4533232499961741,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/9b/Screenshot 2023-10-16 195257.png",
+   "split": "test",
+   "label": "9s",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.3063827919831965,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9b/Screenshot 2023-10-21 193826.png",
+   "split": "train",
+   "label": "9s",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.3285416250000708,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/9b/Screenshot 2023-10-17 144344.png",
+   "split": "test",
+   "label": "9s",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.2944062080059666,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9b/Screenshot 2023-10-02 205035.png",
+   "split": "train",
+   "label": "9s",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.335987041995395,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9b/Screenshot 2023-10-16 221036.png",
+   "split": "train",
+   "label": "9s",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.33341775002190843,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/9n/Screenshot 2023-10-17 111144.png",
+   "split": "test",
+   "label": "9m",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.4960453750099987,
+   "prompt_tokens": 196
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9n/Screenshot 2023-10-02 170457.png",
+   "split": "train",
+   "label": "9m",
+   "pred": "?",
+   "answer": "1 發",
+   "seconds": 0.34222854097606614,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9n/Screenshot 2023-10-17 110433.png",
+   "split": "train",
+   "label": "9m",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.4885612500074785,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9n/Screenshot 2023-10-17 110305.png",
+   "split": "train",
+   "label": "9m",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.48205216700444,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9n/Screenshot 2023-10-17 111138.png",
+   "split": "train",
+   "label": "9m",
+   "pred": "?",
+   "answer": "11",
+   "seconds": 0.2847362080065068,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9p/Screenshot 2023-10-02 170845.png",
+   "split": "train",
+   "label": "9p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.32303324999520555,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/9p/Screenshot 2023-10-02 213404.png",
+   "split": "test",
+   "label": "9p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.33655191701836884,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9p/Screenshot 2023-10-02 213418.png",
+   "split": "train",
+   "label": "9p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.3368638750107493,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9p/Screenshot 2023-10-02 213455.png",
+   "split": "train",
+   "label": "9p",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.5473879580094945,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9p/Screenshot 2023-10-02 213415.png",
+   "split": "train",
+   "label": "9p",
+   "pred": "?",
+   "answer": "red five",
+   "seconds": 0.3370104579953477,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 193658.png",
+   "split": "train",
+   "label": "E",
+   "pred": "?",
+   "answer": "1. The tile shown is a Mahjong tile with the character \"東\" (Dōng), which means \"",
+   "seconds": 0.5294337499944959,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 205235.png",
+   "split": "train",
+   "label": "E",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Chinese character, specifically the kanji for \"東\" (east).\n2",
+   "seconds": 0.5169166669948027,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 193702.png",
+   "split": "train",
+   "label": "E",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile.\n2. The character shown is \"東",
+   "seconds": 0.5182741250027902,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 193647.png",
+   "split": "train",
+   "label": "E",
+   "pred": "?",
+   "answer": "east",
+   "seconds": 0.3081673329870682,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 193640.png",
+   "split": "train",
+   "label": "E",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Chinese character written in a stylized, calligraphic form. It is",
+   "seconds": 0.4906607499870006,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/gd/Screenshot 2023-10-02 211844.png",
+   "split": "test",
+   "label": "F",
+   "pred": "?",
+   "answer": "1 發",
+   "seconds": 0.3356855000020005,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/gd/Screenshot 2023-10-02 170645.png",
+   "split": "train",
+   "label": "F",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.5239852080121636,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/gd/Screenshot 2023-10-02 163755.png",
+   "split": "train",
+   "label": "F",
+   "pred": "?",
+   "answer": "1. 發",
+   "seconds": 0.3482025830016937,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/gd/Screenshot 2023-10-02 191257.png",
+   "split": "train",
+   "label": "F",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.5006976670119911,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/gd/Screenshot 2023-10-02 205249.png",
+   "split": "test",
+   "label": "F",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Chinese character written in green, which is the character for \"發\" (",
+   "seconds": 0.4686690419912338,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-02 205207.png",
+   "split": "train",
+   "label": "N",
+   "pred": "?",
+   "answer": "north",
+   "seconds": 0.21747170900925994,
+   "prompt_tokens": 196
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-21 195318.png",
+   "split": "train",
+   "label": "N",
+   "pred": "?",
+   "answer": "north",
+   "seconds": 0.25407729198923334,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-02 183523.png",
+   "split": "train",
+   "label": "N",
+   "pred": "?",
+   "answer": "north",
+   "seconds": 0.2445247090072371,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-02 183537.png",
+   "split": "train",
+   "label": "N",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
+   "seconds": 0.37493995801196434,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-02 183542.png",
+   "split": "train",
+   "label": "N",
+   "pred": "?",
+   "answer": "13",
+   "seconds": 0.2311876660096459,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/rd/Screenshot 2023-10-02 211914.png",
+   "split": "test",
+   "label": "C",
+   "pred": "?",
+   "answer": "dragon: 中 for red",
+   "seconds": 0.2594580829900224,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/rd/Screenshot 2023-10-02 163653.png",
+   "split": "train",
+   "label": "C",
+   "pred": "?",
+   "answer": "1 中",
+   "seconds": 0.2497350419871509,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/rd/Screenshot 2023-10-02 211908.png",
+   "split": "train",
+   "label": "C",
+   "pred": "?",
+   "answer": "dragon: 中 for red",
+   "seconds": 0.2616956249985378,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/rd/Screenshot 2023-10-02 211929.png",
+   "split": "train",
+   "label": "C",
+   "pred": "?",
+   "answer": "dragon: 中 for red",
+   "seconds": 0.2327569580229465,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/rd/Screenshot 2023-10-02 211801.png",
+   "split": "train",
+   "label": "C",
+   "pred": "?",
+   "answer": "dragon: 中 for red",
+   "seconds": 0.2310856669791974,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/sw.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "south",
+   "seconds": 0.20223925000755116,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/Screenshot 2023-10-02 193235.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "南",
+   "seconds": 0.23650895798346028,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/Screenshot 2023-10-02 193214.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "south",
+   "seconds": 0.23080120800295845,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/Screenshot 2023-10-02 163942.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Mahjong tile with a large black character on a white background.\n2.",
+   "seconds": 0.3611924580181949,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/Screenshot 2023-10-02 193225.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "south",
+   "seconds": 0.19582804199308157,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-02 193621.png",
+   "split": "train",
+   "label": "P",
+   "pred": "?",
+   "answer": "1: 發",
+   "seconds": 0.24752154099405743,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-02 183117.png",
+   "split": "train",
+   "label": "P",
+   "pred": "?",
+   "answer": "1: bamboo, bamboo, bird",
+   "seconds": 0.26785395899787545,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-21 193652.png",
+   "split": "train",
+   "label": "P",
+   "pred": "?",
+   "answer": "1: bamboo, bamboo shows a bird",
+   "seconds": 0.27533725000103004,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-02 193624.png",
+   "split": "train",
+   "label": "P",
+   "pred": "?",
+   "answer": "1: bamboo, bamboo, bamboo, bamboo, bamboo, bamboo, bamboo, bamboo, bamboo, bamboo, bamboo,",
+   "seconds": 0.38397454100777395,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-02 163837.png",
+   "split": "train",
+   "label": "P",
+   "pred": "?",
+   "answer": "1, characters",
+   "seconds": 0.20723095801076852,
+   "prompt_tokens": 196
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ww/Screenshot 2023-10-02 183501.png",
+   "split": "train",
+   "label": "W",
+   "pred": "?",
+   "answer": "1 發",
+   "seconds": 0.2192510000022594,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ww/Screenshot 2023-10-02 183557.png",
+   "split": "train",
+   "label": "W",
+   "pred": "?",
+   "answer": "west",
+   "seconds": 0.24152300000423566,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ww/Screenshot 2023-10-02 183457.png",
+   "split": "train",
+   "label": "W",
+   "pred": "?",
+   "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
+   "seconds": 0.4055041660030838,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/ww/ww.png",
+   "split": "test",
+   "label": "W",
+   "pred": "?",
+   "answer": "1. The tile in the image is a Chinese character, specifically the character \"西\" (xī), which means",
+   "seconds": 0.36028008299763314,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ww/Screenshot 2023-10-02 172254.png",
+   "split": "train",
+   "label": "W",
+   "pred": "?",
+   "answer": "13",
+   "seconds": 0.23745733400573954,
+   "prompt_tokens": 217
+  }
+ ]
+}

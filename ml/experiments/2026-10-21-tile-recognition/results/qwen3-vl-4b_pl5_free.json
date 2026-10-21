@@ -1,0 +1,1677 @@
+{
+ "summary": {
+  "model": "qwen3-vl-4b",
+  "n": 170,
+  "accuracy": 0.17058823529411765,
+  "accuracy_by_split": {
+   "test": 0.15789473684210525,
+   "train": 0.17218543046357615
+  },
+  "accuracy_by_label": {
+   "1m": 0.2,
+   "1p": 0.0,
+   "1s": 0.2,
+   "2m": 0.4,
+   "2p": 0.0,
+   "2s": 0.2,
+   "3m": 0.0,
+   "3p": 0.0,
+   "3s": 0.0,
+   "4m": 0.2,
+   "4p": 0.4,
+   "4s": 0.0,
+   "5m": 0.2,
+   "5p": 0.0,
+   "5s": 0.0,
+   "6m": 0.2,
+   "6p": 0.0,
+   "6s": 0.0,
+   "7m": 0.0,
+   "7p": 0.2,
+   "7s": 0.0,
+   "8m": 0.0,
+   "8p": 0.0,
+   "8s": 0.0,
+   "9m": 0.0,
+   "9p": 0.0,
+   "9s": 0.0,
+   "C": 1.0,
+   "E": 0.6,
+   "F": 0.6,
+   "N": 0.6,
+   "P": 0.6,
+   "S": 0.0,
+   "W": 0.2
+  },
+  "top_confusions": [
+   {
+    "label": "1p",
+    "pred": "5pr",
+    "count": 5
+   },
+   {
+    "label": "3p",
+    "pred": "5pr",
+    "count": 5
+   },
+   {
+    "label": "5s",
+    "pred": "5sr",
+    "count": 5
+   },
+   {
+    "label": "6p",
+    "pred": "5pr",
+    "count": 5
+   },
+   {
+    "label": "8m",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "9p",
+    "pred": "5pr",
+    "count": 5
+   },
+   {
+    "label": "S",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "1m",
+    "pred": "?",
+    "count": 4
+   },
+   {
+    "label": "2p",
+    "pred": "5pr",
+    "count": 4
+   },
+   {
+    "label": "3s",
+    "pred": "?",
+    "count": 4
+   },
+   {
+    "label": "3m",
+    "pred": "?",
+    "count": 4
+   },
+   {
+    "label": "4m",
+    "pred": "?",
+    "count": 4
+   },
+   {
+    "label": "7p",
+    "pred": "5pr",
+    "count": 4
+   },
+   {
+    "label": "8s",
+    "pred": "?",
+    "count": 4
+   },
+   {
+    "label": "8p",
+    "pred": "5pr",
+    "count": 4
+   }
+  ],
+  "first_request_s": 0.4710200830013491,
+  "latency_s": {
+   "mean": 0.5209906306754958,
+   "median": 0.5162157499871682,
+   "p95": 0.6655843750049826
+  },
+  "load_s": 1.0218755829846486,
+  "peak_rss_mb": 8755.359375,
+  "files_gb": 2.951255968,
+  "repo": "Qwen/Qwen3-VL-4B-Instruct-GGUF",
+  "files": [
+   "Qwen3VL-4B-Instruct-Q4_K_M.gguf",
+   "mmproj-Qwen3VL-4B-Instruct-Q8_0.gguf"
+  ],
+  "license": "Apache-2.0",
+  "min_long_side": 224,
+  "server_args": [],
+  "answers": "free",
+  "sample": null,
+  "per_label": 5,
+  "seed": 7
+ },
+ "rows": [
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/Screenshot 2023-10-17 102752.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "bamboo 12",
+   "seconds": 0.4710200830013491,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/Screenshot 2023-10-02 170616.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "bird (bamboo)",
+   "seconds": 0.46479970900691114,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/Screenshot 2023-10-17 102759.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "bamboo 12",
+   "seconds": 0.4639834580011666,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/Screenshot 2023-10-17 102835.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.4881370829825755,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/1b.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "1s",
+   "answer": "1 bamboo",
+   "seconds": 0.42319083301117644,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-02 034116.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "1m",
+   "answer": "1 character",
+   "seconds": 0.42418995799380355,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-21 194257.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "one ten thousand (characters)",
+   "seconds": 0.5347231669875327,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-02 193058.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "one character",
+   "seconds": 0.46816975000547245,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-02 164001.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "one character",
+   "seconds": 0.47286808298667893,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-02 183128.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "red one",
+   "seconds": 0.47345954200136475,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1p/Screenshot 2023-10-17 102916.png",
+   "split": "train",
+   "label": "1p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.4881029169773683,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/1p/Screenshot 2023-10-17 102710.png",
+   "split": "test",
+   "label": "1p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.4393827919848263,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1p/Screenshot 2023-10-17 102911.png",
+   "split": "train",
+   "label": "1p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.4973793749813922,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1p/Screenshot 2023-10-02 170411.png",
+   "split": "train",
+   "label": "1p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5046345409937203,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/1p/Screenshot 2023-10-17 102715.png",
+   "split": "test",
+   "label": "1p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.47556266601895913,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-17 105429.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "2s",
+   "answer": "2 bamboo",
+   "seconds": 0.5171552500105463,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-17 105426.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "?",
+   "answer": "bamboo: 2",
+   "seconds": 0.5647040409967303,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-02 170606.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "?",
+   "answer": "bamboo: 2",
+   "seconds": 0.5590563330042642,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-17 105355.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "F",
+   "answer": "green dragon",
+   "seconds": 0.4571774160140194,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-02 170609.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.441782708017854,
+   "prompt_tokens": 189
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/Screenshot 2023-10-02 193157.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "20000 characters",
+   "seconds": 0.5057513330248185,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/Screenshot 2023-10-02 193145.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "二萬",
+   "seconds": 0.5001812499831431,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/2n.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "2m",
+   "answer": "2 characters",
+   "seconds": 0.4462083340040408,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/Screenshot 2023-10-02 193201.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "二萬",
+   "seconds": 0.505068416998256,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/Screenshot 2023-10-02 163433.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "2m",
+   "answer": "2 characters",
+   "seconds": 0.5264910419937223,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2p/Screenshot 2023-10-17 104912.png",
+   "split": "train",
+   "label": "2p",
+   "pred": "?",
+   "answer": "circles: 6",
+   "seconds": 0.5700269580120221,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2p/Screenshot 2023-10-17 105214.png",
+   "split": "train",
+   "label": "2p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5189560000144411,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/2p/Screenshot 2023-10-17 104948.png",
+   "split": "test",
+   "label": "2p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5175764170126058,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2p/Screenshot 2023-10-17 105211.png",
+   "split": "train",
+   "label": "2p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5311928750015795,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2p/Screenshot 2023-10-17 104959.png",
+   "split": "train",
+   "label": "2p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5265015420154668,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 170536.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "?",
+   "answer": "bamboo: 3",
+   "seconds": 0.549554666999029,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 205841.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "?",
+   "answer": "bamboo 3",
+   "seconds": 0.5406711669929791,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 163949.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.51669954098179,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 183637.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "?",
+   "answer": "three bamboo",
+   "seconds": 0.5151899160118774,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 205857.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "?",
+   "answer": "three bamboo",
+   "seconds": 0.45015608399990015,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-17 103247.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "three ten thousand (三萬)",
+   "seconds": 0.5926310830109287,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-02 163821.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "three ten thousand (characters)",
+   "seconds": 0.5083325830055401,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-17 103302.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "three ten thousand (characters)",
+   "seconds": 0.5582492079993244,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-02 163444.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "three ten thousand (三萬) — characters",
+   "seconds": 0.5476182920101564,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-17 103305.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "C",
+   "answer": "red dragon",
+   "seconds": 0.4454927089973353,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3p/Screenshot 2023-10-02 191559.png",
+   "split": "train",
+   "label": "3p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5304118750209454,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3p/Screenshot 2023-10-02 213102.png",
+   "split": "train",
+   "label": "3p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5267076670133974,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3p/Screenshot 2023-10-02 170408.png",
+   "split": "train",
+   "label": "3p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5309374160133302,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/3p/Screenshot 2023-10-02 213129.png",
+   "split": "test",
+   "label": "3p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5360868749849033,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3p/Screenshot 2023-10-02 213126.png",
+   "split": "train",
+   "label": "3p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.532899957994232,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 205927.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "bamboo four",
+   "seconds": 0.47923866601195186,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 205934.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "bamboo: 4",
+   "seconds": 0.5576765419973526,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 193522.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "bamboo 4",
+   "seconds": 0.5305501660041045,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 193538.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.46246370900189504,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 172140.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.4635200829943642,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4n/Screenshot 2023-10-17 103009.png",
+   "split": "train",
+   "label": "4m",
+   "pred": "4m",
+   "answer": "4 characters",
+   "seconds": 0.4493782909994479,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4n/Screenshot 2023-10-17 103026.png",
+   "split": "train",
+   "label": "4m",
+   "pred": "?",
+   "answer": "四萬",
+   "seconds": 0.5141944170172792,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/4n/Screenshot 2023-10-17 103154.png",
+   "split": "test",
+   "label": "4m",
+   "pred": "?",
+   "answer": "萬 (man) - characters",
+   "seconds": 0.5929296250105835,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4n/Screenshot 2023-10-17 103012.png",
+   "split": "train",
+   "label": "4m",
+   "pred": "?",
+   "answer": "四萬",
+   "seconds": 0.4447137080132961,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/4n/Screenshot 2023-10-17 103151.png",
+   "split": "test",
+   "label": "4m",
+   "pred": "?",
+   "answer": "red five, characters",
+   "seconds": 0.5309966669883579,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-02 191220.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4 circles",
+   "seconds": 0.45387933298479766,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-17 104232.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5305219590081833,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-21 195924.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "?",
+   "answer": "four circles",
+   "seconds": 0.5147429170028772,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-17 104210.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "?",
+   "answer": "circles: 4",
+   "seconds": 0.544049583026208,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-17 104147.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "4p",
+   "answer": "4 circles",
+   "seconds": 0.4898609999800101,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210216.png",
+   "split": "train",
+   "label": "5s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.4640385420061648,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-21 200119.png",
+   "split": "train",
+   "label": "5s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.5237192499917,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210213.png",
+   "split": "train",
+   "label": "5s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.520609291997971,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224820.png",
+   "split": "train",
+   "label": "5s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.463327790988842,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 212929.png",
+   "split": "train",
+   "label": "5s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.46129370798007585,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103431.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.464518249995308,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103411.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.46633558298344724,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-02 172159.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "5m",
+   "answer": "5 characters",
+   "seconds": 0.46673008298967034,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-21 195848.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "?",
+   "answer": "red five, characters",
+   "seconds": 0.5750102080055512,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103633.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.5131290419958532,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 211645.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.4914529579982627,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 211642.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "?",
+   "answer": "red five, circles",
+   "seconds": 0.5869234999991022,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-21 195616.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5572527500044089,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 211626.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "?",
+   "answer": "red five, circles",
+   "seconds": 0.575636958994437,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-21 193951.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "?",
+   "answer": "red five, circles",
+   "seconds": 0.5548479999997653,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-17 104444.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "bamboo: 6",
+   "seconds": 0.5490750419849064,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-17 104405.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "bamboo: 6",
+   "seconds": 0.5451596670027357,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-17 104611.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.5162157499871682,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-02 170248.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "bamboo: 6",
+   "seconds": 0.5073952919919975,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-02 170431.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.5314526660076808,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 191652.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.5647634170018137,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 034150.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "6m",
+   "answer": "6 characters",
+   "seconds": 0.4760508750041481,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 191648.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.5488694160012528,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 191331.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "?",
+   "answer": "six ten thousand (六萬)",
+   "seconds": 0.5801882919913623,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 191656.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.5275765000260435,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6p/Screenshot 2023-10-16 221557.png",
+   "split": "train",
+   "label": "6p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5140948329935782,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6p/Screenshot 2023-10-16 221203.png",
+   "split": "train",
+   "label": "6p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5347218750102911,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/6p/Screenshot 2023-10-02 224643.png",
+   "split": "test",
+   "label": "6p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5381812499836087,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6p/Screenshot 2023-10-22 134731.png",
+   "split": "train",
+   "label": "6p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.7005342910124455,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/6p/Screenshot 2023-10-02 224719.png",
+   "split": "test",
+   "label": "6p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.7870330839941744,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-16 233601.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.667145540995989,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-16 233613.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.6666171250108164,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-02 163731.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "C",
+   "answer": "red dragon",
+   "seconds": 0.6655843750049826,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-15 152157.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.6683779160084669,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-16 234154.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.6271376670047175,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183215.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "七萬",
+   "seconds": 0.6125101250072476,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183721.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.4460709590057377,
+   "prompt_tokens": 196
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183707.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "7萬",
+   "seconds": 0.47210341700701974,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183718.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.43572841698187403,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183704.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "7萬",
+   "seconds": 0.47498699999414384,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7p/7p.png",
+   "split": "train",
+   "label": "7p",
+   "pred": "7p",
+   "answer": "7 circles",
+   "seconds": 0.4452764999878127,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7p/Screenshot 2023-10-02 170329.png",
+   "split": "train",
+   "label": "7p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.46010445899446495,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7p/Screenshot 2023-10-02 193334.png",
+   "split": "train",
+   "label": "7p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5191882500075735,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7p/Screenshot 2023-10-02 210158.png",
+   "split": "train",
+   "label": "7p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5345775830210187,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/7p/Screenshot 2023-10-02 210144.png",
+   "split": "test",
+   "label": "7p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.527243833988905,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-02 224450.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "bamboo: 4",
+   "seconds": 0.5553885840054136,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-02 224513.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "bamboo 4",
+   "seconds": 0.5385830419836566,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-21 194531.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "bamboo: 2",
+   "seconds": 0.5539874999958556,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-02 224501.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "bamboo: 4",
+   "seconds": 0.5602294160053134,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-02 182840.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "F",
+   "answer": "green dragon",
+   "seconds": 0.5000823749869596,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8n/Screenshot 2023-10-22 135124.png",
+   "split": "train",
+   "label": "8m",
+   "pred": "?",
+   "answer": "八萬",
+   "seconds": 0.5183468750037719,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8n/Screenshot 2023-10-17 105927.png",
+   "split": "train",
+   "label": "8m",
+   "pred": "?",
+   "answer": "八萬",
+   "seconds": 0.5108954580209684,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/8n/Screenshot 2023-10-17 105931.png",
+   "split": "test",
+   "label": "8m",
+   "pred": "?",
+   "answer": "八萬",
+   "seconds": 0.4611803339794278,
+   "prompt_tokens": 196
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8n/Screenshot 2023-10-17 105948.png",
+   "split": "train",
+   "label": "8m",
+   "pred": "?",
+   "answer": "八萬",
+   "seconds": 0.5056095000181813,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8n/Screenshot 2023-10-02 183344.png",
+   "split": "train",
+   "label": "8m",
+   "pred": "?",
+   "answer": "red five, characters",
+   "seconds": 0.5385833329928573,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8p/Screenshot 2023-10-02 034206.png",
+   "split": "train",
+   "label": "8p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.48370470898225904,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8p/Screenshot 2023-10-17 105827.png",
+   "split": "train",
+   "label": "8p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.4617859169957228,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/8p/Screenshot 2023-10-17 105740.png",
+   "split": "test",
+   "label": "8p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.4585001670056954,
+   "prompt_tokens": 196
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8p/Screenshot 2023-10-02 211946.png",
+   "split": "train",
+   "label": "8p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.45794304201263003,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8p/Screenshot 2023-10-17 105729.png",
+   "split": "train",
+   "label": "8p",
+   "pred": "6p",
+   "answer": "6 circles",
+   "seconds": 0.44052845798432827,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/9b/Screenshot 2023-10-16 195257.png",
+   "split": "test",
+   "label": "9s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.5060006669955328,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9b/Screenshot 2023-10-21 193826.png",
+   "split": "train",
+   "label": "9s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.5285699169908185,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/9b/Screenshot 2023-10-17 144344.png",
+   "split": "test",
+   "label": "9s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.46809133398346603,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9b/Screenshot 2023-10-02 205035.png",
+   "split": "train",
+   "label": "9s",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5190691660100129,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9b/Screenshot 2023-10-16 221036.png",
+   "split": "train",
+   "label": "9s",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.5187925420177635,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/9n/Screenshot 2023-10-17 111144.png",
+   "split": "test",
+   "label": "9m",
+   "pred": "?",
+   "answer": "九萬",
+   "seconds": 0.4435733749996871,
+   "prompt_tokens": 196
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9n/Screenshot 2023-10-02 170457.png",
+   "split": "train",
+   "label": "9m",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.5198682089976501,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9n/Screenshot 2023-10-17 110433.png",
+   "split": "train",
+   "label": "9m",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.46477704198332503,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9n/Screenshot 2023-10-17 110305.png",
+   "split": "train",
+   "label": "9m",
+   "pred": "5mr",
+   "answer": "red five characters",
+   "seconds": 0.461609749996569,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9n/Screenshot 2023-10-17 111138.png",
+   "split": "train",
+   "label": "9m",
+   "pred": "?",
+   "answer": "九萬",
+   "seconds": 0.4590698750107549,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9p/Screenshot 2023-10-02 170845.png",
+   "split": "train",
+   "label": "9p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5162216250027996,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/9p/Screenshot 2023-10-02 213404.png",
+   "split": "test",
+   "label": "9p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5195966669998597,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9p/Screenshot 2023-10-02 213418.png",
+   "split": "train",
+   "label": "9p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5170940830139443,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9p/Screenshot 2023-10-02 213455.png",
+   "split": "train",
+   "label": "9p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5277516249916516,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9p/Screenshot 2023-10-02 213415.png",
+   "split": "train",
+   "label": "9p",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5295228750037495,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 193658.png",
+   "split": "train",
+   "label": "E",
+   "pred": "?",
+   "answer": "東 wind",
+   "seconds": 0.503070167003898,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 205235.png",
+   "split": "train",
+   "label": "E",
+   "pred": "?",
+   "answer": "東 wind",
+   "seconds": 0.5071142080123536,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 193702.png",
+   "split": "train",
+   "label": "E",
+   "pred": "E",
+   "answer": "east wind",
+   "seconds": 0.49515654100105166,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 193647.png",
+   "split": "train",
+   "label": "E",
+   "pred": "E",
+   "answer": "east wind",
+   "seconds": 0.5139230829954613,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 193640.png",
+   "split": "train",
+   "label": "E",
+   "pred": "E",
+   "answer": "east wind",
+   "seconds": 0.4600400830095168,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/gd/Screenshot 2023-10-02 211844.png",
+   "split": "test",
+   "label": "F",
+   "pred": "F",
+   "answer": "發 (green dragon)",
+   "seconds": 0.5477012920018751,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/gd/Screenshot 2023-10-02 170645.png",
+   "split": "train",
+   "label": "F",
+   "pred": "?",
+   "answer": "發",
+   "seconds": 0.4852820410160348,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/gd/Screenshot 2023-10-02 163755.png",
+   "split": "train",
+   "label": "F",
+   "pred": "F",
+   "answer": "green dragon",
+   "seconds": 0.520189417002257,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/gd/Screenshot 2023-10-02 191257.png",
+   "split": "train",
+   "label": "F",
+   "pred": "F",
+   "answer": "發 (green dragon)",
+   "seconds": 0.5400974580261391,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/gd/Screenshot 2023-10-02 205249.png",
+   "split": "test",
+   "label": "F",
+   "pred": "?",
+   "answer": "發",
+   "seconds": 0.4937506249989383,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-02 205207.png",
+   "split": "train",
+   "label": "N",
+   "pred": "?",
+   "answer": "北 wind",
+   "seconds": 0.44150025001727045,
+   "prompt_tokens": 196
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-21 195318.png",
+   "split": "train",
+   "label": "N",
+   "pred": "N",
+   "answer": "This is the \"North Wind\" tile, which is one of the four wind tiles in Mahjong.\n\nIn Mahjong",
+   "seconds": 0.8035616250126623,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-02 183523.png",
+   "split": "train",
+   "label": "N",
+   "pred": "N",
+   "answer": "north wind",
+   "seconds": 0.5794994999887422,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-02 183537.png",
+   "split": "train",
+   "label": "N",
+   "pred": "N",
+   "answer": "north wind",
+   "seconds": 0.6252911670017056,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-02 183542.png",
+   "split": "train",
+   "label": "N",
+   "pred": "E",
+   "answer": "This is the \"East Wind\" tile, which is represented by the character 東 in the game Mahjong Soul.",
+   "seconds": 1.2086318750225473,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/rd/Screenshot 2023-10-02 211914.png",
+   "split": "test",
+   "label": "C",
+   "pred": "C",
+   "answer": "red dragon",
+   "seconds": 0.6933938330039382,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/rd/Screenshot 2023-10-02 163653.png",
+   "split": "train",
+   "label": "C",
+   "pred": "C",
+   "answer": "red dragon",
+   "seconds": 0.609204584005056,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/rd/Screenshot 2023-10-02 211908.png",
+   "split": "train",
+   "label": "C",
+   "pred": "C",
+   "answer": "red dragon",
+   "seconds": 0.5550647499912884,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/rd/Screenshot 2023-10-02 211929.png",
+   "split": "train",
+   "label": "C",
+   "pred": "C",
+   "answer": "red dragon",
+   "seconds": 0.4628567499748897,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/rd/Screenshot 2023-10-02 211801.png",
+   "split": "train",
+   "label": "C",
+   "pred": "C",
+   "answer": "red dragon",
+   "seconds": 0.4518021659750957,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/sw.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "南 wind",
+   "seconds": 0.44896329200128093,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/Screenshot 2023-10-02 193235.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "南 wind",
+   "seconds": 0.5177511670044623,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/Screenshot 2023-10-02 193214.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "南 wind",
+   "seconds": 0.5054362910159398,
+   "prompt_tokens": 210
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/Screenshot 2023-10-02 163942.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "10 characters",
+   "seconds": 0.49057925000670366,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/Screenshot 2023-10-02 193225.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "南 wind",
+   "seconds": 0.4524267920060083,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-02 193621.png",
+   "split": "train",
+   "label": "P",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5609973749960773,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-02 183117.png",
+   "split": "train",
+   "label": "P",
+   "pred": "5pr",
+   "answer": "red five circles",
+   "seconds": 0.5603289999999106,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-21 193652.png",
+   "split": "train",
+   "label": "P",
+   "pred": "P",
+   "answer": "white dragon",
+   "seconds": 0.5251965830102563,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-02 193624.png",
+   "split": "train",
+   "label": "P",
+   "pred": "P",
+   "answer": "white dragon",
+   "seconds": 0.5368777909898199,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-02 163837.png",
+   "split": "train",
+   "label": "P",
+   "pred": "P",
+   "answer": "white dragon",
+   "seconds": 0.4522324169811327,
+   "prompt_tokens": 196
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ww/Screenshot 2023-10-02 183501.png",
+   "split": "train",
+   "label": "W",
+   "pred": "?",
+   "answer": "西 wind",
+   "seconds": 0.4391757500125095,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ww/Screenshot 2023-10-02 183557.png",
+   "split": "train",
+   "label": "W",
+   "pred": "?",
+   "answer": "西 wind",
+   "seconds": 0.4949148340092506,
+   "prompt_tokens": 224
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ww/Screenshot 2023-10-02 183457.png",
+   "split": "train",
+   "label": "W",
+   "pred": "5sr",
+   "answer": "red five bamboo",
+   "seconds": 0.510170667024795,
+   "prompt_tokens": 217
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/ww/ww.png",
+   "split": "test",
+   "label": "W",
+   "pred": "W",
+   "answer": "west wind",
+   "seconds": 0.4398566670133732,
+   "prompt_tokens": 203
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ww/Screenshot 2023-10-02 172254.png",
+   "split": "train",
+   "label": "W",
+   "pred": "?",
+   "answer": "west",
+   "seconds": 0.49485899999854155,
+   "prompt_tokens": 217
+  }
+ ]
+}

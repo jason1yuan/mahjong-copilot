@@ -1,0 +1,159 @@
+qwen3-vl-2b: 1/1297 correct 1
+qwen3-vl-2b: 26/1297 correct 7
+qwen3-vl-2b: 51/1297 correct 13
+qwen3-vl-2b: 76/1297 correct 15
+qwen3-vl-2b: 101/1297 correct 15
+qwen3-vl-2b: 126/1297 correct 16
+qwen3-vl-2b: 151/1297 correct 20
+qwen3-vl-2b: 176/1297 correct 20
+qwen3-vl-2b: 201/1297 correct 20
+qwen3-vl-2b: 226/1297 correct 32
+qwen3-vl-2b: 251/1297 correct 53
+qwen3-vl-2b: 276/1297 correct 71
+qwen3-vl-2b: 301/1297 correct 72
+qwen3-vl-2b: 326/1297 correct 72
+qwen3-vl-2b: 351/1297 correct 83
+qwen3-vl-2b: 376/1297 correct 91
+qwen3-vl-2b: 401/1297 correct 93
+qwen3-vl-2b: 426/1297 correct 112
+qwen3-vl-2b: 451/1297 correct 133
+qwen3-vl-2b: 476/1297 correct 134
+qwen3-vl-2b: 501/1297 correct 135
+qwen3-vl-2b: 526/1297 correct 145
+qwen3-vl-2b: 551/1297 correct 158
+qwen3-vl-2b: 576/1297 correct 161
+qwen3-vl-2b: 601/1297 correct 161
+qwen3-vl-2b: 626/1297 correct 161
+qwen3-vl-2b: 651/1297 correct 162
+qwen3-vl-2b: 676/1297 correct 162
+qwen3-vl-2b: 701/1297 correct 162
+qwen3-vl-2b: 726/1297 correct 162
+qwen3-vl-2b: 751/1297 correct 167
+qwen3-vl-2b: 776/1297 correct 168
+qwen3-vl-2b: 801/1297 correct 168
+qwen3-vl-2b: 826/1297 correct 168
+qwen3-vl-2b: 851/1297 correct 168
+qwen3-vl-2b: 876/1297 correct 168
+qwen3-vl-2b: 901/1297 correct 168
+qwen3-vl-2b: 926/1297 correct 169
+qwen3-vl-2b: 951/1297 correct 170
+qwen3-vl-2b: 976/1297 correct 172
+qwen3-vl-2b: 1001/1297 correct 187
+qwen3-vl-2b: 1026/1297 correct 190
+qwen3-vl-2b: 1051/1297 correct 190
+qwen3-vl-2b: 1076/1297 correct 190
+qwen3-vl-2b: 1101/1297 correct 193
+qwen3-vl-2b: 1126/1297 correct 197
+qwen3-vl-2b: 1151/1297 correct 197
+qwen3-vl-2b: 1176/1297 correct 201
+qwen3-vl-2b: 1201/1297 correct 203
+qwen3-vl-2b: 1226/1297 correct 207
+qwen3-vl-2b: 1251/1297 correct 212
+qwen3-vl-2b: 1276/1297 correct 227
+{
+ "model": "qwen3-vl-2b",
+ "n": 1297,
+ "accuracy": 0.17810331534309945,
+ "accuracy_by_split": {
+  "test": 0.11059907834101383,
+  "train": 0.19166666666666668
+ },
+ "top_confusions": [
+  {
+   "label": "9s",
+   "pred": "5mr",
+   "count": 87
+  },
+  {
+   "label": "7s",
+   "pred": "5mr",
+   "count": 60
+  },
+  {
+   "label": "6p",
+   "pred": "5pr",
+   "count": 51
+  },
+  {
+   "label": "5s",
+   "pred": "1m",
+   "count": 43
+  },
+  {
+   "label": "6p",
+   "pred": "5mr",
+   "count": 41
+  },
+  {
+   "label": "2p",
+   "pred": "1m",
+   "count": 37
+  },
+  {
+   "label": "5m",
+   "pred": "1m",
+   "count": 34
+  },
+  {
+   "label": "9m",
+   "pred": "1m",
+   "count": 34
+  },
+  {
+   "label": "6s",
+   "pred": "1s",
+   "count": 33
+  },
+  {
+   "label": "8p",
+   "pred": "1m",
+   "count": 32
+  },
+  {
+   "label": "9p",
+   "pred": "5mr",
+   "count": 32
+  },
+  {
+   "label": "F",
+   "pred": "1s",
+   "count": 29
+  },
+  {
+   "label": "4p",
+   "pred": "1m",
+   "count": 28
+  },
+  {
+   "label": "2s",
+   "pred": "1s",
+   "count": 27
+  },
+  {
+   "label": "1p",
+   "pred": "1m",
+   "count": 24
+  }
+ ],
+ "first_request_s": 0.239729291992262,
+ "latency_s": {
+  "mean": 0.2358469483510199,
+  "median": 0.23858454200671986,
+  "p95": 0.26228704198729247
+ },
+ "load_s": 1.0249359580047894,
+ "peak_rss_mb": 6833.53125,
+ "files_gb": 1.552463168,
+ "repo": "Qwen/Qwen3-VL-2B-Instruct-GGUF",
+ "files": [
+  "Qwen3VL-2B-Instruct-Q4_K_M.gguf",
+  "mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf"
+ ],
+ "license": "Apache-2.0",
+ "min_long_side": 224,
+ "server_args": [],
+ "answers": "grammar",
+ "sample": null,
+ "per_label": null,
+ "seed": 0
+}

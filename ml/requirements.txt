@@ -1,0 +1,4 @@
+huggingface_hub>=1.0
+numpy>=2.0
+pillow>=11.0
+requests>=2.32

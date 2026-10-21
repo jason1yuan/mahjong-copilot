@@ -13,7 +13,7 @@
   - 不复制 Mortal、libriichi 或其他 GPL / AGPL 代码；
   - 新依赖只用 MIT / Apache-2.0 / BSD 这类许可，加之前说明理由；
   - 不使用从游戏里扒出来的牌图或其他素材。
-- 签名：不改 bundle identifier 和签名设置，否则用户的屏幕录制授权会失效。
+- 签名：不改 bundle identifier（`io.github.jason1yuan.mahjongcopilot`）和签名设置，否则用户的屏幕录制授权会失效。
 
 ## 目录与边界
 
@@ -42,12 +42,20 @@
 
 ## 命令
 
-工程还没搭（见 #6），搭好后在这里补全。计划如下：
+在仓库根目录（Cargo workspace：`app/src-tauri`、`core`、`perception`）：
 
-- `cargo fmt --all`、`cargo clippy --workspace -- -D warnings`、`cargo test --workspace`
-- `npm run tauri dev` 启动开发版，`npm run tauri build` 打包
+- `cargo fmt --all`
+- `cargo clippy --workspace --all-targets -- -D warnings`
+- `cargo test --workspace`
 
-提交前这三条 cargo 命令都要通过。
+在 `app/` 目录：
+
+- `npm install`（第一次）
+- `npm run tauri dev`：启动开发版
+- `npm run tauri build`：打包出 `.app` 和 DMG，产物在根目录 `target/release/bundle/`
+- `npx tsc --noEmit`：TypeScript 类型检查
+
+提交前上面三条 cargo 命令和类型检查都要通过。
 
 ## 工作流程
 

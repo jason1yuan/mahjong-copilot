@@ -1,0 +1,16 @@
+[package]
+name = "mahjong-core"
+description = "Game state and decision core, independent of platform and UI"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

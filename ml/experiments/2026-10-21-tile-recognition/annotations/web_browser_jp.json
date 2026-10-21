@@ -1,0 +1,151 @@
+{
+ "image": "recordings/web/Pasted 2026-10-21 at 12.39.17 PM.png",
+ "id": "web_browser_jp",
+ "note": "Hand labels pre-filled by pjura/mahjong_soul_vision and checked by eye; red fives fixed by hand.",
+ "hand": [
+  {
+   "tile": "5m",
+   "box": [
+    226,
+    796,
+    293,
+    898
+   ],
+   "prelabel": "5m",
+   "prelabel_confidence": 0.968
+  },
+  {
+   "tile": "9m",
+   "box": [
+    293,
+    796,
+    360,
+    898
+   ],
+   "prelabel": "9m",
+   "prelabel_confidence": 0.969
+  },
+  {
+   "tile": "9m",
+   "box": [
+    360,
+    796,
+    427,
+    898
+   ],
+   "prelabel": "9m",
+   "prelabel_confidence": 0.969
+  },
+  {
+   "tile": "1p",
+   "box": [
+    427,
+    796,
+    494,
+    898
+   ],
+   "prelabel": "1p",
+   "prelabel_confidence": 0.961
+  },
+  {
+   "tile": "1p",
+   "box": [
+    494,
+    796,
+    561,
+    898
+   ],
+   "prelabel": "1p",
+   "prelabel_confidence": 0.961
+  },
+  {
+   "tile": "9p",
+   "box": [
+    561,
+    796,
+    628,
+    898
+   ],
+   "prelabel": "9p",
+   "prelabel_confidence": 0.958
+  },
+  {
+   "tile": "9p",
+   "box": [
+    628,
+    796,
+    694,
+    898
+   ],
+   "prelabel": "9p",
+   "prelabel_confidence": 0.962
+  },
+  {
+   "tile": "9p",
+   "box": [
+    694,
+    796,
+    761,
+    898
+   ],
+   "prelabel": "9p",
+   "prelabel_confidence": 0.963
+  },
+  {
+   "tile": "2s",
+   "box": [
+    761,
+    796,
+    828,
+    898
+   ],
+   "prelabel": "2s",
+   "prelabel_confidence": 0.974
+  },
+  {
+   "tile": "2s",
+   "box": [
+    828,
+    796,
+    895,
+    898
+   ],
+   "prelabel": "2s",
+   "prelabel_confidence": 0.974
+  },
+  {
+   "tile": "2s",
+   "box": [
+    895,
+    796,
+    962,
+    898
+   ],
+   "prelabel": "2s",
+   "prelabel_confidence": 0.974
+  },
+  {
+   "tile": "6s",
+   "box": [
+    962,
+    796,
+    1029,
+    898
+   ],
+   "prelabel": "6s",
+   "prelabel_confidence": 0.97
+  },
+  {
+   "tile": "6s",
+   "box": [
+    1029,
+    796,
+    1096,
+    898
+   ],
+   "prelabel": "6s",
+   "prelabel_confidence": 0.97
+  }
+ ],
+ "checked_by_eye": true
+}

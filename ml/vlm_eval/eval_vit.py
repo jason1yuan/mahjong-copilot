@@ -41,12 +41,17 @@ def dataset_items(cfg: dict[str, Any], split: str) -> list[Item]:
 
 
 def simulated_items(directory: pathlib.Path) -> list[Item]:
+    """Hand tiles of every annotation in a folder: simulate.py output (image next to the
+    JSON) or labeled screenshots (image path from the repository root in "image")."""
     items = []
     for truth_path in sorted(directory.glob("*.json")):
         truth = json.loads(truth_path.read_text(encoding="utf-8"))
-        image = Image.open(truth_path.with_suffix(".png")).convert("RGB")
+        if not isinstance(truth, dict) or not isinstance(truth.get("hand"), list):
+            continue  # not an annotation (e.g. the spec file)
+        image_path = pathlib.Path(truth["image"]) if "image" in truth else truth_path.with_suffix(".png")
+        image = Image.open(image_path).convert("RGB")
         for k, tile in enumerate(truth["hand"]):
-            items.append((image.crop(tuple(tile["box"])), tile["tile"], "simulated", f"{truth_path.stem}#{k}"))
+            items.append((image.crop(tuple(tile["box"])), tile["tile"], directory.name, f"{truth_path.stem}#{k}"))
     return items
 
 
@@ -78,7 +83,7 @@ def main() -> None:
     id2label = model.config.id2label
 
     items = simulated_items(args.simulated) if args.simulated else dataset_items(cfg, args.split)
-    name = "simulated" if args.simulated else args.split
+    name = args.simulated.name if args.simulated else args.split
     rows: list[dict[str, Any]] = []
     with torch.inference_mode():
         for image, label, split, source in items:

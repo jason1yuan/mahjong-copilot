@@ -1,0 +1,162 @@
+{
+ "image": "recordings/web/Pasted 2026-10-21 at 12.40.49 PM.png",
+ "id": "web_tc_replay",
+ "note": "Hand labels pre-filled by pjura/mahjong_soul_vision and checked by eye; red fives fixed by hand.",
+ "hand": [
+  {
+   "tile": "1m",
+   "box": [
+    266,
+    897,
+    355,
+    1017
+   ],
+   "prelabel": "1m",
+   "prelabel_confidence": 0.962
+  },
+  {
+   "tile": "4m",
+   "box": [
+    355,
+    897,
+    444,
+    1017
+   ],
+   "prelabel": "4m",
+   "prelabel_confidence": 0.964
+  },
+  {
+   "tile": "8m",
+   "box": [
+    444,
+    897,
+    533,
+    1017
+   ],
+   "prelabel": "8m",
+   "prelabel_confidence": 0.971
+  },
+  {
+   "tile": "8m",
+   "box": [
+    533,
+    897,
+    622,
+    1017
+   ],
+   "prelabel": "8m",
+   "prelabel_confidence": 0.971
+  },
+  {
+   "tile": "1p",
+   "box": [
+    622,
+    897,
+    711,
+    1017
+   ],
+   "prelabel": "1p",
+   "prelabel_confidence": 0.958
+  },
+  {
+   "tile": "6p",
+   "box": [
+    711,
+    897,
+    800,
+    1017
+   ],
+   "prelabel": "6p",
+   "prelabel_confidence": 0.978
+  },
+  {
+   "tile": "6p",
+   "box": [
+    800,
+    897,
+    890,
+    1017
+   ],
+   "prelabel": "6p",
+   "prelabel_confidence": 0.978
+  },
+  {
+   "tile": "9p",
+   "box": [
+    890,
+    897,
+    979,
+    1017
+   ],
+   "prelabel": "9p",
+   "prelabel_confidence": 0.961
+  },
+  {
+   "tile": "4s",
+   "box": [
+    979,
+    897,
+    1068,
+    1017
+   ],
+   "prelabel": "4s",
+   "prelabel_confidence": 0.963
+  },
+  {
+   "tile": "5s",
+   "box": [
+    1068,
+    897,
+    1157,
+    1017
+   ],
+   "prelabel": "5s",
+   "prelabel_confidence": 0.976
+  },
+  {
+   "tile": "5s",
+   "box": [
+    1157,
+    897,
+    1246,
+    1017
+   ],
+   "prelabel": "5s",
+   "prelabel_confidence": 0.976
+  },
+  {
+   "tile": "S",
+   "box": [
+    1246,
+    897,
+    1335,
+    1017
+   ],
+   "prelabel": "S",
+   "prelabel_confidence": 0.955
+  },
+  {
+   "tile": "F",
+   "box": [
+    1335,
+    897,
+    1424,
+    1017
+   ],
+   "prelabel": "F",
+   "prelabel_confidence": 0.968
+  },
+  {
+   "tile": "C",
+   "box": [
+    1455,
+    897,
+    1541,
+    1017
+   ],
+   "prelabel": "C",
+   "prelabel_confidence": 0.957
+  }
+ ],
+ "checked_by_eye": true
+}

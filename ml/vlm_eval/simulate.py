@@ -1,13 +1,14 @@
-"""Generate simulated screenshots from one labeled Mahjong Soul screenshot (#24).
+"""Generate simulated screenshots from labeled Mahjong Soul screenshots (#24).
 
 Each variant applies a random mix of window size, browser borders, colour shift,
 JPEG compression, blur, a hovered (raised) tile and a reshuffled hand, and is
 saved with ground truth: the mjai label and box of every hand tile in the new
-image. This only tests robustness to those changes; it cannot add tiles or
-detail that the source screenshot does not contain.
+image. Variants only perturb the hand; the rest of the screen stays as in the
+source, and no tiles that the sources lack can appear.
 
-Run from the repository root:
-    ml/.venv/bin/python -I ml/vlm_eval/simulate.py recordings/source/majsoul_01.json -n 40
+Annotations are JSON files with "image" (path from the repository root), "id"
+and "hand": a list of {"tile", "box"}. Run from the repository root:
+    ml/.venv/bin/python -I ml/vlm_eval/simulate.py recordings/source/*.json -n 20 --out recordings/simulated_multi
 """
 
 from __future__ import annotations
@@ -24,14 +25,8 @@ from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 Box = tuple[int, int, int, int]
 
 
-def tile_boxes(box: list[int], count: int) -> list[Box]:
-    x0, y0, x1, y1 = box
-    width = (x1 - x0) / count
-    return [(round(x0 + i * width), y0, round(x0 + (i + 1) * width), y1) for i in range(count)]
-
-
 def reshuffle(image: Image.Image, boxes: list[Box], labels: list[str], rng: random.Random) -> list[str]:
-    """Pastes the hand tiles back in a new order, keeping each slot's size."""
+    """Pastes the hand tiles back in a new order, each resized to the slot it lands in."""
     crops = [image.crop(b) for b in boxes]
     order = list(range(len(boxes)))
     rng.shuffle(order)
@@ -51,8 +46,8 @@ def hover(image: Image.Image, boxes: list[Box], index: int, lift: int) -> list[B
 
 def make_variant(source: Image.Image, ann: dict[str, Any], rng: random.Random) -> tuple[Image.Image, dict[str, Any]]:
     image = source.copy()
-    labels = list(ann["hand"]["tiles"])
-    boxes = tile_boxes(ann["hand"]["box"], len(labels))
+    labels = [t["tile"] for t in ann["hand"]]
+    boxes: list[Box] = [tuple(t["box"]) for t in ann["hand"]]  # type: ignore[misc]
     ops: list[str] = []
 
     if rng.random() < 0.5:
@@ -94,7 +89,7 @@ def make_variant(source: Image.Image, ann: dict[str, Any], rng: random.Random) -
         ops.append(f"jpeg:{quality}")
 
     truth = {
-        "source": ann["image"],
+        "source": ann["id"],
         "size": list(image.size),
         "ops": ops,
         "hand": [{"tile": t, "box": list(b)} for t, b in zip(labels, boxes)],
@@ -104,22 +99,27 @@ def make_variant(source: Image.Image, ann: dict[str, Any], rng: random.Random) -
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("annotation", type=pathlib.Path, help="JSON annotation next to the source image")
-    parser.add_argument("-n", type=int, default=40, help="number of variants")
+    parser.add_argument("annotations", type=pathlib.Path, nargs="+", help="annotation JSON files")
+    parser.add_argument("-n", type=int, default=20, help="variants per source")
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--out", type=pathlib.Path, default=pathlib.Path("recordings/simulated"))
+    parser.add_argument("--out", type=pathlib.Path, default=pathlib.Path("recordings/simulated_multi"))
     args = parser.parse_args()
 
-    ann = json.loads(args.annotation.read_text(encoding="utf-8"))
-    source = Image.open(args.annotation.parent / ann["image"]).convert("RGB")
-    rng = random.Random(args.seed)
     args.out.mkdir(parents=True, exist_ok=True)
-    stem = pathlib.Path(ann["image"]).stem
-    for i in range(args.n):
-        image, truth = make_variant(source, ann, rng)
-        image.save(args.out / f"{stem}_{i:03d}.png")
-        (args.out / f"{stem}_{i:03d}.json").write_text(json.dumps(truth, ensure_ascii=False, indent=1), encoding="utf-8")
-    print(f"wrote {args.n} variants to {args.out}")
+    total = 0
+    for path in args.annotations:
+        ann = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(ann, dict) or not isinstance(ann.get("hand"), list):
+            continue  # not an annotation (e.g. the spec file)
+        source = Image.open(ann["image"]).convert("RGB")
+        # Seeded per source so adding a source does not change the others.
+        rng = random.Random(f"{args.seed}:{ann['id']}")
+        for i in range(args.n):
+            image, truth = make_variant(source, ann, rng)
+            image.save(args.out / f"{ann['id']}_{i:03d}.png")
+            (args.out / f"{ann['id']}_{i:03d}.json").write_text(json.dumps(truth, ensure_ascii=False, indent=1), encoding="utf-8")
+            total += 1
+    print(f"wrote {total} variants to {args.out}")
 
 
 if __name__ == "__main__":

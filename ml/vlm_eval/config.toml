@@ -62,6 +62,27 @@ model = "gpt-6-luna"
 usd_per_million_input_tokens = 0.10
 timeout_s = 60
 
+# Request variants. upscale: long side in pixels; detail: input_image detail
+# ("high" is undocumented for this endpoint and may be rejected); legend: attach a
+# labeled sheet of all tiles from the dataset's clean crops; two_step: ask suit,
+# number, honor and red-five as separate questions instead of one 37-way choice.
+[openai_decisions.variants.base]
+
+[openai_decisions.variants.up512]
+upscale = 512
+
+[openai_decisions.variants.up512-high]
+upscale = 512
+detail = "high"
+
+[openai_decisions.variants.up512-legend]
+upscale = 512
+legend = true
+
+[openai_decisions.variants.up512-twostep]
+upscale = 512
+two_step = true
+
 # Ready-made tile classifier used as the baseline (not a VLM; we do not train it).
 # The dataset card links pjura/mahjong_vision, but that repo holds a discard
 # model; the image classifier is pjura/mahjong_soul_vision.

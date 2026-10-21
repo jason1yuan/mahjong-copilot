@@ -59,6 +59,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("run_id", help="folder name under ml/experiments")
     parser.add_argument("--inputs", nargs="*", default=["recordings/source", "recordings/simulated"])
+    parser.add_argument(
+        "--annotations",
+        type=pathlib.Path,
+        default=pathlib.Path("recordings/source"),
+        help="folder of hand annotations (labels and boxes only) to copy into the archive",
+    )
     args = parser.parse_args()
 
     cfg = tomllib.loads(CONFIG_PATH.read_text(encoding="utf-8"))
@@ -74,6 +80,10 @@ def main() -> None:
     for path in sorted(results_dir.glob("*.log")):
         shutil.copy2(path, out / "logs" / path.name)
     shutil.copy2(CONFIG_PATH, out / "config.toml")
+    # Annotations are our own labels and boxes, not game art, so they are kept with the results.
+    (out / "annotations").mkdir(exist_ok=True)
+    for path in sorted(args.annotations.glob("*.json")):
+        shutil.copy2(path, out / "annotations" / path.name)
 
     models = {
         name: {**spec, "files_on_hub": hub_files("models", spec["repo"], spec["revision"], [spec["model"], spec["mmproj"]])}

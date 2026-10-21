@@ -26,3 +26,135 @@ smolvlm2-2.2b: 576/1297 correct 10
 smolvlm2-2.2b: 601/1297 correct 17
 smolvlm2-2.2b: 626/1297 correct 18
 smolvlm2-2.2b: 651/1297 correct 41
+smolvlm2-2.2b: 676/1297 correct 56
+smolvlm2-2.2b: 701/1297 correct 56
+smolvlm2-2.2b: 726/1297 correct 56
+smolvlm2-2.2b: 751/1297 correct 56
+smolvlm2-2.2b: 776/1297 correct 56
+smolvlm2-2.2b: 801/1297 correct 56
+smolvlm2-2.2b: 826/1297 correct 56
+smolvlm2-2.2b: 851/1297 correct 56
+smolvlm2-2.2b: 876/1297 correct 56
+smolvlm2-2.2b: 901/1297 correct 56
+smolvlm2-2.2b: 926/1297 correct 56
+smolvlm2-2.2b: 951/1297 correct 57
+smolvlm2-2.2b: 976/1297 correct 57
+smolvlm2-2.2b: 1001/1297 correct 57
+smolvlm2-2.2b: 1026/1297 correct 57
+smolvlm2-2.2b: 1051/1297 correct 58
+smolvlm2-2.2b: 1076/1297 correct 58
+smolvlm2-2.2b: 1101/1297 correct 58
+smolvlm2-2.2b: 1126/1297 correct 58
+smolvlm2-2.2b: 1151/1297 correct 58
+smolvlm2-2.2b: 1176/1297 correct 58
+smolvlm2-2.2b: 1201/1297 correct 58
+smolvlm2-2.2b: 1226/1297 correct 58
+smolvlm2-2.2b: 1251/1297 correct 58
+smolvlm2-2.2b: 1276/1297 correct 58
+{
+ "model": "smolvlm2-2.2b",
+ "n": 1297,
+ "accuracy": 0.04471858134155744,
+ "accuracy_by_split": {
+  "test": 0.03225806451612903,
+  "train": 0.04722222222222222
+ },
+ "top_confusions": [
+  {
+   "label": "6p",
+   "pred": "5m",
+   "count": 91
+  },
+  {
+   "label": "9s",
+   "pred": "5m",
+   "count": 74
+  },
+  {
+   "label": "5s",
+   "pred": "5m",
+   "count": 59
+  },
+  {
+   "label": "7s",
+   "pred": "5m",
+   "count": 48
+  },
+  {
+   "label": "9m",
+   "pred": "5m",
+   "count": 47
+  },
+  {
+   "label": "8m",
+   "pred": "5m",
+   "count": 44
+  },
+  {
+   "label": "9p",
+   "pred": "5m",
+   "count": 38
+  },
+  {
+   "label": "3p",
+   "pred": "5m",
+   "count": 37
+  },
+  {
+   "label": "F",
+   "pred": "5m",
+   "count": 34
+  },
+  {
+   "label": "6s",
+   "pred": "5m",
+   "count": 34
+  },
+  {
+   "label": "7p",
+   "pred": "5m",
+   "count": 33
+  },
+  {
+   "label": "2s",
+   "pred": "5s",
+   "count": 32
+  },
+  {
+   "label": "4m",
+   "pred": "5m",
+   "count": 31
+  },
+  {
+   "label": "3m",
+   "pred": "5m",
+   "count": 29
+  },
+  {
+   "label": "1m",
+   "pred": "5m",
+   "count": 28
+  }
+ ],
+ "first_request_s": 0.8094744579866529,
+ "latency_s": {
+  "mean": 0.6999226927228274,
+  "median": 0.6990632289962377,
+  "p95": 0.7414330409956165
+ },
+ "load_s": 1.5309091249946505,
+ "peak_rss_mb": 6040.734375,
+ "files_gb": 1.705125856,
+ "repo": "ggml-org/SmolVLM2-2.2B-Instruct-GGUF",
+ "files": [
+  "SmolVLM2-2.2B-Instruct-Q4_K_M.gguf",
+  "mmproj-SmolVLM2-2.2B-Instruct-Q8_0.gguf"
+ ],
+ "license": "Apache-2.0",
+ "min_long_side": 224,
+ "server_args": [],
+ "answers": "grammar",
+ "sample": null,
+ "per_label": null,
+ "seed": 0
+}

@@ -120,7 +120,6 @@ def main() -> None:
             "server_args": [f"vit on {args.device}"],
             "answers": "classifier",
             "split": name,
-            "kind_accuracy": sum(r["pred"].removesuffix("r") == r["label"].removesuffix("r") for r in rows) / len(rows),
         },
     )
     out = pathlib.Path(cfg["results_dir"]) / f"vit-{name}.json"

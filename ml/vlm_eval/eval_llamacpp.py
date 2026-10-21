@@ -104,13 +104,24 @@ class Sample:
     label: str
 
 
+def red_fives(cfg: dict[str, Any]) -> set[str]:
+    """Dataset images that show a red five although the dataset files them as plain fives."""
+    return set(json.loads(pathlib.Path(cfg["red_fives"]).read_text(encoding="utf-8"))["red"])
+
+
+def dataset_label(path: pathlib.PurePath, red: set[str]) -> str:
+    label = DATASET_TO_MJAI[path.parent.name]
+    return label + "r" if str(path) in red else label
+
+
 def load_samples(cfg: dict[str, Any]) -> list[Sample]:
     root = pathlib.Path(cfg["dataset_dir"])
+    red = red_fives(cfg)
     samples = []
     for split in cfg["splits"]:
         for path in sorted((root / split).glob("*/*")):
             if path.suffix.lower() in {".png", ".jpg", ".jpeg"} and "_aug_" not in path.name:
-                samples.append(Sample(path, split, DATASET_TO_MJAI[path.parent.name]))
+                samples.append(Sample(path, split, dataset_label(path, red)))
     return samples
 
 
@@ -205,6 +216,28 @@ def percentile(values: list[float], q: float) -> float:
     return ordered[min(len(ordered) - 1, round(q * (len(ordered) - 1)))]
 
 
+def calibration(rows: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """How well stated confidences match accuracy: the expected calibration error over
+    ten equal-width bins, and how often answers at or above a confidence are right.
+    Mean confidence below accuracy means the model is underconfident."""
+    scored = [(r["confidence"], r["pred"] == r["label"]) for r in rows if isinstance(r.get("confidence"), (int, float))]
+    if not scored:
+        return None
+    bins: dict[int, list[tuple[float, bool]]] = collections.defaultdict(list)
+    for confidence, right in scored:
+        bins[min(int(confidence * 10), 9)].append((confidence, right))
+    gaps = (abs(statistics.fmean(c for c, _ in b) - statistics.fmean(r for _, r in b)) * len(b) for b in bins.values())
+    return {
+        "n": len(scored),
+        "accuracy": statistics.fmean(r for _, r in scored),
+        "mean_confidence": statistics.fmean(c for c, _ in scored),
+        "ece": sum(gaps) / len(scored),
+        "at_least": {
+            str(t): {"n": sum(c >= t for c, _ in scored), "right": sum(c >= t and r for c, r in scored)} for t in (0.5, 0.7)
+        },
+    }
+
+
 def summarize(name: str, rows: list[dict[str, Any]], extra: dict[str, Any]) -> dict[str, Any]:
     def acc(subset: list[dict[str, Any]]) -> float | None:
         return sum(r["pred"] == r["label"] for r in subset) / len(subset) if subset else None
@@ -218,6 +251,9 @@ def summarize(name: str, rows: list[dict[str, Any]], extra: dict[str, Any]) -> d
         "model": name,
         "n": len(rows),
         "accuracy": acc(rows),
+        # Right tile kind, ignoring whether a five is red.
+        "kind_accuracy": sum(r["pred"].removesuffix("r") == r["label"].removesuffix("r") for r in rows) / len(rows),
+        "calibration": calibration(rows),
         "accuracy_by_split": {s: acc([r for r in rows if r["split"] == s]) for s in sorted({r["split"] for r in rows})},
         "accuracy_by_label": per_label,
         "top_confusions": [

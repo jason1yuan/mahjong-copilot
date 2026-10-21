@@ -25,7 +25,6 @@ import json
 import os
 import pathlib
 import random
-import statistics
 import sys
 import time
 import tomllib
@@ -270,7 +269,6 @@ def evaluate(cfg: dict[str, Any], api: dict[str, Any], key: str, items: list[Ite
                 print(f"{variant_name}: {i + 1}/{len(items)} correct {done}", flush=True)
     input_tokens = sum(int(r["prompt_tokens"] or 0) for r in rows)
 
-    confidences = [r["confidence"] for r in rows if isinstance(r["confidence"], (int, float))]
     summary = summarize(
         "openai-decisions",
         rows,
@@ -285,13 +283,11 @@ def evaluate(cfg: dict[str, Any], api: dict[str, Any], key: str, items: list[Ite
             "variant": {"name": variant_name, **variant},
             "input_tokens": input_tokens,
             "cost_usd": input_tokens / 1e6 * api["usd_per_million_input_tokens"],
-            "mean_confidence": statistics.fmean(confidences) if confidences else None,
-            "kind_accuracy": sum(r["pred"].removesuffix("r") == r["label"].removesuffix("r") for r in rows) / len(rows),
         },
     )
     out.write_text(json.dumps({"summary": summary, "rows": rows}, ensure_ascii=False, indent=1), encoding="utf-8")
     partial.unlink()
-    keep = ("n", "accuracy", "kind_accuracy", "latency_s", "input_tokens", "cost_usd", "mean_confidence")
+    keep = ("n", "accuracy", "kind_accuracy", "latency_s", "input_tokens", "cost_usd", "calibration")
     print(json.dumps({"variant": variant_name, **{k: summary[k] for k in keep}}, ensure_ascii=False, indent=1))
 
 

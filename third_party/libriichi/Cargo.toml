@@ -1,0 +1,25 @@
+# Modified by mahjong-copilot on 2026-10-21: trimmed from libriichi/Cargo.toml in
+# Equim-chan/Mortal at commit 0cff2b52982be5b1163aa9a62fb01f03ce91e0d2. Keeps only
+# the dependencies of the algo, tile and hand modules; no pyo3, no Python build.
+[package]
+name = "libriichi-algo"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-or-later"
+publish = false
+description = "Shanten, agari, scoring and single-player calculators from Mortal's libriichi"
+
+[lib]
+name = "riichi"
+
+[dependencies]
+ahash = "0.8"
+anyhow = "1"
+boomphf = "0.6"
+byteorder = "1"
+flate2 = "1"
+serde = { version = "1", features = ["derive"] }
+tinyvec = { version = "1", features = ["alloc", "serde", "rustc_1_57"] }
+
+[features]
+sp_reproduce_cpp_ver = []

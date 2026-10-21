@@ -9,7 +9,7 @@
 - 延迟：从画面稳定到建议显示 P95 < 300ms。
   - 采集 → 识别 → 决策这条热路径上不做阻塞 IO，不按帧分配大块内存。
   - 画面不进网页视图，界面只接收建议结果。
-- 许可：为了用上已训练好的模型，我们接受它附带的许可义务。例如 Mortal 是 AGPL-3.0：一旦引入它的代码，整个项目就改用 AGPL-3.0 开源，并在根目录加上 AGPL-3.0 的 `LICENSE`。
+- 许可：项目以 AGPL-3.0-or-later 开源（见 `LICENSE`），因为复用了 Mortal 的 libriichi。为了用上已训练好的模型，我们接受它附带的许可义务。
   - 引入任何第三方代码、模型或素材前，先确认许可允许使用并随 app 分发。许可不明的（比如来源不清的模型权重）不要用，先问；
   - 引入后在 `THIRD_PARTY_NOTICES.md` 里记下来源、版本和许可，并保留原有的版权和许可声明；
   - 依赖必须和 AGPL-3.0 兼容（MIT、Apache-2.0、BSD、MPL-2.0、GPL-3.0 都行），不用"仅限非商业"这类附加限制的许可；
@@ -20,7 +20,8 @@
 
 | 目录 | 职责 | 不能做 |
 |---|---|---|
-| `core/` | 状态引擎、规则、决策（Rust） | 依赖任何平台 API、界面或 perception |
+| `core/` | 状态引擎、规则、决策（Rust）。向听、和牌、算点调用 `third_party/libriichi` | 依赖任何平台 API、界面或 perception |
+| `third_party/` | 原样引入的上游代码，目前是 libriichi 的算法部分。不在 Cargo workspace 内，不受我们的 clippy 规则约束 | 修改或格式化；确实要改时，先按它自己的 README 记录改动 |
 | `perception/` | 采集、ONNX 推理、识别（Rust） | 包含决策逻辑；平台代码必须放在 `#[cfg(target_os = ...)]` 隔离的平台模块里 |
 | `app/src-tauri/` | Tauri 外壳：窗口、快捷键、串联各模块 | 写业务逻辑，它只负责组装 |
 | `app/src/` | React + TypeScript 界面 | 计算牌效或做任何决策，只渲染收到的结果 |
@@ -64,6 +65,10 @@
 - `npx tsc --noEmit`：TypeScript 类型检查
 
 提交前上面三条 cargo 命令和类型检查都要通过。
+
+`third_party/libriichi` 的上游测试不在 workspace 里，升级或改动它之后，在根目录单独跑：
+
+- `CARGO_TARGET_DIR=target cargo test --manifest-path third_party/libriichi/Cargo.toml`
 
 ## 工作流程
 

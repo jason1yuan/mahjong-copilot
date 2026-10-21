@@ -1,13 +1,9 @@
 # macOS
 .DS_Store
 
-# Xcode / Swift
-build/
-DerivedData/
-xcuserdata/
-*.xcuserstate
-.build/
-.swiftpm/
+# 网页前端
+node_modules/
+dist/
 
 # Rust
 target/

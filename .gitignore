@@ -8,6 +8,9 @@ dist/
 # Rust
 target/
 
+# Tauri 生成的权限 schema
+app/src-tauri/gen/
+
 # Python
 __pycache__/
 *.pyc

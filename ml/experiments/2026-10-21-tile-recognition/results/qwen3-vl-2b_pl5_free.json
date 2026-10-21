@@ -3,6 +3,8 @@
   "model": "qwen3-vl-2b",
   "n": 170,
   "accuracy": 0.011764705882352941,
+  "kind_accuracy": 0.011764705882352941,
+  "calibration": null,
   "accuracy_by_split": {
    "test": 0.0,
    "train": 0.013245033112582781
@@ -21,8 +23,11 @@
    "4p": 0.0,
    "4s": 0.0,
    "5m": 0.0,
+   "5mr": 0.0,
    "5p": 0.0,
+   "5pr": 0.0,
    "5s": 0.0,
+   "5sr": 0.0,
    "6m": 0.0,
    "6p": 0.0,
    "6s": 0.0,
@@ -100,22 +105,22 @@
     "count": 5
    },
    {
-    "label": "5s",
-    "pred": "?",
-    "count": 5
-   },
-   {
-    "label": "5m",
-    "pred": "?",
-    "count": 5
-   },
-   {
-    "label": "5p",
-    "pred": "?",
-    "count": 5
-   },
-   {
     "label": "6s",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "6m",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "6p",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "7s",
     "pred": "?",
     "count": 5
    }
@@ -686,7 +691,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210216.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "?",
    "answer": "1. The tile in the image is a Japanese riichi mahjong tile.\n2. It has a red character,",
    "seconds": 0.4036299579893239,
@@ -695,7 +700,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-21 200119.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "?",
    "answer": "1. bamboo: sticks; count them; the one of bamboo shows a bird\n- bamboo: sticks; count them",
    "seconds": 0.43212129099993035,
@@ -704,7 +709,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210213.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "?",
    "answer": "1. The tile in the image is a Japanese riichi mahjong tile.\n2. It is a red tile with",
    "seconds": 0.42028091597603634,
@@ -713,7 +718,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224820.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "?",
    "answer": "1. The tile in the image is a Japanese riichi mahjong tile.\n2. It has a red character in",
    "seconds": 0.3994961659773253,
@@ -731,7 +736,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103431.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "?",
    "answer": "13",
    "seconds": 0.23235870801727287,
@@ -740,7 +745,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103411.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "?",
    "answer": "1. The tile in the image is a Japanese riichi mahjong tile from the game Mahjong Soul.\n2.",
    "seconds": 0.4181256659794599,
@@ -794,7 +799,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-21 195616.png",
    "split": "train",
-   "label": "5p",
+   "label": "5pr",
    "pred": "?",
    "answer": "red five",
    "seconds": 0.2784694999863859,

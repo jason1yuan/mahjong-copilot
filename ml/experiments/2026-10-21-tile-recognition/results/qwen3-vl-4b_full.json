@@ -2,10 +2,12 @@
  "summary": {
   "model": "qwen3-vl-4b",
   "n": 1297,
-  "accuracy": 0.3407864302235929,
+  "accuracy": 0.38164996144949886,
+  "kind_accuracy": 0.43407864302235927,
+  "calibration": null,
   "accuracy_by_split": {
-   "test": 0.2073732718894009,
-   "train": 0.3675925925925926
+   "test": 0.2488479262672811,
+   "train": 0.4083333333333333
   },
   "accuracy_by_label": {
    "1m": 0.7142857142857143,
@@ -20,9 +22,12 @@
    "4m": 0.7419354838709677,
    "4p": 0.42857142857142855,
    "4s": 0.41935483870967744,
-   "5m": 0.13513513513513514,
+   "5m": 0.20833333333333334,
+   "5mr": 0.6923076923076923,
    "5p": 0.0,
+   "5pr": 1.0,
    "5s": 0.0,
+   "5sr": 0.8780487804878049,
    "6m": 0.625,
    "6p": 0.0196078431372549,
    "6s": 0.5531914893617021,
@@ -55,11 +60,6 @@
     "count": 84
    },
    {
-    "label": "5s",
-    "pred": "5sr",
-    "count": 70
-   },
-   {
     "label": "7s",
     "pred": "5sr",
     "count": 45
@@ -80,14 +80,14 @@
     "count": 38
    },
    {
+    "label": "5s",
+    "pred": "5sr",
+    "count": 34
+   },
+   {
     "label": "2p",
     "pred": "5pr",
     "count": 33
-   },
-   {
-    "label": "5p",
-    "pred": "5pr",
-    "count": 29
    },
    {
     "label": "1p",
@@ -95,14 +95,14 @@
     "count": 22
    },
    {
-    "label": "5m",
+    "label": "7s",
     "pred": "5mr",
     "count": 22
    },
    {
-    "label": "7s",
-    "pred": "5mr",
-    "count": 22
+    "label": "5p",
+    "pred": "5pr",
+    "count": 21
    },
    {
     "label": "7s",
@@ -118,6 +118,11 @@
     "label": "8p",
     "pred": "5pr",
     "count": 18
+   },
+   {
+    "label": "9m",
+    "pred": "5mr",
+    "count": 17
    }
   ],
   "first_request_s": 0.5025810829829425,
@@ -533,7 +538,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/test/5b/Screenshot 2023-10-02 224838.png",
    "split": "test",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.4892172079999,
@@ -542,7 +547,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/test/5b/Screenshot 2023-10-02 224842.png",
    "split": "test",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.4896264160051942,
@@ -551,7 +556,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/test/5b/Screenshot 2023-10-16 200714.png",
    "split": "test",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.4369985829980578,
@@ -560,7 +565,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/test/5b/Screenshot 2023-10-17 210223.png",
    "split": "test",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.43800083399401046,
@@ -569,7 +574,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/test/5b/Screenshot 2023-10-17 210227.png",
    "split": "test",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.43764654197730124,
@@ -578,7 +583,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/test/5b/Screenshot 2023-10-17 210239.png",
    "split": "test",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.4838279999967199,
@@ -587,7 +592,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/test/5b/Screenshot 2023-10-17 210246.png",
    "split": "test",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.4402993329858873,
@@ -596,7 +601,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/test/5b/Screenshot 2023-10-17 210308.png",
    "split": "test",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.43698679201770574,
@@ -605,7 +610,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/test/5b/Screenshot 2023-10-17 210341.png",
    "split": "test",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5pr",
    "answer": "red five circles",
    "seconds": 0.482684667018475,
@@ -623,7 +628,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/test/5n/Screenshot 2023-10-17 103424.png",
    "split": "test",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5mr",
    "answer": "red five characters",
    "seconds": 0.49312274999101646,
@@ -632,7 +637,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/test/5n/Screenshot 2023-10-17 103427.png",
    "split": "test",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.4424524169880897,
@@ -5249,7 +5254,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 170848.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.5409435420006048,
@@ -5375,7 +5380,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 193438.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6156787080108188,
@@ -5384,7 +5389,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 193443.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6801012919750065,
@@ -5393,7 +5398,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 193446.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5pr",
    "answer": "red five circles",
    "seconds": 0.646985917002894,
@@ -5402,7 +5407,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 193454.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6489091670082416,
@@ -5528,7 +5533,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224811.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6061994580086321,
@@ -5537,7 +5542,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224815.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.842929083009949,
@@ -5546,7 +5551,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224820.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6951665839878842,
@@ -5555,7 +5560,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224825.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6829847089829855,
@@ -5564,7 +5569,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224829.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6988979589950759,
@@ -5573,7 +5578,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224832.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6893157080048695,
@@ -5582,7 +5587,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224835.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6607915420026984,
@@ -5591,7 +5596,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224858.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5mr",
    "answer": "red five characters",
    "seconds": 0.7668500830186531,
@@ -5600,7 +5605,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224903.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.7673445410036948,
@@ -5609,7 +5614,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224917.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.8114404170191847,
@@ -5618,7 +5623,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224923.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.8153265409928281,
@@ -5627,7 +5632,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224928.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.7440560419927351,
@@ -5636,7 +5641,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210155.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6885172920010518,
@@ -5645,7 +5650,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210203.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6475599579862319,
@@ -5654,7 +5659,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210213.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6493832080159336,
@@ -5663,7 +5668,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210216.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.5874731250223704,
@@ -5672,7 +5677,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210231.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6484517919889186,
@@ -5681,7 +5686,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210252.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6311507080099545,
@@ -5690,7 +5695,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210257.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6460799589985982,
@@ -5699,7 +5704,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210345.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5pr",
    "answer": "red five circles",
    "seconds": 0.6988031250075437,
@@ -5708,7 +5713,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210349.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.7123949170054402,
@@ -5717,7 +5722,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210352.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.7159743749944028,
@@ -5744,7 +5749,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-21 194831.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6120267499936745,
@@ -5753,7 +5758,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-21 194838.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.622194750001654,
@@ -5762,7 +5767,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-21 194852.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6417815000168048,
@@ -5771,7 +5776,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-21 194900.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5pr",
    "answer": "red five circles",
    "seconds": 0.7003875410009641,
@@ -5798,7 +5803,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-21 200119.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6366948329959996,
@@ -5879,7 +5884,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103401.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.588337583001703,
@@ -5888,7 +5893,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103404.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5mr",
    "answer": "red five characters",
    "seconds": 0.5840589580184314,
@@ -5897,7 +5902,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103407.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.5277163330174517,
@@ -5906,7 +5911,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103411.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5mr",
    "answer": "red five characters",
    "seconds": 0.5699231659818906,
@@ -5915,7 +5920,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103413.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5sr",
    "answer": "red five bamboo",
    "seconds": 0.6573165000008885,
@@ -5924,7 +5929,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103416.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5mr",
    "answer": "red five characters",
    "seconds": 0.5648002089874353,
@@ -5933,7 +5938,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103419.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5mr",
    "answer": "red five characters",
    "seconds": 0.577764500019839,
@@ -5942,7 +5947,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103431.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5mr",
    "answer": "red five characters",
    "seconds": 0.5834370419906918,
@@ -6077,7 +6082,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-21 195127.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5mr",
    "answer": "red five characters",
    "seconds": 0.6902443330036476,
@@ -6086,7 +6091,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-21 195132.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5mr",
    "answer": "red five characters",
    "seconds": 0.687432250007987,
@@ -6095,7 +6100,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-21 195137.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "5mr",
    "answer": "red five characters",
    "seconds": 0.8327188749972265,
@@ -6149,7 +6154,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 163901.png",
    "split": "train",
-   "label": "5p",
+   "label": "5pr",
    "pred": "5pr",
    "answer": "red five circles",
    "seconds": 0.6395544999977574,
@@ -6158,7 +6163,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 163926.png",
    "split": "train",
-   "label": "5p",
+   "label": "5pr",
    "pred": "5pr",
    "answer": "red five circles",
    "seconds": 0.6614190000109375,
@@ -6167,7 +6172,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 163930.png",
    "split": "train",
-   "label": "5p",
+   "label": "5pr",
    "pred": "5pr",
    "answer": "red five circles",
    "seconds": 0.6703474160167389,
@@ -6194,7 +6199,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 170418.png",
    "split": "train",
-   "label": "5p",
+   "label": "5pr",
    "pred": "5pr",
    "answer": "red five circles",
    "seconds": 0.7647763749992009,
@@ -6347,7 +6352,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-21 194352.png",
    "split": "train",
-   "label": "5p",
+   "label": "5pr",
    "pred": "5pr",
    "answer": "red five circles",
    "seconds": 0.6023914580000564,
@@ -6374,7 +6379,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-21 195611.png",
    "split": "train",
-   "label": "5p",
+   "label": "5pr",
    "pred": "5pr",
    "answer": "red five circles",
    "seconds": 0.6430812919861637,
@@ -6383,7 +6388,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-21 195616.png",
    "split": "train",
-   "label": "5p",
+   "label": "5pr",
    "pred": "5pr",
    "answer": "red five circles",
    "seconds": 0.6692123340035323,
@@ -6392,7 +6397,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-21 195915.png",
    "split": "train",
-   "label": "5p",
+   "label": "5pr",
    "pred": "5pr",
    "answer": "red five circles",
    "seconds": 0.6232989169948269,

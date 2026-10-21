@@ -4,6 +4,9 @@
 dataset_repo = "pjura/mahjong_souls_tiles"
 dataset_revision = "8c0f22e7c6b64be55bb1d2767fe1a63981788de7"
 dataset_dir = "ml/data/mahjong_souls_tiles/dataset"
+# The dataset has no red-five class: its five folders mix red and plain fives.
+# The images listed as red here (judged by eye) are scored as 5mr / 5pr / 5sr.
+red_fives = "ml/experiments/2026-10-21-tile-recognition/annotations/dataset_red_fives.json"
 splits = ["test", "train"]
 models_dir = "ml/models"
 results_dir = "ml/results"

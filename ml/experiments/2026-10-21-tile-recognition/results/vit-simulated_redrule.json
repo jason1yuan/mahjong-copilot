@@ -3,6 +3,8 @@
   "model": "mahjong_soul_vision",
   "n": 520,
   "accuracy": 0.9134615384615384,
+  "kind_accuracy": 0.9134615384615384,
+  "calibration": null,
   "accuracy_by_split": {
    "simulated": 0.9134615384615384
   },
@@ -97,8 +99,7 @@
    "vit on cpu"
   ],
   "answers": "classifier",
-  "split": "simulated_redrule",
-  "kind_accuracy": 0.9134615384615384
+  "split": "simulated_redrule"
  },
  "rows": [
   {

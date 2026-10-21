@@ -3,6 +3,23 @@
   "model": "openai-decisions",
   "n": 520,
   "accuracy": 0.45384615384615384,
+  "kind_accuracy": 0.4846153846153846,
+  "calibration": {
+   "n": 517,
+   "accuracy": 0.4564796905222437,
+   "mean_confidence": 0.3288411992263056,
+   "ece": 0.1276384912959381,
+   "at_least": {
+    "0.5": {
+     "n": 136,
+     "right": 122
+    },
+    "0.7": {
+     "n": 81,
+     "right": 77
+    }
+   }
+  },
   "accuracy_by_split": {
    "simulated": 0.45384615384615384
   },
@@ -119,9 +136,7 @@
    "two_step": true
   },
   "input_tokens": 467549,
-  "cost_usd": 0.0467549,
-  "mean_confidence": 0.3288411992263056,
-  "kind_accuracy": 0.4846153846153846
+  "cost_usd": 0.0467549
  },
  "rows": [
   {

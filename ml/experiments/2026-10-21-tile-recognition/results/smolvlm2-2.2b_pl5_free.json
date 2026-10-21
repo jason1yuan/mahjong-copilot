@@ -3,6 +3,8 @@
   "model": "smolvlm2-2.2b",
   "n": 170,
   "accuracy": 0.0,
+  "kind_accuracy": 0.0,
+  "calibration": null,
   "accuracy_by_split": {
    "test": 0.0,
    "train": 0.0
@@ -21,8 +23,11 @@
    "4p": 0.0,
    "4s": 0.0,
    "5m": 0.0,
+   "5mr": 0.0,
    "5p": 0.0,
+   "5pr": 0.0,
    "5s": 0.0,
+   "5sr": 0.0,
    "6m": 0.0,
    "6p": 0.0,
    "6s": 0.0,
@@ -105,17 +110,17 @@
     "count": 5
    },
    {
-    "label": "5s",
+    "label": "6s",
     "pred": "?",
     "count": 5
    },
    {
-    "label": "5m",
+    "label": "6m",
     "pred": "?",
     "count": 5
    },
    {
-    "label": "5p",
+    "label": "6p",
     "pred": "?",
     "count": 5
    }
@@ -686,7 +691,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210216.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "?",
    "answer": " red five",
    "seconds": 0.6683395419968292,
@@ -695,7 +700,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-21 200119.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "?",
    "answer": " red five",
    "seconds": 0.6703189170220867,
@@ -704,7 +709,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210213.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "?",
    "answer": " red five",
    "seconds": 0.6693496669759043,
@@ -713,7 +718,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224820.png",
    "split": "train",
-   "label": "5s",
+   "label": "5sr",
    "pred": "?",
    "answer": " red five",
    "seconds": 0.6833371249958873,
@@ -731,7 +736,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103431.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "?",
    "answer": " red five",
    "seconds": 0.6835317920194939,
@@ -740,7 +745,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103411.png",
    "split": "train",
-   "label": "5m",
+   "label": "5mr",
    "pred": "?",
    "answer": " red five",
    "seconds": 0.711180999991484,
@@ -794,7 +799,7 @@
   {
    "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-21 195616.png",
    "split": "train",
-   "label": "5p",
+   "label": "5pr",
    "pred": "?",
    "answer": " red five",
    "seconds": 0.6748722080374137,

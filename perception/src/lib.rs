@@ -1,7 +1,9 @@
 //! Window capture and tile recognition. Platform-specific code goes in per-OS modules
-//! behind `#[cfg(target_os = ...)]`; capture lands in #1.
+//! behind `#[cfg(target_os = ...)]`.
 
 pub mod cache;
+pub mod capture;
+pub mod change;
 pub mod classifier;
 mod pillow;
 pub mod recognizer;

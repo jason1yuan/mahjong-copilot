@@ -10,6 +10,10 @@ image.workspace = true
 mahjong-core.workspace = true
 ort.workspace = true
 thiserror.workspace = true
+tracing.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+screencapturekit.workspace = true
 
 [dev-dependencies]
 image = { workspace = true, features = ["png", "jpeg"] }

@@ -16,6 +16,15 @@ type TileView = { tile: string; doubt: "small" | "unsure" | null };
 // A tile on the table as read; `tile` is null for a tile face down.
 type TableTile = { tile: string | null; sideways: boolean; added: string | null; doubt: boolean };
 type TableView = { rivers: TableTile[][]; melds: TableTile[][][] };
+// The round, the player's wind and the numbers on the table; each null when not read.
+type GameView = {
+  round: string | null;
+  seatWind: string | null;
+  scores: number[] | null;
+  tilesLeft: number | null;
+  honba: number | null;
+  riichiSticks: number | null;
+};
 type OptionView = { discard: string; shanten: number; ukeireCount: number };
 type Advice = {
   seq: number;
@@ -29,6 +38,7 @@ type Advice = {
   dora: TileView[];
   seen: number | null;
   table: TableView | null;
+  game: GameView | null;
   times: {
     settleMs: number;
     findMs: number;
@@ -80,6 +90,19 @@ function statusText(status: Status | null, models: string | null): string {
   }
 }
 
+const WINDS: Record<string, string> = { E: "东", S: "南", W: "西", N: "北" };
+
+// 东2局 · 自风 北 · 余 45 · 1 本场 · 供托 0, leaving out what was not read.
+function gameText(game: GameView): string {
+  const parts = [];
+  if (game.round) parts.push(`${WINDS[game.round[0]] ?? "?"}${game.round.slice(1)}局`);
+  if (game.seatWind) parts.push(`自风 ${WINDS[game.seatWind] ?? "?"}`);
+  if (game.tilesLeft !== null) parts.push(`余 ${game.tilesLeft}`);
+  if (game.honba !== null) parts.push(`${game.honba} 本场`);
+  if (game.riichiSticks !== null) parts.push(`供托 ${game.riichiSticks}`);
+  return parts.join(" · ");
+}
+
 // Seats in turn order from the player, as the table view lists them.
 const SEATS = ["自家", "下家", "对家", "上家"];
 // The dev build opens taller, to fit the table view.
@@ -114,13 +137,14 @@ function OwnMelds({ melds }: { melds: TableTile[][] }) {
 }
 
 // Every seat's river and melds as read; dev build only, for debugging the table reading.
-function TableDebug({ table }: { table: TableView }) {
+function TableDebug({ table, scores }: { table: TableView; scores: number[] | null }) {
   return (
     <div className="table-debug">
       <p className="legend">↻ 横放（被鸣的牌、立直宣言牌） · +X 加杠 · ▮ 扣着的牌 · ? 拿不准</p>
       {SEATS.map((seat, i) => (
         <p key={seat}>
           <span className="seat">{seat}</span>
+          {scores && <span className="score">{scores[i]}</span>}
           <span>河 {table.rivers[i].map(tableText).join(" ") || "—"}</span>
           {table.melds[i].length > 0 && (
             <span> ｜ 副露 {table.melds[i].map((m) => `[${m.map(tableText).join(" ")}]`).join(" ")}</span>
@@ -267,6 +291,7 @@ function App() {
             )}
             {advice.seen !== null && <span className="muted-inline">已见 {advice.seen} 张</span>}
           </p>
+          {advice.game && gameText(advice.game) && <p className="game">{gameText(advice.game)}</p>}
           {advice.options.length > 1 && (
             <p className="options">
               {advice.options.map((o) => (
@@ -285,7 +310,7 @@ function App() {
       ) : (
         <p className="placeholder">{watching ? "等待手牌出现" : statusText(status, models)}</p>
       )}
-      {recording && advice?.table && <TableDebug table={advice.table} />}
+      {recording && advice?.table && <TableDebug table={advice.table} scores={advice.game?.scores ?? null} />}
       {recording && <DebugRecording initial={recording} />}
     </main>
   );

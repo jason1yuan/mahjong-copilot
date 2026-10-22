@@ -275,8 +275,7 @@ mod tests {
     fn seat_winds_follow_the_dealer() {
         assert_eq!(seat_wind(Seat::Own, Seat::Own), Wind::East);
         assert_eq!(seat_wind(Seat::Own, Seat::Right), Wind::South);
-        // The dealer across: the seat on the left plays next and is South, the player West
-        // (as in the recorded 東1局, whose markers read 東 across, 南 left, 西 own).
+        // The dealer across: the seat on the left plays next and is South, the player West.
         assert_eq!(seat_wind(Seat::Across, Seat::Left), Wind::South);
         assert_eq!(seat_wind(Seat::Across, Seat::Own), Wind::West);
         assert_eq!(seat_wind(Seat::Across, Seat::Right), Wind::North);

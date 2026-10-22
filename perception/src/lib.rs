@@ -9,6 +9,7 @@ pub mod dora;
 pub mod faces;
 pub mod hand;
 pub mod meld;
+pub mod numbers;
 mod pillow;
 pub mod profile;
 pub mod recognizer;

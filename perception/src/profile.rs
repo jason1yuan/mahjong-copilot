@@ -89,18 +89,28 @@ pub struct DoraLayout {
     pub height: f32,
     pub pitch: f32,
     pub slots: usize,
+    /// The riichi stick and honba counters under the indicators (#9): `[x, y, width,
+    /// height]` from the first indicator's top left, in hand pitches.
+    pub sticks: [f32; 4],
+    pub honba: [f32; 4],
 }
 
 /// The box in the middle of the table (#9), in table coordinates (see [`TableGeometry`]).
 /// The box stands above the table, so its parts are given where they appear on the table
 /// plane instead of as one shape turned for each seat: `markers` are the centres of the
-/// seat wind markers in seat order (own, right, across, left), each `marker` tile widths
+/// seat wind markers in seat order (own, right, across, left; each seat's marker is at its
+/// left-hand corner of the box, the player's at the bottom left), each `marker` tile widths
 /// square, and `label` is the round label (東1局) as `[left, top, right, bottom]`.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
 pub struct CentreLayout {
     pub markers: [[f64; 2]; 4],
     pub marker: f64,
     pub label: [f64; 4],
+    /// Each seat's score, as `[left, top, right, bottom]` in that seat's own coordinates, so
+    /// it reads upright (#9).
+    pub scores: [[f64; 4]; 4],
+    /// The tiles-left digits (not the 余 before them), in the player's coordinates.
+    pub tiles_left: [f64; 4],
 }
 
 impl Profile {

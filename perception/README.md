@@ -12,6 +12,8 @@ Rust crate，和界面无关。
 
 ## 认牌（#4）
 
+- `recognizer`：`TileRecognizer` 是流水线用的入口：先查模板缓存，没命中的牌一次交给认牌模型；牌宽不到 28 像素或置信度低于 0.7 时标为"不确定"（`Doubt`），这样的牌不进缓存。每个"游戏 + 牌面 + 窗口大小 + 区域种类"用一个，窗口大小变了就 `clear_cache`
+- `cache`：运行时模板缓存。24×32 的小图按像素比较，容忍悬停上浮
 - `classifier`：`TileClassifier` 加载 ONNX 模型，`classify` 给出 34 种牌，`recognize` 再加上赤五规则
 - `red_five`：`ml/vlm_eval/red_five.py` 的移植，阈值和判定完全相同
 - `pillow`：从 Pillow 逐步移植的颜色转换和双线性缩放，保证和 Python 评测看到的像素一模一样
@@ -32,6 +34,12 @@ cargo test -p mahjong-perception --release --test classifier -- --ignored
 
 ```bash
 cargo run -p mahjong-perception --release --example eval_classifier -- recordings/source recordings/simulated_multi
+```
+
+标定模板缓存的阈值，并模拟连续的牌局（命中率、命中出错、耗时）：
+
+```bash
+cargo run -p mahjong-perception --release --example eval_cache -- recordings/source recordings/simulated_multi
 ```
 
 ONNX Runtime 由 `ort` 在构建时下载预编译的静态库，运行时不联网。macOS 上它需要 clang 的运行时库，`build.rs` 会自动链接。

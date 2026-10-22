@@ -13,6 +13,9 @@ pub struct Profile {
     pub windows: WindowMatch,
     pub tile_face: TileFace,
     pub hand: HandGeometry,
+    /// The 3D table (#8); absent for a game whose table is not described yet.
+    pub table: Option<TableGeometry>,
+    pub river: Option<RiverLayout>,
 }
 
 /// A window belongs to the game when its app is one of `apps` (any app if empty) and its
@@ -39,6 +42,26 @@ pub struct HandGeometry {
     pub pitch: f32,
     pub left: f32,
     pub top: f32,
+}
+
+/// Where the table lies in the game area (#8): `corners` are the positions, as fractions of
+/// the game area's width and height, of the table points (-6, -6), (6, -6), (6, 6) and
+/// (-6, 6). Table coordinates are in tile widths from the table centre, the player's own
+/// seat towards +y (see `table`).
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+pub struct TableGeometry {
+    pub corners: [[f32; 2]; 4],
+}
+
+/// Where a river lies, in the seat's own coordinates (as if it were the player's, see
+/// [`TableGeometry`]): rows of `columns` tiles start at x = `left`, the first row's near edge
+/// is `near` from the centre, and rows are `row_pitch` apart. All in tile widths.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+pub struct RiverLayout {
+    pub left: f64,
+    pub near: f64,
+    pub row_pitch: f64,
+    pub columns: usize,
 }
 
 impl Profile {

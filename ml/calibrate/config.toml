@@ -1,0 +1,21 @@
+# Table calibration (#8): where to look for river tiles and how to start the fit.
+profile = "profiles/majsoul-web/profile.json"
+# Tiles per river row.
+columns = 6
+# Part of the game area holding the rivers: left, top, right, bottom as fractions of it.
+region = [0.28, 0.12, 0.73, 0.72]
+# Least face area in pixels at a game width of 3018 px; scaled with the window.
+min_face_area = 1500
+# A face this many times wider than tall lies across the screen: a side seat's tile.
+side_aspect = 1.5
+# Table centre in the game area, to tell the seats apart.
+centre = [0.502, 0.397]
+# Least gap between two rows' tile centres, as a fraction of the game area's height (own,
+# across) or width (left, right).
+row_gap = { own = 0.0275, across = 0.02, left = 0.0175, right = 0.0175 }
+# Starting layout for the fit, in tile widths: left, near, row pitch.
+start = [-3.0, 3.6, 1.35]
+# Frames whose game area is wider or narrower than the median by more than this are skipped.
+max_area_change = 0.02
+# Residuals larger than this many pixels count less (soft L1 loss).
+loss_scale = 4.0

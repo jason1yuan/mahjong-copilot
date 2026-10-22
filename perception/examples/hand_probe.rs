@@ -10,10 +10,11 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use mahjong_perception::cache::TemplateCache;
 use mahjong_perception::capture::{self, CaptureConfig, LatestFrame, RelRect};
 use mahjong_perception::change::{ChangeDetector, FrameGate, Region};
 use mahjong_perception::hand::HandTracker;
-use mahjong_perception::{Doubt, Source, TileClassifier, TileRecognizer, profile};
+use mahjong_perception::{Doubt, Source, TileClassifier, TileRecognizer, Zone, profile};
 
 const DEFAULT_MODEL: &str = "ml/models/mahjong_soul_vision/model.onnx";
 
@@ -109,7 +110,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "done: {} frames, {} templates in the cache, stopped by the system: {}",
         stats.frames,
-        recognizer.cache().len(),
+        recognizer.cache(Zone::Hand).map_or(0, TemplateCache::len),
         stats.stopped
     );
     Ok(())

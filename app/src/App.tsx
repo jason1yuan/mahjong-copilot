@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { LogicalSize } from "@tauri-apps/api/dpi";
 import { tileLabel } from "./tile";
 import "./App.css";
 
@@ -11,6 +13,9 @@ type Status =
   | { state: "error"; message: string };
 
 type TileView = { tile: string; doubt: "small" | "unsure" | null };
+// A tile on the table as read; `tile` is null for a tile face down.
+type TableTile = { tile: string | null; sideways: boolean; added: string | null; doubt: boolean };
+type TableView = { rivers: TableTile[][]; melds: TableTile[][][] };
 type OptionView = { discard: string; shanten: number; ukeireCount: number };
 type Advice = {
   seq: number;
@@ -23,6 +28,7 @@ type Advice = {
   ukeireCount: number | null;
   dora: TileView[];
   seen: number | null;
+  table: TableView | null;
   times: {
     settleMs: number;
     findMs: number;
@@ -74,6 +80,66 @@ function statusText(status: Status | null, models: string | null): string {
   }
 }
 
+// Seats in turn order from the player, as the table view lists them.
+const SEATS = ["自家", "下家", "对家", "上家"];
+// The dev build opens taller, to fit the table view.
+const DEV_HEIGHT = 430;
+
+function short(mjai: string): string {
+  const label = tileLabel(mjai);
+  return `${label.rank}${label.suit}${mjai.endsWith("r") ? "赤" : ""}`;
+}
+
+function tableText(t: TableTile): string {
+  const face = t.tile === null ? "▮" : short(t.tile);
+  return `${face}${t.sideways ? "↻" : ""}${t.added ? `+${short(t.added)}` : ""}${t.doubt ? "?" : ""}`;
+}
+
+// The player's own melds, beside the hand: sideways tiles lie turned.
+function OwnMelds({ melds }: { melds: TableTile[][] }) {
+  return (
+    <div className="melds">
+      {melds.map((meld, i) => (
+        <div key={i} className="meld">
+          {meld.map((t, j) => (
+            <span key={j} className={`meld-tile${t.sideways ? " sideways" : ""}`} title={tableText(t)}>
+              {t.tile === null ? "" : short(t.tile)}
+              {t.added && <small>+</small>}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Every seat's river and melds as read; dev build only, for debugging the table reading.
+function TableDebug({ table }: { table: TableView }) {
+  return (
+    <div className="table-debug">
+      {SEATS.map((seat, i) => (
+        <p key={seat}>
+          <span className="seat">{seat}</span>
+          <span>河 {table.rivers[i].map(tableText).join(" ") || "—"}</span>
+          {table.melds[i].length > 0 && (
+            <span> ｜ 副露 {table.melds[i].map((m) => `[${m.map(tableText).join(" ")}]`).join(" ")}</span>
+          )}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function WindowButtons() {
+  const window = getCurrentWindow();
+  return (
+    <span className="window-buttons">
+      <button type="button" className="close" aria-label="关闭" title="关闭" onClick={() => window.close()} />
+      <button type="button" className="minimize" aria-label="最小化" title="最小化" onClick={() => window.minimize()} />
+    </span>
+  );
+}
+
 // Screenshot button and recording switch for the table evaluation set; dev build only.
 function DebugRecording({ initial }: { initial: Recording }) {
   const [recording, setRecording] = useState(initial);
@@ -122,7 +188,12 @@ function App() {
 
   useEffect(() => {
     invoke<Status | null>("pipeline_status").then(setStatus).catch(() => undefined);
-    invoke<Recording | null>("debug_recording").then(setRecording).catch(() => undefined);
+    invoke<Recording | null>("debug_recording")
+      .then((r) => {
+        setRecording(r);
+        if (r) getCurrentWindow().setSize(new LogicalSize(560, DEV_HEIGHT)).catch(() => undefined);
+      })
+      .catch(() => undefined);
     const unlisten = [
       listen<Status>("pipeline-status", (e) => setStatus(e.payload)),
       listen<Advice | null>("advice", (e) => setAdvice(e.payload)),
@@ -157,6 +228,7 @@ function App() {
   return (
     <main className="panel">
       <header className="titlebar" data-tauri-drag-region>
+        <WindowButtons />
         <span className={`status-dot ${dot}`} data-tauri-drag-region />
         <span data-tauri-drag-region>麻将 Copilot</span>
         <span className="muted" data-tauri-drag-region>
@@ -171,6 +243,7 @@ function App() {
                 <Tile view={view} best={i === advice.discard} />
               </div>
             ))}
+            {advice.table && advice.table.melds[0].length > 0 && <OwnMelds melds={advice.table.melds[0]} />}
           </div>
           <p className="info">
             {advice.discard !== null && <strong>打 {name(advice.tiles[advice.discard].tile)}</strong>}
@@ -206,6 +279,7 @@ function App() {
       ) : (
         <p className="placeholder">{watching ? "等待手牌出现" : statusText(status, models)}</p>
       )}
+      {recording && advice?.table && <TableDebug table={advice.table} />}
       {recording && <DebugRecording initial={recording} />}
     </main>
   );

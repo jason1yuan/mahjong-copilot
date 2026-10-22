@@ -89,7 +89,64 @@ pub struct Advice {
     /// Tiles face up on the table (rivers, melds, dora indicators), which the counts above
     /// leave out; `None` when the table is not read.
     pub seen: Option<u32>,
+    /// The table as read, for the window's debug view and the player's own melds.
+    pub table: Option<TableView>,
     pub times: StepTimes,
+}
+
+/// One tile on the table as read.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TableTile {
+    /// `None` for a tile lying face down.
+    pub tile: Option<Tile>,
+    pub sideways: bool,
+    /// The tile added to a called pon, making it a kan.
+    pub added: Option<Tile>,
+    pub doubt: bool,
+}
+
+/// Rivers and melds by seat, in turn order from the player.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TableView {
+    pub rivers: [Vec<TableTile>; 4],
+    /// Each seat's melds in the order they were made, each left to right.
+    pub melds: [Vec<Vec<TableTile>>; 4],
+}
+
+impl TableView {
+    fn of(table: &Snapshot) -> Self {
+        Self {
+            rivers: table.rivers.clone().map(|river| {
+                river
+                    .iter()
+                    .map(|t| TableTile {
+                        tile: Some(t.tile.tile),
+                        sideways: t.sideways,
+                        added: None,
+                        doubt: t.tile.doubt.is_some(),
+                    })
+                    .collect()
+            }),
+            melds: table.melds.clone().map(|melds| {
+                melds
+                    .iter()
+                    .map(|meld| {
+                        meld.iter()
+                            .map(|t| TableTile {
+                                tile: t.tile.map(|r| r.tile),
+                                sideways: t.sideways,
+                                added: t.added.map(|r| r.tile),
+                                doubt: t.tile.is_some_and(|r| r.doubt.is_some())
+                                    || t.added.is_some_and(|r| r.doubt.is_some()),
+                            })
+                            .collect()
+                    })
+                    .collect()
+            }),
+        }
+    }
 }
 
 /// Still screen to advice on screen, over the last readings; sent as `latency`.
@@ -292,6 +349,7 @@ impl Pipeline {
                 .table
                 .as_ref()
                 .map(|_| visible.iter().map(|&n| u32::from(n)).sum()),
+            table: reading.table.as_ref().map(TableView::of),
             times: StepTimes {
                 settle_ms: ms(reading.timings.settled - reading.timings.still_since),
                 find_ms: ms(reading.timings.find),

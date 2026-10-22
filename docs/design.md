@@ -235,7 +235,9 @@ flowchart LR
 ## 五、开箱即用 + 离线
 
 - 不加入 Apple Developer Program（不交年费）：app 用自签名证书签名，用 Tauri 的打包工具打成 DMG，拖进"应用程序"即可。
-- 模型联网下载：识别模型和决策模型都不放进安装包，也不提交到 GitHub。首次启动时联网下载，从固定版本的地址获取并校验哈希，存在本机的应用数据目录。下载完成后运行不再需要联网。安装包本身约 100MB，牌图和适配包内置。
+- 模型联网下载：识别模型和决策模型都不放进安装包，也不提交到 GitHub。首次启动时联网下载，从固定版本的地址获取并校验哈希，存在本机的应用数据目录。下载完成后运行不再需要联网。
+  - 实现（#4）：`models` crate 锁定每个模型的地址（含修订版）、大小和 SHA-256。先下载到 `<文件名>.part`，中断后从断点续传；大小和哈希都对了才改成正式文件名，所以正式文件一定是完整、校验过的，之后启动只需核对大小。整个项目只有它联网，用 ureq（rustls，自带根证书）；
+  - app 启动时在后台下载缺少的模型，发出 `model-progress`、`models-ready`、`models-error` 事件，引导界面（#17）据此显示进度和重试。认牌模型 345MB，实测约 13 秒下完并校验；安装包本身约 100MB，牌图和适配包内置。
 - 首次打开：因为没有经过苹果公证，系统会拦截一次。用户在"系统设置 → 隐私与安全性"底部点"仍要打开"并确认，之后就能正常使用。app 被拦截时自己还没运行，所以这三步说明画在 DMG 窗口的背景图上，下载页也写一份。
 - 始终用同一张自签名证书签名（不用临时签名），这样屏幕录制权限能跨版本保留。证书导出为 .p12 备份，丢了的话所有用户都要重新授权。
 - 以后想去掉首次打开这一步，再加入 Apple Developer Program（个人即可，每年 99 美元），换成开发者证书签名并公证。代价是所有用户需要重新授权一次屏幕录制。
@@ -275,7 +277,8 @@ flowchart LR
 | 应用框架 | Tauri 2 |
 | 界面 | React + TypeScript + Vite，运行在系统网页视图里（mac：WKWebView；Windows：WebView2） |
 | 采集 | Rust 平台模块：ScreenCaptureKit（mac）/ Windows.Graphics.Capture（Windows） |
-| 推理 | ONNX Runtime（Rust 绑定 ort）。决策模型用 CPU（实测比 CoreML 快）；认牌模型用 CPU 还是 CoreML，以 #4 的实测为准 |
+| 推理 | ONNX Runtime（Rust 绑定 ort），决策模型和认牌模型都用 CPU（实测都比 CoreML 合适） |
+| 模型下载 | `models` crate：ureq（rustls）+ sha2，只在缺少模型时运行 |
 | 状态 + 决策 | Rust crate，和界面、平台无关 |
 | 模型 | 不训练任何模型，不用 VLM。认牌用现成的 pjura/mahjong_soul_vision（Apache-2.0）加赤五颜色规则；决策用 Mortal（haor/Mortal-S42 权重）。都转换为 ONNX |
 

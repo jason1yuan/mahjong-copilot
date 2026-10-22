@@ -1,0 +1,18 @@
+{
+  "id": "majsoul-web",
+  "name": "雀魂（网页版）",
+  "windows": {
+    "apps": ["Google Chrome", "Safari", "Microsoft Edge", "Firefox", "Arc", "Brave Browser", "Opera", "Vivaldi"],
+    "title_contains": ["雀魂", "じゃんたま", "Mahjong Soul", "MahjongSoul", "majsoul"]
+  },
+  "tile_face": {
+    "min_brightness": 175,
+    "max_spread": 45
+  },
+  "hand": {
+    "aspect": 1.7778,
+    "pitch": 0.0493,
+    "left": 0.1163,
+    "top": 0.86
+  }
+}

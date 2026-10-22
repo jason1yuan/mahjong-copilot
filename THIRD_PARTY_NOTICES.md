@@ -15,7 +15,7 @@
 
 ## 认牌模型 pjura/mahjong_soul_vision
 
-- 位置：不随安装包分发；app 首次启动时从我们自己的 Hugging Face 模型仓库下载转换后的 `model.onnx`，校验哈希后存在本机
+- 位置：不随安装包分发；app 首次启动时从我们自己的 Hugging Face 模型仓库 [xzhe121/mahjong_soul_vision-onnx](https://huggingface.co/xzhe121/mahjong_soul_vision-onnx)（修订版 `d1da028b53b97e309e67ddfed6e4b61e85603f65`）下载转换后的 `model.onnx`，校验哈希后存在本机
 - 来源：Hugging Face 上的 [pjura/mahjong_soul_vision](https://huggingface.co/pjura/mahjong_soul_vision)，修订版 `ea01ca0bcb9be0fc10a5fa09ee8356770c25adc5`（ViT-base 图像分类器，基于 google/vit-base-patch16-224-in21k）
 - 改动：用 `ml/convert/export_classifier.py` 转成 ONNX（opset 18），权重不变；上传内容由 `ml/convert/prepare_upload.py` 生成，附原许可和改动说明
 - 版权与许可：原作者 pjura，Apache-2.0

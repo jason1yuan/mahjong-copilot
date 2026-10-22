@@ -72,6 +72,8 @@ pub struct Recognition {
 pub enum Zone {
     Hand,
     River(Seat),
+    Meld(Seat),
+    Dora,
 }
 
 /// One per game, tile skin and window size, like its template caches.

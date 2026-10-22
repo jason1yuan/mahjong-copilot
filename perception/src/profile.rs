@@ -16,6 +16,8 @@ pub struct Profile {
     /// The 3D table (#8); absent for a game whose table is not described yet.
     pub table: Option<TableGeometry>,
     pub river: Option<RiverLayout>,
+    pub melds: Option<MeldLayout>,
+    pub dora: Option<DoraLayout>,
 }
 
 /// A window belongs to the game when its app is one of `apps` (any app if empty) and its
@@ -62,6 +64,29 @@ pub struct RiverLayout {
     pub near: f64,
     pub row_pitch: f64,
     pub columns: usize,
+}
+
+/// Where a seat's melds lie, in its own coordinates (see [`TableGeometry`]): a band from x
+/// = `left` to `right` and from y = `near` to `far`, in tile widths. The melds run leftwards
+/// from a tile ending right of `start_after`.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+pub struct MeldLayout {
+    pub left: f64,
+    pub right: f64,
+    pub near: f64,
+    pub far: f64,
+    pub start_after: f64,
+}
+
+/// The dora indicator box, a row of `slots` tiles in the top left corner. Sizes are
+/// fractions of the hand's tile pitch: each face is `width` by `height`, `pitch` apart. Where
+/// it is, is searched for: in a wide window it can stick to the window's edge.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+pub struct DoraLayout {
+    pub width: f32,
+    pub height: f32,
+    pub pitch: f32,
+    pub slots: usize,
 }
 
 impl Profile {

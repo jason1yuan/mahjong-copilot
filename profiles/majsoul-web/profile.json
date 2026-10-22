@@ -23,5 +23,18 @@
     "near": 3.2184,
     "row_pitch": 1.3643,
     "columns": 6
+  },
+  "melds": {
+    "left": 0.0,
+    "right": 12.8,
+    "near": 9.3,
+    "far": 12.7,
+    "start_after": 9.5
+  },
+  "dora": {
+    "width": 0.545,
+    "height": 0.807,
+    "pitch": 0.594,
+    "slots": 5
   }
 }

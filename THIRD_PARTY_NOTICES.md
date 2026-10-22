@@ -13,6 +13,14 @@
   - 和牌判定：[EndlessCheng/mahjong-helper](https://github.com/EndlessCheng/mahjong-helper)，MIT；算法出自山岡忠夫
   - 单人期望值计算：[nekobean/mahjong-cpp](https://github.com/nekobean/mahjong-cpp)，GPL-3.0
 
+## 认牌模型 pjura/mahjong_soul_vision
+
+- 位置：不随安装包分发；app 首次启动时从我们自己的 Hugging Face 模型仓库下载转换后的 `model.onnx`，校验哈希后存在本机
+- 来源：Hugging Face 上的 [pjura/mahjong_soul_vision](https://huggingface.co/pjura/mahjong_soul_vision)，修订版 `ea01ca0bcb9be0fc10a5fa09ee8356770c25adc5`（ViT-base 图像分类器，基于 google/vit-base-patch16-224-in21k）
+- 改动：用 `ml/convert/export_classifier.py` 转成 ONNX（opset 18），权重不变；上传内容由 `ml/convert/prepare_upload.py` 生成，附原许可和改动说明
+- 版权与许可：原作者 pjura，Apache-2.0
+- 训练数据：原作者用雀魂截图（[pjura/mahjong_souls_tiles](https://huggingface.co/datasets/pjura/mahjong_souls_tiles)）训练；游戏美术的版权归游戏方。我们的仓库里不放任何截图
+
 ## ONNX Runtime
 
 - 位置：静态链接进 app（经 `perception` 的 `ort` 依赖）

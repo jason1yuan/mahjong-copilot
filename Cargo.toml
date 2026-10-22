@@ -17,6 +17,10 @@ mahjong-models = { path = "models" }
 mahjong-perception = { path = "perception" }
 libriichi-algo = { path = "third_party/libriichi" }
 image = { version = "0.25", default-features = false }
+# macOS's on-device text recognition (Vision), for the round label (#9).
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSArray", "NSData", "NSDictionary", "NSEnumerator", "NSError", "NSString"] }
+objc2-vision = { version = "0.3", default-features = false, features = ["std", "VNObservation", "VNRecognizeTextRequest", "VNRequest", "VNRequestHandler", "VNTypes"] }
 # Prebuilt ONNX Runtime 1.31 is downloaded at build time only; `fetch-models` (downloads
 # at run time) stays off.
 ort = { version = "=2.0.0-rc.15", default-features = false, features = ["std", "tracing", "download-binaries", "tls-native", "copy-dylibs", "api-31"] }

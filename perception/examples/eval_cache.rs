@@ -20,7 +20,7 @@ use std::time::Instant;
 
 use image::{RgbImage, imageops};
 use mahjong_perception::cache::{MAX_DISTANCE, MIN_MARGIN, crop_distance};
-use mahjong_perception::{Source, TileClassifier, TileRecognizer};
+use mahjong_perception::{Source, TileClassifier, TileRecognizer, Zone};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -241,7 +241,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         for (crops, labels) in &frames {
             let before: Vec<_> = crops
                 .iter()
-                .map(|c| recognizer.cache().closest_to(c))
+                .map(|c| {
+                    recognizer
+                        .cache(Zone::Hand)
+                        .and_then(|cache| cache.closest_to(c))
+                })
                 .collect();
             let start = Instant::now();
             let results = recognizer.recognize(crops)?;

@@ -172,3 +172,32 @@ body {
   color: var(--red);
   font-size: 13px;
 }
+
+.dev {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dev button {
+  padding: 2px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--tile-bg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.dev label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dev-error {
+  color: var(--red);
+}

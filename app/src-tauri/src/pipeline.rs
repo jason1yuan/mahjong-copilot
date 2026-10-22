@@ -3,9 +3,12 @@
 //! core, sends it to the window, and measures how long it took from the screen going still
 //! to the advice being shown. Assembly only: the reading lives in perception, the advice
 //! in core.
+//!
+//! The dev build also saves frames for the table evaluation set (#8): a screenshot button
+//! and a switch that saves each frame changing the hand, into `recordings/live/`.
 
 use std::collections::{HashMap, VecDeque};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex, PoisonError};
@@ -14,7 +17,7 @@ use std::time::{Duration, Instant};
 use mahjong_core::{Tile, TileCounts, outlook, rank_discards};
 use mahjong_perception::capture::{self, WindowInfo};
 use mahjong_perception::profile::{self, Profile};
-use mahjong_perception::{Doubt, HandReading, WatchEvent, Watcher};
+use mahjong_perception::{Doubt, FrameTap, HandReading, Recorder, WatchEvent, Watcher};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
@@ -89,6 +92,17 @@ pub struct Latency {
     pub p95_ms: f64,
 }
 
+/// The dev build's debug recording, for the window's debug row.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Recording {
+    /// Saving each frame that changes the hand.
+    pub on: bool,
+    /// Frames written since the app started.
+    pub saved: u64,
+    pub dir: String,
+}
+
 /// Shared between the watcher thread, the window's commands and the status query.
 #[derive(Default)]
 pub struct Pipeline {
@@ -98,6 +112,23 @@ pub struct Pipeline {
     /// Advice sent and not yet shown: when its screen went still.
     pending: Mutex<HashMap<u64, Instant>>,
     shown: Mutex<VecDeque<f64>>,
+    /// The running watcher's frames, for the debug recording.
+    tap: Mutex<Option<FrameTap>>,
+    /// Started on first use, in the dev build only.
+    recorder: Mutex<Option<Arc<Recorder>>>,
+    recording: AtomicBool,
+    saved: Arc<AtomicU64>,
+}
+
+/// `recordings/live/` in the repository, which git ignores. The dev build runs from the
+/// repository, two levels above this crate.
+fn recordings_dir() -> PathBuf {
+    let crate_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    crate_dir
+        .ancestors()
+        .nth(2)
+        .unwrap_or(crate_dir)
+        .join("recordings/live")
 }
 
 fn ms(d: Duration) -> f64 {
@@ -174,6 +205,11 @@ impl Pipeline {
             });
             match watcher {
                 Ok(watcher) => {
+                    let tap = watcher.tap();
+                    if self.recording.load(Ordering::Relaxed) {
+                        tap.record(lock(&self.recorder).clone());
+                    }
+                    *lock(&self.tap) = Some(tap);
                     tracing::info!(app = %window.app, title = %window.title, "watching the game window");
                     self.set_status(
                         app,
@@ -184,6 +220,7 @@ impl Pipeline {
                     );
                     // Until capture stops (the window closed) or the watcher goes away.
                     let _ = wait.recv();
+                    lock(&self.tap).take();
                     watcher.stop();
                 }
                 Err(err) => {
@@ -316,6 +353,64 @@ impl Pipeline {
         if let Err(err) = app.emit("latency", latency) {
             tracing::warn!("sending latency: {err}");
         }
+    }
+}
+
+impl Pipeline {
+    /// The debug recording's state; `None` outside the dev build.
+    pub fn recording(&self) -> Option<Recording> {
+        tauri::is_dev().then(|| Recording {
+            on: self.recording.load(Ordering::Relaxed),
+            saved: self.saved.load(Ordering::Relaxed),
+            dir: recordings_dir().display().to_string(),
+        })
+    }
+
+    /// Saves the newest frame of the game window (dev build only).
+    pub fn save_frame(&self, app: &AppHandle) -> Result<(), String> {
+        let recorder = self.recorder(app)?;
+        let tap = lock(&self.tap)
+            .clone()
+            .ok_or("not watching a game window")?;
+        let frame = tap.snapshot().ok_or("no frame captured yet")?;
+        if recorder.save("manual", frame) {
+            Ok(())
+        } else {
+            Err("still writing earlier frames".into())
+        }
+    }
+
+    /// Starts or stops saving each frame that changes the hand (dev build only).
+    pub fn set_recording(&self, app: &AppHandle, on: bool) -> Result<Recording, String> {
+        let recorder = if on { Some(self.recorder(app)?) } else { None };
+        self.recording.store(on, Ordering::Relaxed);
+        if let Some(tap) = lock(&self.tap).as_ref() {
+            tap.record(recorder);
+        }
+        self.recording()
+            .ok_or_else(|| "only in the dev build".into())
+    }
+
+    fn recorder(&self, app: &AppHandle) -> Result<Arc<Recorder>, String> {
+        if !tauri::is_dev() {
+            return Err("only in the dev build".into());
+        }
+        let mut recorder = lock(&self.recorder);
+        if let Some(recorder) = recorder.as_ref() {
+            return Ok(Arc::clone(recorder));
+        }
+        let saved = Arc::clone(&self.saved);
+        let app = app.clone();
+        let started = Recorder::start(recordings_dir(), move |path, count| {
+            saved.store(count, Ordering::Relaxed);
+            tracing::info!(path = %path.display(), "saved a frame");
+            // Best effort: the count is only for the debug row.
+            let _ = app.emit("frame-saved", count);
+        })
+        .map(Arc::new)
+        .map_err(|err| err.to_string())?;
+        *recorder = Some(Arc::clone(&started));
+        Ok(started)
     }
 }
 

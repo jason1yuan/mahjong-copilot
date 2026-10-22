@@ -8,17 +8,23 @@
 //! the evaluation crops (see the PR for #4): on the multi-source simulations they mark 71 of
 //! the 76 classifier errors, and none of the 132 real hand tiles.
 //!
+//! Each zone of the table (the hand, each seat's river) keeps its own templates, since the
+//! same tile looks different in each (size, angle, light); they share the one classifier.
+//!
 //! Every other answer becomes a template. A stricter bar for templates (0.9) was tried and
 //! dropped: it cost hits and fixed nothing, since the one wrong hit seen repeated a mistake
 //! the classifier made with 0.95 confidence, and wherever a hit differed from what the
 //! classifier would have said, the hit was the right one (a blurred crop matching a clear
 //! earlier template).
 
+use std::collections::HashMap;
+
 use image::RgbImage;
 use mahjong_core::Tile;
 
 use crate::cache::TemplateCache;
 use crate::classifier::{ClassifierError, Prediction, TileClassifier};
+use crate::table::Seat;
 
 /// Crops narrower than this are in doubt.
 pub const MIN_TILE_WIDTH: u32 = 28;
@@ -61,36 +67,55 @@ pub struct Recognition {
     pub doubt: Option<Doubt>,
 }
 
-/// One per game, tile skin, window size and kind of region, like its template cache.
+/// Where on the table a tile is, which picks its template cache.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Zone {
+    Hand,
+    River(Seat),
+}
+
+/// One per game, tile skin and window size, like its template caches.
 pub struct TileRecognizer<C = TileClassifier> {
     classifier: C,
-    cache: TemplateCache,
+    caches: HashMap<Zone, TemplateCache>,
 }
 
 impl<C: Classify> TileRecognizer<C> {
     pub fn new(classifier: C) -> Self {
         Self {
             classifier,
-            cache: TemplateCache::new(),
+            caches: HashMap::new(),
         }
     }
 
-    pub fn cache(&self) -> &TemplateCache {
-        &self.cache
+    /// The templates of `zone`, if it has any yet.
+    pub fn cache(&self, zone: Zone) -> Option<&TemplateCache> {
+        self.caches.get(&zone)
     }
 
     /// Forgets all templates; call when the game, skin or window size changes.
     pub fn clear_cache(&mut self) {
-        self.cache.clear();
+        self.caches.clear();
     }
 
-    /// Recognizes tile crops: cache hits right away, the rest in one classifier batch.
+    /// Recognizes hand tiles; see [`recognize_in`](Self::recognize_in).
     pub fn recognize(&mut self, crops: &[RgbImage]) -> Result<Vec<Recognition>, ClassifierError> {
+        self.recognize_in(Zone::Hand, crops)
+    }
+
+    /// Recognizes tile crops from `zone`: cache hits right away, the rest in one classifier
+    /// batch.
+    pub fn recognize_in(
+        &mut self,
+        zone: Zone,
+        crops: &[RgbImage],
+    ) -> Result<Vec<Recognition>, ClassifierError> {
+        let cache = self.caches.entry(zone).or_default();
         let mut results: Vec<Option<Recognition>> = crops
             .iter()
             .map(|crop| {
                 let hit = (crop.width() >= MIN_TILE_WIDTH)
-                    .then(|| self.cache.lookup(crop))
+                    .then(|| cache.lookup(crop))
                     .flatten()?;
                 Some(Recognition {
                     tile: hit.tile,
@@ -113,8 +138,7 @@ impl<C: Classify> TileRecognizer<C> {
                     None
                 };
                 if doubt.is_none() {
-                    self.cache
-                        .insert(prediction.tile, prediction.confidence, &crops[i]);
+                    cache.insert(prediction.tile, prediction.confidence, &crops[i]);
                 }
                 results[i] = Some(Recognition {
                     tile: prediction.tile,
@@ -216,7 +240,11 @@ mod tests {
         });
         let small = recognizer.recognize(&[crop(20, 240)]).unwrap();
         assert_eq!(small[0].doubt, Some(Doubt::TooSmall));
-        assert!(recognizer.cache().is_empty());
+        assert!(
+            recognizer
+                .cache(Zone::Hand)
+                .is_none_or(TemplateCache::is_empty)
+        );
 
         let mut recognizer = TileRecognizer::new(Fake {
             confidence: 0.5,
@@ -225,6 +253,10 @@ mod tests {
         let unsure = recognizer.recognize(&[crop(40, 240)]).unwrap();
         assert_eq!(unsure[0].doubt, Some(Doubt::LowConfidence));
         assert_eq!(unsure[0].tile.to_string(), "3m", "the best guess is kept");
-        assert!(recognizer.cache().is_empty());
+        assert!(
+            recognizer
+                .cache(Zone::Hand)
+                .is_none_or(TemplateCache::is_empty)
+        );
     }
 }

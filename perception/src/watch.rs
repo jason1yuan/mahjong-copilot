@@ -5,13 +5,17 @@
 //! Until the hand is found the whole window is watched; after that only the rows of the
 //! hand (a little above, for raised tiles), so animations elsewhere on the table cost
 //! nothing.
+//!
+//! [`FrameTap`] gives the dev build's screenshot button and recording switch the frames
+//! (#8); nothing is saved unless they are used.
 
 use std::path::Path;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
+use image::RgbImage;
 use ort::environment::Environment;
 
 use crate::capture::{
@@ -22,6 +26,7 @@ use crate::classifier::{ClassifierError, TileClassifier};
 use crate::hand::{HandTracker, TileBox};
 use crate::profile::Profile;
 use crate::recognizer::{Recognition, TileRecognizer};
+use crate::record::Recorder;
 
 /// The whole window, watched until the hand is found.
 const WHOLE: Region = Region {
@@ -79,7 +84,33 @@ pub enum WatchEvent {
 /// A running watcher; dropping it stops the thread and the capture.
 pub struct Watcher {
     stop: Arc<AtomicBool>,
+    tap: FrameTap,
     thread: Option<JoinHandle<()>>,
+}
+
+/// Debug access to a running watcher's frames, for the dev build's screenshot button and
+/// recording switch (#8). Cheap to clone; not used on the advice path.
+#[derive(Clone)]
+pub struct FrameTap {
+    latest: Arc<LatestFrame>,
+    recorder: Arc<Mutex<Option<Arc<Recorder>>>>,
+}
+
+impl FrameTap {
+    /// A copy of the newest frame; `None` before the first one.
+    pub fn snapshot(&self) -> Option<RgbImage> {
+        self.latest.latest().view().map(|view| view.to_rgb())
+    }
+
+    /// From now on saves each frame that changed the hand with `recorder`; `None` stops.
+    pub fn record(&self, recorder: Option<Arc<Recorder>>) {
+        *lock(&self.recorder) = recorder;
+    }
+}
+
+// Holds only an `Option`; a panic elsewhere cannot leave it half-written.
+fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
+    m.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
 impl Watcher {
@@ -106,8 +137,13 @@ impl Watcher {
             })?
         };
         let stop = Arc::new(AtomicBool::new(false));
+        let tap = FrameTap {
+            latest: Arc::clone(&latest),
+            recorder: Arc::new(Mutex::new(None)),
+        };
         let thread = {
             let stop = Arc::clone(&stop);
+            let recorder = Arc::clone(&tap.recorder);
             let mut state = State {
                 recognizer,
                 tracker: HandTracker::new(),
@@ -145,8 +181,22 @@ impl Watcher {
                         if let Some(view) = frame.view()
                             && let Some(event) = state.read(&view)
                         {
-                            drop(frame);
+                            let recorder = lock(&recorder).clone();
+                            let Some(recorder) = recorder else {
+                                drop(frame);
+                                on_event(event);
+                                continue;
+                            };
+                            // Advice first, so recording never delays it; then copy the
+                            // frame that was read before capture can replace it.
                             on_event(event);
+                            let image = view.to_rgb();
+                            drop(frame);
+                            if !recorder.save("auto", image) {
+                                tracing::warn!(
+                                    "recording: earlier frames are still being written; skipped one"
+                                );
+                            }
                         }
                     }
                     if let Err(err) = session.stop() {
@@ -156,8 +206,13 @@ impl Watcher {
         };
         Ok(Self {
             stop,
+            tap,
             thread: Some(thread),
         })
+    }
+
+    pub fn tap(&self) -> FrameTap {
+        self.tap.clone()
     }
 
     pub fn stop(mut self) {

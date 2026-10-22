@@ -69,16 +69,19 @@ cargo run -p mahjong-perception --release --example eval_cache -- recordings/sou
 - `FrameTap`：给开发版的截图按钮和连续录制用（#8）：`snapshot` 复制最新一帧；`record` 打开后，每次手牌变化都把读到的那一帧交给 `Recorder`，在发出建议之后才做
 - `record`：`Recorder` 在后台线程上把帧存成 PNG，最多排队 4 张，再多就丢掉，不拖慢流水线。只有明确开启的调试录制才用它
 
-## 牌桌和牌河（#8）
+## 牌桌：牌河、副露、宝牌指示（#8）
 
 - `table`：牌桌的透视变换。`Table::new` 用适配包里 `table.corners` 和这一帧的游戏区域算出桌面到画面的变换，四家（`Seat`：自家、下家、对家、上家）各一个；`rectify` 把某一家的一块桌面重采样成从那一家看过去的正面图
 - `river`：读四家牌河。`rectify` 按 `river` 版面校正出每家的牌河，`find_tiles` 按牌面切牌（行、横放），`crop` 取出转正的牌图，`read` 用每家自己的模板缓存（`Zone::River`）认牌
+- `faces`：在校正后的正面图里找牌面（浅色、灰或粉、够大、不在别的牌面里面），判断横放，牌河和副露共用
+- `meld`：读四家副露。`rectify` 校正出每家的副露带子，`find_strip` 从右往左找出牌（含横放、加杠叠上的牌、扣着的牌），`group` 按牌本身分成一副副，`read` 用每家自己的模板缓存（`Zone::Meld`）认牌
+- `dora`：在左上角找宝牌指示框，`find` 找出翻开的格子，`read` 用自己的模板缓存（`Zone::Dora`）认牌
 - `recognizer`：模板缓存按区域（`Zone`）分开，共用一个认牌模型
 
-用录下的帧评测牌河（标签和图片都只在本机），用法和标签格式见文件开头：
+用录下的帧评测牌河、副露和宝牌指示（标签和图片都只在本机），用法和标签格式见文件开头：
 
 ```bash
-cargo run -p mahjong-perception --release --example eval_river -- recordings/live --labels recordings/live/rivers.json
+cargo run -p mahjong-perception --release --example eval_table -- recordings/live --labels recordings/live/table.json
 ```
 
 重新标定 `table` 和 `river`（换皮肤或别的游戏时）：

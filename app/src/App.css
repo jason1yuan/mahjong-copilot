@@ -50,20 +50,8 @@ body {
   cursor: default;
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ok);
-}
 
-.status-dot.wait {
-  background: #d4a017;
-}
 
-.status-dot.bad {
-  background: var(--red);
-}
 
 .muted {
   color: var(--muted);
@@ -231,6 +219,10 @@ body {
   background: #febc2e;
 }
 
+.window-buttons .maximize {
+  background: #28c840;
+}
+
 .window-buttons button:hover {
   filter: brightness(0.85);
 }
@@ -273,6 +265,10 @@ body {
 
 .table-debug p {
   margin: 0;
+}
+
+.table-debug .legend {
+  font-size: 10px;
 }
 
 .table-debug .seat {

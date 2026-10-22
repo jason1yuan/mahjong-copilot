@@ -117,6 +117,7 @@ function OwnMelds({ melds }: { melds: TableTile[][] }) {
 function TableDebug({ table }: { table: TableView }) {
   return (
     <div className="table-debug">
+      <p className="legend">↻ 横放（被鸣的牌、立直宣言牌） · +X 加杠 · ▮ 扣着的牌 · ? 拿不准</p>
       {SEATS.map((seat, i) => (
         <p key={seat}>
           <span className="seat">{seat}</span>
@@ -136,6 +137,13 @@ function WindowButtons() {
     <span className="window-buttons">
       <button type="button" className="close" aria-label="关闭" title="关闭" onClick={() => window.close()} />
       <button type="button" className="minimize" aria-label="最小化" title="最小化" onClick={() => window.minimize()} />
+      <button
+        type="button"
+        className="maximize"
+        aria-label="最大化"
+        title="最大化"
+        onClick={() => window.toggleMaximize()}
+      />
     </span>
   );
 }
@@ -222,14 +230,12 @@ function App() {
   }, [advice]);
 
   const watching = status?.state === "watching";
-  const dot = models || status?.state === "error" ? "bad" : watching ? "ok" : "wait";
   const concealed = advice ? advice.tiles.length - (advice.drawn ? 1 : 0) : 0;
 
   return (
     <main className="panel">
       <header className="titlebar" data-tauri-drag-region>
         <WindowButtons />
-        <span className={`status-dot ${dot}`} data-tauri-drag-region />
         <span data-tauri-drag-region>麻将 Copilot</span>
         <span className="muted" data-tauri-drag-region>
           {statusText(status, models)}

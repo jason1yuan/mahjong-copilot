@@ -192,7 +192,7 @@ pub fn find_strip(view: &MeldView, layout: &MeldLayout, face: TileFace) -> Vec<M
 }
 
 /// Splits a strip of tiles (right to left) into melds, each left to right, choosing the
-/// split with the fewest groups that are not melds.
+/// split with the fewest groups that are not melds, and keeps only the melds.
 pub fn group(strip: &[MeldTile]) -> Vec<Meld> {
     // best[i]: (groups that are not melds, sizes) for the strip from i on.
     let n = strip.len();
@@ -218,10 +218,15 @@ pub fn group(strip: &[MeldTile]) -> Vec<Meld> {
     let mut melds = Vec::new();
     let mut start = 0;
     for size in sizes {
-        let mut meld = strip[start..start + size].to_vec();
-        meld.reverse();
-        melds.push(meld);
+        let group = &strip[start..start + size];
         start += size;
+        // Something in the band that is not a meld (an avatar's light patch, a hand lying
+        // face down beside it) is left out.
+        if is_meld(group) {
+            let mut meld = group.to_vec();
+            meld.reverse();
+            melds.push(meld);
+        }
     }
     melds
 }
@@ -467,6 +472,28 @@ mod tests {
             tile("3p", true),
         ];
         assert_eq!(names(&group(&strip)), ["5p 5p* 5p", "3p* 4p 5p"]);
+    }
+
+    #[test]
+    fn what_is_not_a_meld_is_left_out() {
+        // A seat without melds: a light patch read as a sideways 3p, and the hand lying face
+        // down beside it.
+        let back = MeldTile {
+            tile: None,
+            sideways: false,
+            added: None,
+        };
+        assert!(group(&[tile("3p", true), back]).is_empty());
+        // A real pon is kept even with junk after it.
+        assert_eq!(
+            names(&group(&[
+                tile("E", false),
+                tile("E", true),
+                tile("E", false),
+                back
+            ])),
+            ["E E* E"]
+        );
     }
 
     #[test]

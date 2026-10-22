@@ -32,6 +32,7 @@ use crate::recognizer::{Doubt, Recognition, TileRecognizer};
 use crate::record::Recorder;
 use crate::round::RoundReader;
 use crate::snapshot::{self, Snapshot};
+use crate::table::Seat;
 use crate::text;
 
 /// The whole window, watched until the hand is found.
@@ -253,6 +254,13 @@ impl Drop for Watcher {
     }
 }
 
+/// Whether a hand of `tiles` (with the drawn one) fits `melds` called: 13 tiles less three
+/// a meld (a kan's fourth tile is replaced by a draw), one more after a draw.
+fn hand_fits(tiles: usize, melds: usize) -> bool {
+    let waiting = 13usize.saturating_sub(3 * melds);
+    tiles == waiting || tiles == waiting + 1
+}
+
 /// More than this share of a hand's tiles unsure means it is not a hand.
 const MAX_UNSURE: f32 = 0.5;
 
@@ -362,6 +370,18 @@ impl State {
             }
         };
         let table_time = start.elapsed();
+        // Mid-way through the game's sorting animation (tiles sliding together after a
+        // discard or a deal, some overlapping) the hand can read with tiles missing. It must
+        // fit the player's melds; if not, wait for the next settled frame (#39).
+        if let Some(table) = &table
+            && !hand_fits(tiles.len(), table.melds[Seat::Own.index()].len())
+        {
+            tracing::debug!(
+                tiles = tiles.len(),
+                "the hand does not fit the melds; waiting for it to settle"
+            );
+            return None;
+        }
 
         // From now on watch the hand's rows, reaching up for raised tiles, and the table
         // above them.
@@ -425,6 +445,18 @@ mod tests {
             source: Source::Classifier,
             doubt,
         }
+    }
+
+    #[test]
+    fn a_hand_must_fit_the_melds() {
+        assert!(hand_fits(13, 0) && hand_fits(14, 0));
+        assert!(hand_fits(10, 1) && hand_fits(11, 1));
+        assert!(hand_fits(1, 4) && hand_fits(2, 4));
+        // Read mid-way through the sorting animation at a deal: 8 tiles, overlapping.
+        assert!(!hand_fits(8, 0));
+        // A tile lost while the others slide together after a discard.
+        assert!(!hand_fits(12, 0));
+        assert!(!hand_fits(9, 1));
     }
 
     #[test]

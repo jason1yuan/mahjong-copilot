@@ -40,6 +40,14 @@ impl Tile {
     pub fn is_honor(self) -> bool {
         self.kind >= 27
     }
+
+    /// The red version of a five (a red five stays as it is); `None` for any other tile.
+    pub fn to_red(self) -> Option<Self> {
+        matches!(self.kind, 4 | 13 | 22).then_some(Self {
+            kind: self.kind,
+            red: true,
+        })
+    }
 }
 
 impl FromStr for Tile {
@@ -134,6 +142,17 @@ mod tests {
         assert!(red.is_red());
         assert_eq!(red.kind(), "5p".parse::<Tile>().unwrap().kind());
         assert_eq!(red.to_string(), "5pr");
+    }
+
+    #[test]
+    fn only_fives_have_a_red_version() {
+        for (plain, red) in [("5m", "5mr"), ("5p", "5pr"), ("5s", "5sr"), ("5sr", "5sr")] {
+            let tile = plain.parse::<Tile>().unwrap();
+            assert_eq!(tile.to_red(), Some(red.parse().unwrap()), "{plain}");
+        }
+        for other in ["4m", "6p", "1s", "9s", "E", "C"] {
+            assert_eq!(other.parse::<Tile>().unwrap().to_red(), None, "{other}");
+        }
     }
 
     #[test]

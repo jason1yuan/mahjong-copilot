@@ -33,6 +33,9 @@ const MARGIN: f64 = 0.3;
 const MAX_GAP: f64 = 0.45;
 /// Least pixels per tile width a river is rectified at.
 const MIN_SCALE: f64 = 8.0;
+/// Most pixels per tile width: the classifier and the cache shrink tiles further anyway,
+/// and the near seats would otherwise cost the most.
+const MAX_SCALE: f64 = 72.0;
 
 /// A river rectified into an upright view from its seat.
 pub struct RiverView {
@@ -74,7 +77,9 @@ pub fn rectify(
         layout.left + layout.columns as f64 / 2.0,
         layout.near + layout.row_pitch,
     ];
-    let scale = table.scale_at(seat, middle[0], middle[1]).max(MIN_SCALE);
+    let scale = table
+        .scale_at(seat, middle[0], middle[1])
+        .clamp(MIN_SCALE, MAX_SCALE);
     // Half a tile to the left of the first column, so the first face starts at 0.5 tiles.
     let origin = [layout.left - 0.5, layout.near - MARGIN];
     let size = [READ_WIDTH, ROWS as f64 * layout.row_pitch + 2.0 * MARGIN];

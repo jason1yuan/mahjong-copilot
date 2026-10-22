@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 
 use mahjong_perception::capture::{self, CaptureConfig, LatestFrame, RelRect};
 use mahjong_perception::change::{ChangeDetector, FrameGate, Region};
-use mahjong_perception::hand::HandFinder;
+use mahjong_perception::hand::HandTracker;
 use mahjong_perception::{Doubt, Source, TileClassifier, TileRecognizer, profile};
 
 const DEFAULT_MODEL: &str = "ml/models/mahjong_soul_vision/model.onnx";
@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         rows: 18,
     };
     let mut detector = ChangeDetector::new(&[whole]);
-    let mut finder = HandFinder::new();
+    let mut finder = HandTracker::new();
     let mut watched = whole;
     let mut last_hand = String::new();
     let mut seen = 0;
@@ -118,7 +118,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(clippy::too_many_arguments)]
 fn report(
     view: &capture::FrameView<'_>,
-    finder: &mut HandFinder,
+    finder: &mut HandTracker,
     recognizer: &mut TileRecognizer,
     profile: &profile::Profile,
     watched: &mut Region,

@@ -124,6 +124,81 @@ const MIN_SEAM_SCORE: f32 = 2.0;
 /// Below this share of face pixels, a slot at the end of the row is not a tile.
 const MIN_TILENESS: f32 = 0.35;
 
+/// The tile size found earlier for this frame size: later frames are read with it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Expect {
+    pub pitch: f32,
+    pub height: u32,
+}
+
+impl Expect {
+    fn of(layout: &HandLayout) -> Self {
+        Self {
+            pitch: layout.pitch,
+            height: layout.band.1 - layout.band.0,
+        }
+    }
+
+    /// Same tile size, within the 4 % rounding and resampling leave.
+    fn matches(&self, other: &Expect) -> bool {
+        (self.pitch - other.pitch).abs() < 0.04 * self.pitch
+    }
+}
+
+/// A new tile size seen this many times in a row replaces the locked one.
+const RELOCK: u32 = 3;
+
+/// Finds the hand frame after frame. Once found for a frame size, the tile size is locked,
+/// so a hand partly covered (a popup, a dimmed table) still splits into the right tiles
+/// instead of being read with a wrong tile size. A changed frame size starts over; a
+/// different tile size seen [`RELOCK`] times in a row (the game rescaled) replaces it.
+#[derive(Default)]
+pub struct HandTracker {
+    finder: HandFinder,
+    lock: Option<((u32, u32), Expect)>,
+    candidate: Option<(Expect, u32)>,
+}
+
+impl HandTracker {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// The locked tile size, if any.
+    pub fn expect(&self) -> Option<Expect> {
+        self.lock.map(|(_, e)| e)
+    }
+
+    pub fn find(&mut self, frame: &FrameView<'_>, face: TileFace) -> Option<HandLayout> {
+        let size = (frame.width(), frame.height());
+        let Some((locked_size, expect)) = self.lock.filter(|(s, _)| *s == size) else {
+            let layout = self.finder.find(frame, face)?;
+            self.lock = Some((size, Expect::of(&layout)));
+            self.candidate = None;
+            return Some(layout);
+        };
+        if let Some(layout) = self.finder.find_expecting(frame, face, Some(expect)) {
+            self.candidate = None;
+            return Some(layout);
+        }
+        // Not there at the locked size: maybe the game rescaled. Believe a new size only
+        // once it repeats.
+        let layout = self.finder.find(frame, face)?;
+        let seen = Expect::of(&layout);
+        let count = match self.candidate {
+            Some((c, n)) if c.matches(&seen) => n + 1,
+            _ => 1,
+        };
+        if count >= RELOCK {
+            self.lock = Some((locked_size, seen));
+            self.candidate = None;
+            return Some(layout);
+        }
+        self.candidate = Some((seen, count));
+        None
+    }
+}
+
 /// Reusable scratch space, so finding the hand again does not allocate frame-sized buffers.
 #[derive(Default)]
 pub struct HandFinder {
@@ -131,6 +206,7 @@ pub struct HandFinder {
     height: usize,
     mask: Vec<bool>,
     mean: Vec<f32>,
+    expect: Option<Expect>,
 }
 
 impl HandFinder {
@@ -139,6 +215,18 @@ impl HandFinder {
     }
 
     pub fn find(&mut self, frame: &FrameView<'_>, face: TileFace) -> Option<HandLayout> {
+        self.find_expecting(frame, face, None)
+    }
+
+    /// Like [`find`](Self::find), but with tiles of a known size: the pitch must be within
+    /// 4 % of `expect.pitch`, and boxes are `expect.height` tall.
+    pub fn find_expecting(
+        &mut self,
+        frame: &FrameView<'_>,
+        face: TileFace,
+        expect: Option<Expect>,
+    ) -> Option<HandLayout> {
+        self.expect = expect;
         let (w, h) = (frame.width() as usize, frame.height() as usize);
         if w < 16 || h < 16 {
             return None;
@@ -256,7 +344,7 @@ impl HandFinder {
         let (mut n, mut shift);
         let mut rounds = 0;
         loop {
-            let (count, score, grid_shift) = tile_count(&seams, g0, g1, band)?;
+            let (count, score, grid_shift) = tile_count(&seams, g0, g1, band, self.expect)?;
             if count < MIN_TILES || score < MIN_SEAM_SCORE {
                 return None;
             }
@@ -394,25 +482,37 @@ impl HandFinder {
 
     fn tile_box(&self, left: usize, right: usize, y0: usize, band: usize) -> TileBox {
         let top = self.tile_top(left, right, y0, band);
+        let height = self.expect.map_or(band, |e| e.height as usize);
         TileBox {
             left: left as u32,
             top: top as u32,
             right: right as u32,
-            bottom: (top + band).min(self.height) as u32,
+            bottom: (top + height).min(self.height) as u32,
         }
     }
 }
 
 /// The number of tiles in `g0..g1` whose dividing lines best fall on the seams, how
-/// clearly (seam darkness over the average), and the shift of the grid in pixels.
-fn tile_count(seams: &[f32], g0: usize, g1: usize, band: usize) -> Option<(usize, f32, f32)> {
+/// clearly (seam darkness over the average), and the shift of the grid in pixels. Tiles
+/// are `MIN_ASPECT..MAX_ASPECT` as wide as the band is tall, or within 4 % of an expected
+/// pitch.
+fn tile_count(
+    seams: &[f32],
+    g0: usize,
+    g1: usize,
+    band: usize,
+    expect: Option<Expect>,
+) -> Option<(usize, f32, f32)> {
     let width = (g1 - g0) as f32;
     let background = seams[g0..g1].iter().sum::<f32>() / width + 1e-3;
     let band = band as f32;
+    let (lo, hi) = expect.map_or((MIN_ASPECT * band, MAX_ASPECT * band), |e| {
+        (0.96 * e.pitch, 1.04 * e.pitch)
+    });
     let mut best: Option<(usize, f32, f32)> = None;
-    for n in 1..=(width / (MIN_ASPECT * band)) as usize + 1 {
+    for n in 1..=(width / lo.max(1.0)) as usize + 1 {
         let step = width / n as f32;
-        if !(MIN_ASPECT * band..=MAX_ASPECT * band).contains(&step) {
+        if !(lo..=hi).contains(&step) {
             continue;
         }
         if n == 1 {
@@ -569,6 +669,44 @@ mod tests {
         // The 1280x720 screenshot this layout comes from fills the whole frame.
         assert!((area.width - 1280.0).abs() < 5.0, "{area:?}");
         assert!(area.left.abs() < 5.0 && area.top.abs() < 5.0, "{area:?}");
+    }
+
+    #[test]
+    fn a_locked_tile_size_reads_a_partly_covered_hand() {
+        let (w, h) = (40, 60);
+        let tiles = row(100, 13, w, 500);
+        let clear = table(800, 580, 0, &tiles, w, h);
+        // A dark popup covers the upper 40 % of the hand.
+        let covered: Vec<u8> = clear
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .enumerate()
+            .flat_map(|(i, px)| {
+                let y = i as u32 / 800;
+                if (496..524).contains(&y) {
+                    [20, 20, 20, 255]
+                } else {
+                    *px
+                }
+            })
+            .collect();
+        fn view(data: &[u8]) -> FrameView<'_> {
+            FrameView::new(800, 580, 3200, data, 1.0).unwrap()
+        }
+        let mut tracker = HandTracker::new();
+        assert_eq!(
+            tracker.find(&view(&clear), FACE).unwrap().concealed.len(),
+            13
+        );
+        let expect = tracker.expect().unwrap();
+        assert!(
+            (expect.pitch - 40.0).abs() < 1.0 && expect.height.abs_diff(h) <= 2,
+            "{expect:?}"
+        );
+        let layout = tracker.find(&view(&covered), FACE).unwrap();
+        assert_eq!(layout.concealed.len(), 13);
+        assert!((layout.pitch - 40.0).abs() < 1.6);
     }
 
     #[test]

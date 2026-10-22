@@ -2,7 +2,8 @@
 
 Python。这里不训练任何模型：识别和决策都用现成的。截图、录屏、数据集和模型权重都不进 git（见根目录 `.gitignore`）。
 
-- VLM 选型评测（P0）：在雀魂单张牌切图和真实截图上，比较几种开源小型 VLM 的认牌准确率、耗时、内存和体积，选出识别用的模型和运行方式。现成的认牌模型 pjura/mahjong_soul_vision（ViT-base 图像分类器）一起参加评测，作为对照。
+- 认牌方案评测（P0，`vlm_eval/`）：在雀魂单张牌切图和真实截图上，比较开源小型 VLM、在线 API 和现成的认牌模型 pjura/mahjong_soul_vision（ViT-base 图像分类器）。结论是用后者加赤五颜色规则，见 [docs/vlm-eval.md](../docs/vlm-eval.md)。
+- 认牌模型导出（`convert/`）：`export_classifier.py` 把 pjura/mahjong_soul_vision 导出成 ONNX（另有 int8 版本），并和 PyTorch 逐张对照；`pillow_fixtures.py` 生成 Rust 移植 Pillow 算法时用的测试数据。
 - 决策模型（P2）：用 Mortal（haor/Mortal-S42 权重）。这里只做 ONNX 导出，以及和原 PyTorch 模型的输出对照测试。
 - 评测集（P1）：在游戏里回放已知牌谱并录屏，用牌谱作为标准答案，评测识别准确率和事件推断是否正确。
 

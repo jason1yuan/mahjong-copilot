@@ -1,0 +1,61 @@
+{
+ "pillow": "13.0.0",
+ "pattern": "value(x, y, c) = (x * 31 + y * 17 + c * 73 + (x * y) % 13) % 256",
+ "output": [
+  224,
+  224
+ ],
+ "hash": "64-bit FNV-1a of the row-major RGB bytes",
+ "cases": [
+  {
+   "width": 31,
+   "height": 47,
+   "fnv1a64": "d50aef0b310c631b"
+  },
+  {
+   "width": 13,
+   "height": 9,
+   "fnv1a64": "6707cb38898e7778"
+  },
+  {
+   "width": 1,
+   "height": 1,
+   "fnv1a64": "8e5e3a48206d4f25"
+  },
+  {
+   "width": 300,
+   "height": 200,
+   "fnv1a64": "cec646734ab5e7cd"
+  },
+  {
+   "width": 600,
+   "height": 40,
+   "fnv1a64": "2b7b5070c766255e"
+  },
+  {
+   "width": 5,
+   "height": 300,
+   "fnv1a64": "ba78969810375578"
+  },
+  {
+   "width": 224,
+   "height": 100,
+   "fnv1a64": "2aba1e786bbfc311"
+  },
+  {
+   "width": 100,
+   "height": 224,
+   "fnv1a64": "afc2bc061961225b"
+  },
+  {
+   "width": 224,
+   "height": 224,
+   "fnv1a64": "2e33a35313b3e906"
+  },
+  {
+   "width": 64,
+   "height": 87,
+   "fnv1a64": "ec290778d6d9f365"
+  }
+ ]
+}

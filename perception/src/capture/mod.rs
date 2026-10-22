@@ -246,6 +246,11 @@ impl<'a> FrameView<'a> {
         ((77 * u32::from(r) + 150 * u32::from(g) + 29 * u32::from(b)) >> 8) as u8
     }
 
+    /// The whole view as an RGB image.
+    pub fn to_rgb(&self) -> RgbImage {
+        RgbImage::from_fn(self.width, self.height, |x, y| Rgb(self.rgb(x, y)))
+    }
+
     /// The pixels of a relative rectangle as an RGB image, e.g. one tile for recognition.
     pub fn crop_rgb(&self, rect: RelRect) -> RgbImage {
         let [left, top, right, bottom] = self.pixel_rect(rect);

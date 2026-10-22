@@ -5,7 +5,9 @@ pub mod cache;
 pub mod capture;
 pub mod change;
 pub mod classifier;
+pub mod hand;
 mod pillow;
+pub mod profile;
 pub mod recognizer;
 pub mod red_five;
 

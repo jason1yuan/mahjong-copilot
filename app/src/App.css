@@ -43,25 +43,15 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 28px;
+  height: 32px;
+  margin: -4px -6px 0;
+  padding: 0 6px;
   font-size: 13px;
   cursor: default;
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ok);
-}
 
-.status-dot.wait {
-  background: #d4a017;
-}
 
-.status-dot.bad {
-  background: var(--red);
-}
 
 .muted {
   color: var(--muted);
@@ -204,4 +194,85 @@ body {
 
 .muted-inline {
   color: var(--muted);
+}
+
+.window-buttons {
+  display: inline-flex;
+  gap: 7px;
+  margin-right: 4px;
+}
+
+.window-buttons button {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.window-buttons .close {
+  background: #ff5f57;
+}
+
+.window-buttons .minimize {
+  background: #febc2e;
+}
+
+.window-buttons .maximize {
+  background: #28c840;
+}
+
+.window-buttons button:hover {
+  filter: brightness(0.85);
+}
+
+.melds {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 12px;
+  align-items: flex-end;
+}
+
+.meld {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.meld-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 27px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--tile-bg);
+  font-size: 10px;
+}
+
+.meld-tile.sideways {
+  width: 27px;
+  height: 20px;
+}
+
+.table-debug {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.table-debug p {
+  margin: 0;
+}
+
+.table-debug .legend {
+  font-size: 10px;
+}
+
+.table-debug .seat {
+  display: inline-block;
+  width: 30px;
+  color: var(--text);
 }

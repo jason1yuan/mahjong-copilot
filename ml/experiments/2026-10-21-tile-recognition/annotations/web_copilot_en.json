@@ -1,0 +1,162 @@
+{
+ "image": "recordings/web/Pasted 2026-10-21 at 12.39.53 PM.png",
+ "id": "web_copilot_en",
+ "note": "Hand labels pre-filled by pjura/mahjong_soul_vision and checked by eye; red fives fixed by hand.",
+ "hand": [
+  {
+   "tile": "1m",
+   "box": [
+    146,
+    664,
+    209,
+    759
+   ],
+   "prelabel": "1m",
+   "prelabel_confidence": 0.964
+  },
+  {
+   "tile": "1m",
+   "box": [
+    209,
+    664,
+    272,
+    759
+   ],
+   "prelabel": "1m",
+   "prelabel_confidence": 0.964
+  },
+  {
+   "tile": "1m",
+   "box": [
+    272,
+    664,
+    335,
+    759
+   ],
+   "prelabel": "1m",
+   "prelabel_confidence": 0.965
+  },
+  {
+   "tile": "5mr",
+   "box": [
+    335,
+    664,
+    398,
+    759
+   ],
+   "prelabel": "5m",
+   "prelabel_confidence": 0.968
+  },
+  {
+   "tile": "7m",
+   "box": [
+    398,
+    664,
+    461,
+    759
+   ],
+   "prelabel": "7m",
+   "prelabel_confidence": 0.962
+  },
+  {
+   "tile": "8m",
+   "box": [
+    461,
+    664,
+    524,
+    759
+   ],
+   "prelabel": "8m",
+   "prelabel_confidence": 0.972
+  },
+  {
+   "tile": "2p",
+   "box": [
+    524,
+    664,
+    588,
+    759
+   ],
+   "prelabel": "2p",
+   "prelabel_confidence": 0.968
+  },
+  {
+   "tile": "3p",
+   "box": [
+    588,
+    664,
+    651,
+    759
+   ],
+   "prelabel": "3p",
+   "prelabel_confidence": 0.966
+  },
+  {
+   "tile": "1s",
+   "box": [
+    651,
+    664,
+    714,
+    759
+   ],
+   "prelabel": "1s",
+   "prelabel_confidence": 0.963
+  },
+  {
+   "tile": "2s",
+   "box": [
+    714,
+    664,
+    777,
+    759
+   ],
+   "prelabel": "2s",
+   "prelabel_confidence": 0.973
+  },
+  {
+   "tile": "4s",
+   "box": [
+    777,
+    664,
+    840,
+    759
+   ],
+   "prelabel": "4s",
+   "prelabel_confidence": 0.963
+  },
+  {
+   "tile": "W",
+   "box": [
+    840,
+    664,
+    903,
+    759
+   ],
+   "prelabel": "W",
+   "prelabel_confidence": 0.939
+  },
+  {
+   "tile": "W",
+   "box": [
+    903,
+    664,
+    966,
+    759
+   ],
+   "prelabel": "W",
+   "prelabel_confidence": 0.941
+  },
+  {
+   "tile": "1m",
+   "box": [
+    988,
+    664,
+    1049,
+    759
+   ],
+   "prelabel": "1m",
+   "prelabel_confidence": 0.964
+  }
+ ],
+ "checked_by_eye": true
+}

@@ -1,0 +1,1682 @@
+{
+ "summary": {
+  "model": "internvl3-2b",
+  "n": 170,
+  "accuracy": 0.0,
+  "kind_accuracy": 0.0,
+  "calibration": null,
+  "accuracy_by_split": {
+   "test": 0.0,
+   "train": 0.0
+  },
+  "accuracy_by_label": {
+   "1m": 0.0,
+   "1p": 0.0,
+   "1s": 0.0,
+   "2m": 0.0,
+   "2p": 0.0,
+   "2s": 0.0,
+   "3m": 0.0,
+   "3p": 0.0,
+   "3s": 0.0,
+   "4m": 0.0,
+   "4p": 0.0,
+   "4s": 0.0,
+   "5m": 0.0,
+   "5mr": 0.0,
+   "5p": 0.0,
+   "5pr": 0.0,
+   "5s": 0.0,
+   "5sr": 0.0,
+   "6m": 0.0,
+   "6p": 0.0,
+   "6s": 0.0,
+   "7m": 0.0,
+   "7p": 0.0,
+   "7s": 0.0,
+   "8m": 0.0,
+   "8p": 0.0,
+   "8s": 0.0,
+   "9m": 0.0,
+   "9p": 0.0,
+   "9s": 0.0,
+   "C": 0.0,
+   "E": 0.0,
+   "F": 0.0,
+   "N": 0.0,
+   "P": 0.0,
+   "S": 0.0,
+   "W": 0.0
+  },
+  "top_confusions": [
+   {
+    "label": "1s",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "1m",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "1p",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "2s",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "2m",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "2p",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "3s",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "3m",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "3p",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "4s",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "4m",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "4p",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "6s",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "6m",
+    "pred": "?",
+    "count": 5
+   },
+   {
+    "label": "6p",
+    "pred": "?",
+    "count": 5
+   }
+  ],
+  "first_request_s": 0.5261890419642441,
+  "latency_s": {
+   "mean": 0.5591502754050776,
+   "median": 0.5484991670236923,
+   "p95": 0.6327019999735057
+  },
+  "load_s": 1.0182822499773465,
+  "peak_rss_mb": 3876.21875,
+  "files_gb": 1.453770816,
+  "repo": "ggml-org/InternVL3-2B-Instruct-GGUF",
+  "files": [
+   "InternVL3-2B-Instruct-Q4_K_M.gguf",
+   "mmproj-InternVL3-2B-Instruct-Q8_0.gguf"
+  ],
+  "license": "Apache-2.0",
+  "min_long_side": 224,
+  "server_args": [],
+  "answers": "free",
+  "sample": null,
+  "per_label": 5,
+  "seed": 7
+ },
+ "rows": [
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/Screenshot 2023-10-17 102752.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5261890419642441,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/Screenshot 2023-10-02 170616.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5151301249861717,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/Screenshot 2023-10-17 102759.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5041884160018526,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/Screenshot 2023-10-17 102835.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5010654589859769,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1b/1b.png",
+   "split": "train",
+   "label": "1s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5007499579805881,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-02 034116.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with one round dot (circle) and one stick (bamboo).",
+   "seconds": 0.6023730830056593,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-21 194257.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.512149624992162,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-02 193058.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.52022416703403,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-02 164001.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5508830419857986,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1n/Screenshot 2023-10-02 183128.png",
+   "split": "train",
+   "label": "1m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5218595829792321,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1p/Screenshot 2023-10-17 102916.png",
+   "split": "train",
+   "label": "1p",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5034741659765132,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/1p/Screenshot 2023-10-17 102710.png",
+   "split": "test",
+   "label": "1p",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5071013339911588,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1p/Screenshot 2023-10-17 102911.png",
+   "split": "train",
+   "label": "1p",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5632266669999808,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/1p/Screenshot 2023-10-02 170411.png",
+   "split": "train",
+   "label": "1p",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5275157080031931,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/1p/Screenshot 2023-10-17 102715.png",
+   "split": "test",
+   "label": "1p",
+   "pred": "?",
+   "answer": "The tile in the image is a red five of bamboo.",
+   "seconds": 0.5504695000126958,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-17 105429.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5336562920128927,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-17 105426.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5761989169986919,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-02 170606.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5313190420274623,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-17 105355.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5399336249683984,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2b/Screenshot 2023-10-02 170609.png",
+   "split": "train",
+   "label": "2s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5366147090098821,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/Screenshot 2023-10-02 193157.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "The tile is a red five with a bamboo character.",
+   "seconds": 0.5517905419692397,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/Screenshot 2023-10-02 193145.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5351457079523243,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/2n.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with two sticks (bamboo) and a round dot.",
+   "seconds": 0.6146435420378111,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/Screenshot 2023-10-02 193201.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5362898749881424,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2n/Screenshot 2023-10-02 163433.png",
+   "split": "train",
+   "label": "2m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5363371659768745,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2p/Screenshot 2023-10-17 104912.png",
+   "split": "train",
+   "label": "2p",
+   "pred": "?",
+   "answer": "The tile is a bamboo tile with a bird.",
+   "seconds": 0.537423666974064,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2p/Screenshot 2023-10-17 105214.png",
+   "split": "train",
+   "label": "2p",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5650546670076437,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/2p/Screenshot 2023-10-17 104948.png",
+   "split": "test",
+   "label": "2p",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5646130419918336,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2p/Screenshot 2023-10-17 105211.png",
+   "split": "train",
+   "label": "2p",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.571082208014559,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/2p/Screenshot 2023-10-17 104959.png",
+   "split": "train",
+   "label": "2p",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5210549579933286,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 170536.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5337676249910146,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 205841.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5261217909865081,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 163949.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "?",
+   "answer": "The tile in the image is a bamboo tile with a bird.",
+   "seconds": 0.5639543749857694,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 183637.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5354470419697464,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3b/Screenshot 2023-10-02 205857.png",
+   "split": "train",
+   "label": "3s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5508331669843756,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-17 103247.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5623307089554146,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-02 163821.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5484991670236923,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-17 103302.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5503895000438206,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-02 163444.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5632003750069998,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3n/Screenshot 2023-10-17 103305.png",
+   "split": "train",
+   "label": "3m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5738188329851255,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3p/Screenshot 2023-10-02 191559.png",
+   "split": "train",
+   "label": "3p",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.6086510419845581,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3p/Screenshot 2023-10-02 213102.png",
+   "split": "train",
+   "label": "3p",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with three bamboo sticks.",
+   "seconds": 0.6941275830031373,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3p/Screenshot 2023-10-02 170408.png",
+   "split": "train",
+   "label": "3p",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.7239374589989893,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/3p/Screenshot 2023-10-02 213129.png",
+   "split": "test",
+   "label": "3p",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.7853213750058785,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/3p/Screenshot 2023-10-02 213126.png",
+   "split": "train",
+   "label": "3p",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with three bamboo sticks.",
+   "seconds": 0.8109067910118029,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 205927.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.6961070419638418,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 205934.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.6102916660020128,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 193522.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.575141207955312,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 193538.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "The tile is a green character with a bird on it, which is a bamboo tile.",
+   "seconds": 0.6118421669816598,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4b/Screenshot 2023-10-02 172140.png",
+   "split": "train",
+   "label": "4s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5355129580129869,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4n/Screenshot 2023-10-17 103009.png",
+   "split": "train",
+   "label": "4m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5346280000521801,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4n/Screenshot 2023-10-17 103026.png",
+   "split": "train",
+   "label": "4m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5373425839934498,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/4n/Screenshot 2023-10-17 103154.png",
+   "split": "test",
+   "label": "4m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5263264999957755,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4n/Screenshot 2023-10-17 103012.png",
+   "split": "train",
+   "label": "4m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5487309580203146,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/4n/Screenshot 2023-10-17 103151.png",
+   "split": "test",
+   "label": "4m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5313274590298533,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-02 191220.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 circles.",
+   "seconds": 0.5704078329727054,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-17 104232.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with three bamboo sticks.",
+   "seconds": 0.5772798749967478,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-21 195924.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 circles.",
+   "seconds": 0.5622463749605231,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-17 104210.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5283520410303026,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/4p/Screenshot 2023-10-17 104147.png",
+   "split": "train",
+   "label": "4p",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 circles.",
+   "seconds": 0.5647483339998871,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210216.png",
+   "split": "train",
+   "label": "5sr",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5336613330291584,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-21 200119.png",
+   "split": "train",
+   "label": "5sr",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5414652500185184,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-17 210213.png",
+   "split": "train",
+   "label": "5sr",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5396144160185941,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 224820.png",
+   "split": "train",
+   "label": "5sr",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.540119124983903,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5b/Screenshot 2023-10-02 212929.png",
+   "split": "train",
+   "label": "5s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5372564169811085,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103431.png",
+   "split": "train",
+   "label": "5mr",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5258671249612235,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103411.png",
+   "split": "train",
+   "label": "5mr",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5371324580046348,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-02 172159.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5242086669895798,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-21 195848.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5335262499866076,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5n/Screenshot 2023-10-17 103633.png",
+   "split": "train",
+   "label": "5m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5303562909830362,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 211645.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "?",
+   "answer": "The tile in the image is a red five of bamboo.",
+   "seconds": 0.5507730829995126,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 211642.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5212820840533823,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-21 195616.png",
+   "split": "train",
+   "label": "5pr",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5414451250107959,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-02 211626.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5191575839999132,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/5p/Screenshot 2023-10-21 193951.png",
+   "split": "train",
+   "label": "5p",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5301110420259647,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-17 104444.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "The tile is a green character with a red character 萬 above it, which is a Chinese numeral. The suit",
+   "seconds": 0.6491406250279397,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-17 104405.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "The tile is a green character with a bird on it, which is a bamboo tile.",
+   "seconds": 0.6327019999735057,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-17 104611.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.602450417005457,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-02 170248.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5569223329657689,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6b/Screenshot 2023-10-02 170431.png",
+   "split": "train",
+   "label": "6s",
+   "pred": "?",
+   "answer": "The tile is a green character with a bird on it, which is a bamboo tile.",
+   "seconds": 0.6169604579918087,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 191652.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5863388750003651,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 034150.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5356536249746569,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 191648.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5312517080456018,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 191331.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5377987080137245,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6n/Screenshot 2023-10-02 191656.png",
+   "split": "train",
+   "label": "6m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5353672920027748,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6p/Screenshot 2023-10-16 221557.png",
+   "split": "train",
+   "label": "6p",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5303794999490492,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6p/Screenshot 2023-10-16 221203.png",
+   "split": "train",
+   "label": "6p",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5334328329772688,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/6p/Screenshot 2023-10-02 224643.png",
+   "split": "test",
+   "label": "6p",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5401414589723572,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/6p/Screenshot 2023-10-22 134731.png",
+   "split": "train",
+   "label": "6p",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5193257920327596,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/6p/Screenshot 2023-10-02 224719.png",
+   "split": "test",
+   "label": "6p",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5308905830024742,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-16 233601.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5303972080000676,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-16 233613.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5288884160108864,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-02 163731.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5379347910056822,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-15 152157.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.52883666602429,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7b/Screenshot 2023-10-16 234154.png",
+   "split": "train",
+   "label": "7s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5260981249739416,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183215.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5341567079885863,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183721.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5234045419492759,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183707.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5273885419592261,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183718.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5711661250097677,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7n/Screenshot 2023-10-02 183704.png",
+   "split": "train",
+   "label": "7m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.519032749987673,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7p/7p.png",
+   "split": "train",
+   "label": "7p",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5260385000146925,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7p/Screenshot 2023-10-02 170329.png",
+   "split": "train",
+   "label": "7p",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5373133340035565,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7p/Screenshot 2023-10-02 193334.png",
+   "split": "train",
+   "label": "7p",
+   "pred": "?",
+   "answer": "The tile in the image is a red five with bamboo sticks.",
+   "seconds": 0.5993657090002671,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/7p/Screenshot 2023-10-02 210158.png",
+   "split": "train",
+   "label": "7p",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.6113132910104468,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/7p/Screenshot 2023-10-02 210144.png",
+   "split": "test",
+   "label": "7p",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.599665834044572,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-02 224450.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5810087079880759,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-02 224513.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.6050889160251245,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-21 194531.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "The tile is a green character with a red character 萬 above it, indicating it is a \"red five\"",
+   "seconds": 0.6488395410124213,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-02 224501.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5342390000005253,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8b/Screenshot 2023-10-02 182840.png",
+   "split": "train",
+   "label": "8s",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.519776583998464,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8n/Screenshot 2023-10-22 135124.png",
+   "split": "train",
+   "label": "8m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5332447919645347,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8n/Screenshot 2023-10-17 105927.png",
+   "split": "train",
+   "label": "8m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5639915840001777,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/8n/Screenshot 2023-10-17 105931.png",
+   "split": "test",
+   "label": "8m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5452886669663712,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8n/Screenshot 2023-10-17 105948.png",
+   "split": "train",
+   "label": "8m",
+   "pred": "?",
+   "answer": "The tile is a red five with a bamboo character.",
+   "seconds": 0.5425580840092152,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8n/Screenshot 2023-10-02 183344.png",
+   "split": "train",
+   "label": "8m",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5877786659984849,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8p/Screenshot 2023-10-02 034206.png",
+   "split": "train",
+   "label": "8p",
+   "pred": "?",
+   "answer": "The tile in the image is a red five of bamboo.",
+   "seconds": 0.5469190840376541,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8p/Screenshot 2023-10-17 105827.png",
+   "split": "train",
+   "label": "8p",
+   "pred": "?",
+   "answer": "The tile in the image is a red five of bamboo.",
+   "seconds": 0.5557601659675129,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/8p/Screenshot 2023-10-17 105740.png",
+   "split": "test",
+   "label": "8p",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with five bamboo sticks.",
+   "seconds": 0.5621793750324287,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8p/Screenshot 2023-10-02 211946.png",
+   "split": "train",
+   "label": "8p",
+   "pred": "?",
+   "answer": "The tile in the image is a red five.",
+   "seconds": 0.5388757080072537,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/8p/Screenshot 2023-10-17 105729.png",
+   "split": "train",
+   "label": "8p",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 circles.",
+   "seconds": 0.5718344579800032,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/9b/Screenshot 2023-10-16 195257.png",
+   "split": "test",
+   "label": "9s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5517653329879977,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9b/Screenshot 2023-10-21 193826.png",
+   "split": "train",
+   "label": "9s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5489837499917485,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/9b/Screenshot 2023-10-17 144344.png",
+   "split": "test",
+   "label": "9s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5517124999896623,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9b/Screenshot 2023-10-02 205035.png",
+   "split": "train",
+   "label": "9s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.535994625010062,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9b/Screenshot 2023-10-16 221036.png",
+   "split": "train",
+   "label": "9s",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5445974579779431,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/9n/Screenshot 2023-10-17 111144.png",
+   "split": "test",
+   "label": "9m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5356409169617109,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9n/Screenshot 2023-10-02 170457.png",
+   "split": "train",
+   "label": "9m",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5635625420254655,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9n/Screenshot 2023-10-17 110433.png",
+   "split": "train",
+   "label": "9m",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5421478750067763,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9n/Screenshot 2023-10-17 110305.png",
+   "split": "train",
+   "label": "9m",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5620765830390155,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9n/Screenshot 2023-10-17 111138.png",
+   "split": "train",
+   "label": "9m",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5219960840186104,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9p/Screenshot 2023-10-02 170845.png",
+   "split": "train",
+   "label": "9p",
+   "pred": "?",
+   "answer": "The tile in the image is a red five of bamboo.",
+   "seconds": 0.5534820419852622,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/9p/Screenshot 2023-10-02 213404.png",
+   "split": "test",
+   "label": "9p",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5273163749952801,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9p/Screenshot 2023-10-02 213418.png",
+   "split": "train",
+   "label": "9p",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5286546249990351,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9p/Screenshot 2023-10-02 213455.png",
+   "split": "train",
+   "label": "9p",
+   "pred": "?",
+   "answer": "The tile in the image is a red five of bamboo.",
+   "seconds": 0.5403636249830015,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/9p/Screenshot 2023-10-02 213415.png",
+   "split": "train",
+   "label": "9p",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5216137919924222,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 193658.png",
+   "split": "train",
+   "label": "E",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5662870000232942,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 205235.png",
+   "split": "train",
+   "label": "E",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5699070839909837,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 193702.png",
+   "split": "train",
+   "label": "E",
+   "pred": "?",
+   "answer": "The tile is a bamboo with a bird.",
+   "seconds": 0.5265255410340615,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 193647.png",
+   "split": "train",
+   "label": "E",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with five bamboo sticks.",
+   "seconds": 0.5582687499700114,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ew/Screenshot 2023-10-02 193640.png",
+   "split": "train",
+   "label": "E",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5635216669761576,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/gd/Screenshot 2023-10-02 211844.png",
+   "split": "test",
+   "label": "F",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5638248330214992,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/gd/Screenshot 2023-10-02 170645.png",
+   "split": "train",
+   "label": "F",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5527153339935467,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/gd/Screenshot 2023-10-02 163755.png",
+   "split": "train",
+   "label": "F",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with five bamboo sticks.",
+   "seconds": 0.5562780419713818,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/gd/Screenshot 2023-10-02 191257.png",
+   "split": "train",
+   "label": "F",
+   "pred": "?",
+   "answer": "The tile is a green character with a red character 萬 above it, which is a Chinese numeral. The suit",
+   "seconds": 0.6285910420119762,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/gd/Screenshot 2023-10-02 205249.png",
+   "split": "test",
+   "label": "F",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5211514579714276,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-02 205207.png",
+   "split": "train",
+   "label": "N",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5624310830025934,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-21 195318.png",
+   "split": "train",
+   "label": "N",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5709505840204656,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-02 183523.png",
+   "split": "train",
+   "label": "N",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5637002920266241,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-02 183537.png",
+   "split": "train",
+   "label": "N",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5601882500341162,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/nw/Screenshot 2023-10-02 183542.png",
+   "split": "train",
+   "label": "N",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5707500419812277,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/rd/Screenshot 2023-10-02 211914.png",
+   "split": "test",
+   "label": "C",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5235041670384817,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/rd/Screenshot 2023-10-02 163653.png",
+   "split": "train",
+   "label": "C",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with a Chinese numeral above it. The numeral is 4. The suit",
+   "seconds": 0.6210100839962251,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/rd/Screenshot 2023-10-02 211908.png",
+   "split": "train",
+   "label": "C",
+   "pred": "?",
+   "answer": "The tile is a red five of bamboo.",
+   "seconds": 0.5214700419455767,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/rd/Screenshot 2023-10-02 211929.png",
+   "split": "train",
+   "label": "C",
+   "pred": "?",
+   "answer": "The tile is a red five with bamboo sticks.",
+   "seconds": 0.5294744159909897,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/rd/Screenshot 2023-10-02 211801.png",
+   "split": "train",
+   "label": "C",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5691448749857955,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/sw.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "The tile is a South (S) character with 5 bamboo sticks.",
+   "seconds": 0.5615951249492355,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/Screenshot 2023-10-02 193235.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5551056250114925,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/Screenshot 2023-10-02 193214.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "The tile is a South (south) wind.",
+   "seconds": 0.5244293749565259,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/Screenshot 2023-10-02 163942.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 circles.",
+   "seconds": 0.5512134159798734,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/sw/Screenshot 2023-10-02 193225.png",
+   "split": "train",
+   "label": "S",
+   "pred": "?",
+   "answer": "The tile is a South (south) wind with a red character 萬.",
+   "seconds": 0.6038670830312185,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-02 193621.png",
+   "split": "train",
+   "label": "P",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.6023716250201687,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-02 183117.png",
+   "split": "train",
+   "label": "P",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.6205332920071669,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-21 193652.png",
+   "split": "train",
+   "label": "P",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.6285648329649121,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-02 193624.png",
+   "split": "train",
+   "label": "P",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.6032850840128958,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/wd/Screenshot 2023-10-02 163837.png",
+   "split": "train",
+   "label": "P",
+   "pred": "?",
+   "answer": "The tile is a white character with a red character 萬 above it, indicating it is a \"white character with",
+   "seconds": 0.6490889999549836,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ww/Screenshot 2023-10-02 183501.png",
+   "split": "train",
+   "label": "W",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 sticks.",
+   "seconds": 0.577782207983546,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ww/Screenshot 2023-10-02 183557.png",
+   "split": "train",
+   "label": "W",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5797820409643464,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ww/Screenshot 2023-10-02 183457.png",
+   "split": "train",
+   "label": "W",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 bamboo sticks.",
+   "seconds": 0.5890683749457821,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/test/ww/ww.png",
+   "split": "test",
+   "label": "W",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with 5 sticks.",
+   "seconds": 0.5886447500088252,
+   "prompt_tokens": 452
+  },
+  {
+   "path": "ml/data/mahjong_souls_tiles/dataset/train/ww/Screenshot 2023-10-02 172254.png",
+   "split": "train",
+   "label": "W",
+   "pred": "?",
+   "answer": "The tile is a red character 萬 with five bamboo sticks.",
+   "seconds": 0.5751850410015322,
+   "prompt_tokens": 452
+  }
+ ]
+}

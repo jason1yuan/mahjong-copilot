@@ -1,0 +1,160 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+qwen3-vl-4b: 1/1297 correct 1
+qwen3-vl-4b: 26/1297 correct 9
+qwen3-vl-4b: 51/1297 correct 14
+qwen3-vl-4b: 76/1297 correct 17
+qwen3-vl-4b: 101/1297 correct 18
+qwen3-vl-4b: 126/1297 correct 20
+qwen3-vl-4b: 151/1297 correct 24
+qwen3-vl-4b: 176/1297 correct 24
+qwen3-vl-4b: 201/1297 correct 30
+qwen3-vl-4b: 226/1297 correct 52
+qwen3-vl-4b: 251/1297 correct 66
+qwen3-vl-4b: 276/1297 correct 79
+qwen3-vl-4b: 301/1297 correct 83
+qwen3-vl-4b: 326/1297 correct 96
+qwen3-vl-4b: 351/1297 correct 111
+qwen3-vl-4b: 376/1297 correct 119
+qwen3-vl-4b: 401/1297 correct 124
+qwen3-vl-4b: 426/1297 correct 148
+qwen3-vl-4b: 451/1297 correct 164
+qwen3-vl-4b: 476/1297 correct 165
+qwen3-vl-4b: 501/1297 correct 171
+qwen3-vl-4b: 526/1297 correct 186
+qwen3-vl-4b: 551/1297 correct 203
+qwen3-vl-4b: 576/1297 correct 211
+qwen3-vl-4b: 601/1297 correct 211
+qwen3-vl-4b: 626/1297 correct 211
+qwen3-vl-4b: 651/1297 correct 212
+qwen3-vl-4b: 676/1297 correct 216
+qwen3-vl-4b: 701/1297 correct 220
+qwen3-vl-4b: 726/1297 correct 239
+qwen3-vl-4b: 751/1297 correct 249
+qwen3-vl-4b: 776/1297 correct 251
+qwen3-vl-4b: 801/1297 correct 251
+qwen3-vl-4b: 826/1297 correct 251
+qwen3-vl-4b: 851/1297 correct 252
+qwen3-vl-4b: 876/1297 correct 252
+qwen3-vl-4b: 901/1297 correct 263
+qwen3-vl-4b: 926/1297 correct 270
+qwen3-vl-4b: 951/1297 correct 271
+qwen3-vl-4b: 976/1297 correct 274
+qwen3-vl-4b: 1001/1297 correct 295
+qwen3-vl-4b: 1026/1297 correct 301
+qwen3-vl-4b: 1051/1297 correct 302
+qwen3-vl-4b: 1076/1297 correct 302
+qwen3-vl-4b: 1101/1297 correct 308
+qwen3-vl-4b: 1126/1297 correct 326
+qwen3-vl-4b: 1151/1297 correct 326
+qwen3-vl-4b: 1176/1297 correct 348
+qwen3-vl-4b: 1201/1297 correct 373
+qwen3-vl-4b: 1226/1297 correct 388
+qwen3-vl-4b: 1251/1297 correct 412
+qwen3-vl-4b: 1276/1297 correct 430
+{
+ "model": "qwen3-vl-4b",
+ "n": 1297,
+ "accuracy": 0.3407864302235929,
+ "accuracy_by_split": {
+  "test": 0.2073732718894009,
+  "train": 0.3675925925925926
+ },
+ "top_confusions": [
+  {
+   "label": "6p",
+   "pred": "5pr",
+   "count": 99
+  },
+  {
+   "label": "9s",
+   "pred": "5sr",
+   "count": 84
+  },
+  {
+   "label": "5s",
+   "pred": "5sr",
+   "count": 70
+  },
+  {
+   "label": "7s",
+   "pred": "5sr",
+   "count": 45
+  },
+  {
+   "label": "3p",
+   "pred": "5pr",
+   "count": 38
+  },
+  {
+   "label": "7p",
+   "pred": "5pr",
+   "count": 38
+  },
+  {
+   "label": "9p",
+   "pred": "5pr",
+   "count": 38
+  },
+  {
+   "label": "2p",
+   "pred": "5pr",
+   "count": 33
+  },
+  {
+   "label": "5p",
+   "pred": "5pr",
+   "count": 29
+  },
+  {
+   "label": "1p",
+   "pred": "5pr",
+   "count": 22
+  },
+  {
+   "label": "5m",
+   "pred": "5mr",
+   "count": 22
+  },
+  {
+   "label": "7s",
+   "pred": "5mr",
+   "count": 22
+  },
+  {
+   "label": "7s",
+   "pred": "C",
+   "count": 21
+  },
+  {
+   "label": "4p",
+   "pred": "5pr",
+   "count": 20
+  },
+  {
+   "label": "8p",
+   "pred": "5pr",
+   "count": 18
+  }
+ ],
+ "first_request_s": 0.5025810829829425,
+ "latency_s": {
+  "mean": 0.5512459583161542,
+  "median": 0.5302734159922693,
+  "p95": 0.7216040829953272
+ },
+ "load_s": 1.0426368750049733,
+ "peak_rss_mb": 7411.125,
+ "files_gb": 2.951255968,
+ "repo": "Qwen/Qwen3-VL-4B-Instruct-GGUF",
+ "files": [
+  "Qwen3VL-4B-Instruct-Q4_K_M.gguf",
+  "mmproj-Qwen3VL-4B-Instruct-Q8_0.gguf"
+ ],
+ "license": "Apache-2.0",
+ "min_long_side": 224,
+ "server_args": [],
+ "answers": "grammar",
+ "sample": null,
+ "per_label": null,
+ "seed": 0
+}

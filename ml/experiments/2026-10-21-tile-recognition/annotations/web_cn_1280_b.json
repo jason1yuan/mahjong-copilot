@@ -1,0 +1,151 @@
+{
+ "image": "recordings/web/Pasted 2026-10-21 at 12.40.55 PM.png",
+ "id": "web_cn_1280_b",
+ "note": "Hand labels pre-filled by pjura/mahjong_soul_vision and checked by eye; red fives fixed by hand.",
+ "hand": [
+  {
+   "tile": "2m",
+   "box": [
+    149,
+    619,
+    212,
+    714
+   ],
+   "prelabel": "2m",
+   "prelabel_confidence": 0.95
+  },
+  {
+   "tile": "9m",
+   "box": [
+    212,
+    619,
+    275,
+    714
+   ],
+   "prelabel": "9m",
+   "prelabel_confidence": 0.965
+  },
+  {
+   "tile": "3p",
+   "box": [
+    275,
+    619,
+    338,
+    714
+   ],
+   "prelabel": "3p",
+   "prelabel_confidence": 0.951
+  },
+  {
+   "tile": "5p",
+   "box": [
+    338,
+    619,
+    401,
+    714
+   ],
+   "prelabel": "5p",
+   "prelabel_confidence": 0.959
+  },
+  {
+   "tile": "6p",
+   "box": [
+    401,
+    619,
+    464,
+    714
+   ],
+   "prelabel": "6p",
+   "prelabel_confidence": 0.975
+  },
+  {
+   "tile": "1s",
+   "box": [
+    464,
+    619,
+    527,
+    714
+   ],
+   "prelabel": "1s",
+   "prelabel_confidence": 0.953
+  },
+  {
+   "tile": "3s",
+   "box": [
+    527,
+    619,
+    590,
+    714
+   ],
+   "prelabel": "3s",
+   "prelabel_confidence": 0.961
+  },
+  {
+   "tile": "4s",
+   "box": [
+    590,
+    619,
+    653,
+    714
+   ],
+   "prelabel": "4s",
+   "prelabel_confidence": 0.948
+  },
+  {
+   "tile": "7s",
+   "box": [
+    653,
+    619,
+    716,
+    714
+   ],
+   "prelabel": "7s",
+   "prelabel_confidence": 0.965
+  },
+  {
+   "tile": "8s",
+   "box": [
+    716,
+    619,
+    779,
+    714
+   ],
+   "prelabel": "8s",
+   "prelabel_confidence": 0.932
+  },
+  {
+   "tile": "9s",
+   "box": [
+    779,
+    619,
+    842,
+    714
+   ],
+   "prelabel": "9s",
+   "prelabel_confidence": 0.971
+  },
+  {
+   "tile": "S",
+   "box": [
+    842,
+    619,
+    905,
+    714
+   ],
+   "prelabel": "S",
+   "prelabel_confidence": 0.954
+  },
+  {
+   "tile": "W",
+   "box": [
+    905,
+    619,
+    968,
+    714
+   ],
+   "prelabel": "W",
+   "prelabel_confidence": 0.938
+  }
+ ],
+ "checked_by_eye": true
+}

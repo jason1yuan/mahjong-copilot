@@ -1,0 +1,114 @@
+internvl3-2b: 1/170 correct 0
+internvl3-2b: 26/170 correct 0
+internvl3-2b: 51/170 correct 0
+internvl3-2b: 76/170 correct 0
+internvl3-2b: 101/170 correct 0
+internvl3-2b: 126/170 correct 0
+internvl3-2b: 151/170 correct 0
+{
+ "model": "internvl3-2b",
+ "n": 170,
+ "accuracy": 0.0,
+ "accuracy_by_split": {
+  "test": 0.0,
+  "train": 0.0
+ },
+ "top_confusions": [
+  {
+   "label": "1s",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "1m",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "1p",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "2s",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "2m",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "2p",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "3s",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "3m",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "3p",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "4s",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "4m",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "4p",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "5s",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "5m",
+   "pred": "?",
+   "count": 5
+  },
+  {
+   "label": "5p",
+   "pred": "?",
+   "count": 5
+  }
+ ],
+ "first_request_s": 0.5261890419642441,
+ "latency_s": {
+  "mean": 0.5591502754050776,
+  "median": 0.5484991670236923,
+  "p95": 0.6327019999735057
+ },
+ "load_s": 1.0182822499773465,
+ "peak_rss_mb": 3876.21875,
+ "files_gb": 1.453770816,
+ "repo": "ggml-org/InternVL3-2B-Instruct-GGUF",
+ "files": [
+  "InternVL3-2B-Instruct-Q4_K_M.gguf",
+  "mmproj-InternVL3-2B-Instruct-Q8_0.gguf"
+ ],
+ "license": "Apache-2.0",
+ "min_long_side": 224,
+ "server_args": [],
+ "answers": "free",
+ "sample": null,
+ "per_label": 5,
+ "seed": 7
+}

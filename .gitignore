@@ -23,7 +23,11 @@ venv/
 
 # 数据、训练产物和模型权重（体积大，之后用 Git LFS 或 Releases 管理）
 ml/data/
+ml/models/
+ml/results/
 ml/runs/
+*.gguf
+*.safetensors
 *.pt
 *.pth
 *.onnx

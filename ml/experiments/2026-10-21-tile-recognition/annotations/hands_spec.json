@@ -1,0 +1,11 @@
+[
+ {"image": "../web/Pasted 2026-10-21 at 12.38.50 PM.png", "id": "web_naga_replay", "band": [490, 566], "groups": [[127, 780, 13], [798, 846, 1]]},
+ {"image": "../web/Pasted 2026-10-21 at 12.39.17 PM.png", "id": "web_browser_jp", "band": [796, 898], "groups": [[226, 1096, 13]]},
+ {"image": "../web/Pasted 2026-10-21 at 12.39.31 PM.png", "id": "web_cn_1280", "band": [620, 716], "groups": [[149, 969, 13]]},
+ {"image": "../web/Pasted 2026-10-21 at 12.39.53 PM.png", "id": "web_copilot_en", "band": [664, 759], "groups": [[146, 966, 13], [988, 1049, 1]]},
+ {"image": "../web/Pasted 2026-10-21 at 12.39.59 PM.png", "id": "web_copilot_cn", "band": [662, 757], "groups": [[148, 968, 13], [990, 1051, 1]]},
+ {"image": "../web/Pasted 2026-10-21 at 12.40.19 PM.png", "id": "web_wave_skin", "band": [299, 343], "groups": [[89, 385, 10]]},
+ {"image": "../web/Pasted 2026-10-21 at 12.40.32 PM.png", "id": "web_en_sanma", "band": [742, 857], "groups": [[371, 1339, 13], [1381, 1455, 1]]},
+ {"image": "../web/Pasted 2026-10-21 at 12.40.49 PM.png", "id": "web_tc_replay", "band": [897, 1017], "groups": [[266, 1424, 13], [1455, 1541, 1]]},
+ {"image": "../web/Pasted 2026-10-21 at 12.40.55 PM.png", "id": "web_cn_1280_b", "band": [619, 714], "groups": [[149, 968, 13]]}
+]

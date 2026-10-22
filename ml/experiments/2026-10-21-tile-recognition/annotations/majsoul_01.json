@@ -1,0 +1,125 @@
+{
+ "image": "recordings/source/majsoul_01.png",
+ "id": "majsoul_01",
+ "checked_by_eye": true,
+ "note": "User-provided Mahjong Soul screenshot, 600x353, simplified Chinese client, bronze room 4-player south, East 1. Labels read by eye; tile 9 is a red five of bamboo.",
+ "hand": [
+  {
+   "tile": "8m",
+   "box": [
+    67,
+    294,
+    97,
+    346
+   ]
+  },
+  {
+   "tile": "9m",
+   "box": [
+    97,
+    294,
+    127,
+    346
+   ]
+  },
+  {
+   "tile": "4p",
+   "box": [
+    127,
+    294,
+    157,
+    346
+   ]
+  },
+  {
+   "tile": "5p",
+   "box": [
+    157,
+    294,
+    187,
+    346
+   ]
+  },
+  {
+   "tile": "6p",
+   "box": [
+    187,
+    294,
+    217,
+    346
+   ]
+  },
+  {
+   "tile": "2s",
+   "box": [
+    217,
+    294,
+    247,
+    346
+   ]
+  },
+  {
+   "tile": "3s",
+   "box": [
+    247,
+    294,
+    276,
+    346
+   ]
+  },
+  {
+   "tile": "4s",
+   "box": [
+    276,
+    294,
+    306,
+    346
+   ]
+  },
+  {
+   "tile": "5sr",
+   "box": [
+    306,
+    294,
+    336,
+    346
+   ]
+  },
+  {
+   "tile": "6s",
+   "box": [
+    336,
+    294,
+    366,
+    346
+   ]
+  },
+  {
+   "tile": "7s",
+   "box": [
+    366,
+    294,
+    396,
+    346
+   ]
+  },
+  {
+   "tile": "8s",
+   "box": [
+    396,
+    294,
+    426,
+    346
+   ]
+  },
+  {
+   "tile": "8s",
+   "box": [
+    426,
+    294,
+    456,
+    346
+   ]
+  }
+ ]
+}

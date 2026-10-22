@@ -1,0 +1,7 @@
+huggingface_hub>=1.0
+mlx-vlm>=0.7
+numpy>=2.0
+pillow>=11.0
+requests>=2.32
+torch>=2.6
+transformers>=5.0

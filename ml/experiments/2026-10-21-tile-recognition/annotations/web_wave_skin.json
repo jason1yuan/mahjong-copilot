@@ -1,0 +1,118 @@
+{
+ "image": "recordings/web/Pasted 2026-10-21 at 12.40.19 PM.png",
+ "id": "web_wave_skin",
+ "note": "Hand labels pre-filled by pjura/mahjong_soul_vision and checked by eye; red fives fixed by hand.",
+ "hand": [
+  {
+   "tile": "3m",
+   "box": [
+    89,
+    299,
+    119,
+    343
+   ],
+   "prelabel": "3m",
+   "prelabel_confidence": 0.94
+  },
+  {
+   "tile": "3m",
+   "box": [
+    119,
+    299,
+    148,
+    343
+   ],
+   "prelabel": "3m",
+   "prelabel_confidence": 0.925
+  },
+  {
+   "tile": "4m",
+   "box": [
+    148,
+    299,
+    178,
+    343
+   ],
+   "prelabel": "4m",
+   "prelabel_confidence": 0.916
+  },
+  {
+   "tile": "4m",
+   "box": [
+    178,
+    299,
+    207,
+    343
+   ],
+   "prelabel": "4m",
+   "prelabel_confidence": 0.916
+  },
+  {
+   "tile": "5mr",
+   "box": [
+    207,
+    299,
+    237,
+    343
+   ],
+   "prelabel": "5m",
+   "prelabel_confidence": 0.896
+  },
+  {
+   "tile": "6m",
+   "box": [
+    237,
+    299,
+    267,
+    343
+   ],
+   "prelabel": "6m",
+   "prelabel_confidence": 0.829
+  },
+  {
+   "tile": "7m",
+   "box": [
+    267,
+    299,
+    296,
+    343
+   ],
+   "prelabel": "7m",
+   "prelabel_confidence": 0.901
+  },
+  {
+   "tile": "8m",
+   "box": [
+    296,
+    299,
+    326,
+    343
+   ],
+   "prelabel": "8m",
+   "prelabel_confidence": 0.949
+  },
+  {
+   "tile": "3p",
+   "box": [
+    326,
+    299,
+    355,
+    343
+   ],
+   "prelabel": "3p",
+   "prelabel_confidence": 0.869
+  },
+  {
+   "tile": "3p",
+   "box": [
+    355,
+    299,
+    385,
+    343
+   ],
+   "prelabel": "3p",
+   "prelabel_confidence": 0.875
+  }
+ ],
+ "checked_by_eye": true
+}

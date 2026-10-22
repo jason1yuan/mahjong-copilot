@@ -9,9 +9,11 @@ pub mod hand;
 mod pillow;
 pub mod profile;
 pub mod recognizer;
+pub mod record;
 pub mod red_five;
 pub mod watch;
 
 pub use classifier::{ClassifierError, Prediction, TileClassifier};
 pub use recognizer::{Doubt, Recognition, Source, TileRecognizer};
-pub use watch::{HandReading, Timings, WatchError, WatchEvent, Watcher};
+pub use record::{RecordError, Recorder};
+pub use watch::{FrameTap, HandReading, Timings, WatchError, WatchEvent, Watcher};

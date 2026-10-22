@@ -31,6 +31,8 @@ type Advice = {
 };
 type Latency = { count: number; lastMs: number; p50Ms: number; p95Ms: number };
 type Progress = { name: string; downloaded: number; total: number };
+// The dev build's debug recording (#8); null in a packaged app.
+type Recording = { on: boolean; saved: number; dir: string };
 
 function shantenText(shanten: number): string {
   if (shanten < 0) return "和了";
@@ -69,14 +71,55 @@ function statusText(status: Status | null, models: string | null): string {
   }
 }
 
+// Screenshot button and recording switch for the table evaluation set; dev build only.
+function DebugRecording({ initial }: { initial: Recording }) {
+  const [recording, setRecording] = useState(initial);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unlisten = listen<number>("frame-saved", (e) =>
+      setRecording((r) => ({ ...r, saved: e.payload })),
+    );
+    return () => {
+      unlisten.then((stop) => stop());
+    };
+  }, []);
+
+  const report = (err: unknown) => setError(String(err));
+  const shoot = () => {
+    setError(null);
+    invoke("save_frame").catch(report);
+  };
+  const toggle = (on: boolean) => {
+    setError(null);
+    invoke<Recording>("set_recording", { on }).then(setRecording).catch(report);
+  };
+
+  return (
+    <div className="dev">
+      <button type="button" onClick={shoot}>
+        截图
+      </button>
+      <label>
+        <input type="checkbox" checked={recording.on} onChange={(e) => toggle(e.target.checked)} />
+        连续录制
+      </label>
+      <span title={recording.dir}>已存 {recording.saved} 张</span>
+      {error && <span className="dev-error">{error}</span>}
+    </div>
+  );
+}
+
 function App() {
   const [status, setStatus] = useState<Status | null>(null);
   const [advice, setAdvice] = useState<Advice | null>(null);
   const [latency, setLatency] = useState<Latency | null>(null);
   const [models, setModels] = useState<string | null>(null);
+  const [recording, setRecording] = useState<Recording | null>(null);
 
   useEffect(() => {
     invoke<Status | null>("pipeline_status").then(setStatus).catch(() => undefined);
+    invoke<Recording | null>("debug_recording").then(setRecording).catch(() => undefined);
     const unlisten = [
       listen<Status>("pipeline-status", (e) => setStatus(e.payload)),
       listen<Advice | null>("advice", (e) => setAdvice(e.payload)),
@@ -154,6 +197,7 @@ function App() {
       ) : (
         <p className="placeholder">{watching ? "等待手牌出现" : statusText(status, models)}</p>
       )}
+      {recording && <DebugRecording initial={recording} />}
     </main>
   );
 }

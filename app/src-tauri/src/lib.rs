@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use pipeline::{Pipeline, Status};
+use pipeline::{Pipeline, Recording, Status};
 use tauri::{AppHandle, Emitter, Manager, State};
 use tracing_subscriber::EnvFilter;
 
@@ -93,6 +93,28 @@ fn advice_shown(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>, seq: u64) {
     pipeline.shown(&app, seq);
 }
 
+/// The dev build's debug recording (#8); `None` in a packaged app, which has none.
+#[tauri::command]
+fn debug_recording(pipeline: State<'_, Arc<Pipeline>>) -> Option<Recording> {
+    pipeline.recording()
+}
+
+/// Saves the game window's newest frame into `recordings/live/` (dev build only).
+#[tauri::command]
+fn save_frame(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>) -> Result<(), String> {
+    pipeline.save_frame(&app)
+}
+
+/// Turns saving each frame that changes the hand on or off (dev build only).
+#[tauri::command]
+fn set_recording(
+    app: AppHandle,
+    pipeline: State<'_, Arc<Pipeline>>,
+    on: bool,
+) -> Result<Recording, String> {
+    pipeline.set_recording(&app, on)
+}
+
 pub fn run() -> tauri::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -111,7 +133,10 @@ pub fn run() -> tauri::Result<()> {
             models_ready,
             download_models,
             pipeline_status,
-            advice_shown
+            advice_shown,
+            debug_recording,
+            save_frame,
+            set_recording
         ])
         .run(tauri::generate_context!())
 }

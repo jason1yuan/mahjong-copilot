@@ -66,5 +66,7 @@ cargo run -p mahjong-perception --release --example eval_cache -- recordings/sou
 - 找到手牌后只盯手牌那几行；窗口大小变了就重新盯整个窗口，并清空模板缓存
 - 手牌变了发 `WatchEvent::Hand`，其中的 `HandReading` 带每张牌、牌框和各环节耗时；画面里没有手牌时发 `NoHand`，窗口关了发 `Stopped`
 - 拿到手牌后怎么打不在这里决定，由 app 交给 core
+- `FrameTap`：给开发版的截图按钮和连续录制用（#8）：`snapshot` 复制最新一帧；`record` 打开后，每次手牌变化都把读到的那一帧交给 `Recorder`，在发出建议之后才做
+- `record`：`Recorder` 在后台线程上把帧存成 PNG，最多排队 4 张，再多就丢掉，不拖慢流水线。只有明确开启的调试录制才用它
 
 ONNX Runtime 由 `ort` 在构建时下载预编译的静态库，运行时不联网。macOS 上它需要 clang 的运行时库，`build.rs` 会自动链接。

@@ -1,14 +1,15 @@
 //! Tauri shell: creates the windows and wires perception and core together.
 //! Business logic belongs in `mahjong-core` / `mahjong-perception`, not here.
 
+mod pipeline;
+
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use mahjong_core::{Tile, parse_tiles};
-use tauri::{AppHandle, Emitter, Manager};
-
-/// Fixed hand for the UI until capture (#1) and recognition (#4) supply real ones.
-const SAMPLE_HAND: &str = "1m 2m 3m 4m 5m 6m 7m 8m 3p 4p 5s C C N";
+use pipeline::{Pipeline, Status};
+use tauri::{AppHandle, Emitter, Manager, State};
+use tracing_subscriber::EnvFilter;
 
 /// Set while a model download runs, so a retry does not start a second one.
 static DOWNLOADING: AtomicBool = AtomicBool::new(false);
@@ -19,11 +20,6 @@ struct ModelProgress {
     name: String,
     downloaded: u64,
     total: u64,
-}
-
-#[tauri::command]
-fn sample_hand() -> Result<Vec<Tile>, String> {
-    parse_tiles(SAMPLE_HAND).map_err(|err| err.to_string())
 }
 
 fn models_dir(app: &AppHandle) -> tauri::Result<PathBuf> {
@@ -40,8 +36,9 @@ fn models_ready(app: AppHandle) -> Result<bool, String> {
 }
 
 /// Downloads the missing models in the background (the only time the app goes online),
-/// sending `model-progress`, then `models-ready` or `models-error` with the reason. Runs
-/// on startup; the onboarding screen calls it again to retry.
+/// sending `model-progress`, then `models-ready` or `models-error` with the reason, and
+/// starts the live pipeline once they are in place. Runs on startup; the onboarding
+/// screen calls it again to retry.
 #[tauri::command]
 fn download_models(app: AppHandle) {
     if DOWNLOADING.swap(true, Ordering::SeqCst) {
@@ -51,7 +48,10 @@ fn download_models(app: AppHandle) {
         let result = fetch_all(&app);
         DOWNLOADING.store(false, Ordering::SeqCst);
         let sent = match result {
-            Ok(()) => app.emit("models-ready", ()),
+            Ok(classifier) => {
+                app.state::<Arc<Pipeline>>().start(app.clone(), classifier);
+                app.emit("models-ready", ())
+            }
             Err(err) => {
                 tracing::error!("model download failed: {err:#}");
                 app.emit("models-error", format!("{err:#}"))
@@ -63,7 +63,8 @@ fn download_models(app: AppHandle) {
     });
 }
 
-fn fetch_all(app: &AppHandle) -> anyhow::Result<()> {
+/// Fetches every model; returns the tile classifier's path.
+fn fetch_all(app: &AppHandle) -> anyhow::Result<PathBuf> {
     let dir = models_dir(app)?;
     for model in &mahjong_models::ALL {
         mahjong_models::fetch(&dir, model, &mut |p| {
@@ -76,29 +77,41 @@ fn fetch_all(app: &AppHandle) -> anyhow::Result<()> {
             let _ = app.emit("model-progress", progress);
         })?;
     }
-    Ok(())
+    Ok(mahjong_models::path(&dir, &mahjong_models::TILE_CLASSIFIER))
+}
+
+/// What the pipeline is doing; the window asks once on load, then follows
+/// `pipeline-status`.
+#[tauri::command]
+fn pipeline_status(pipeline: State<'_, Arc<Pipeline>>) -> Option<Status> {
+    pipeline.status()
+}
+
+/// The window drew advice `seq`; closes its latency measurement.
+#[tauri::command]
+fn advice_shown(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>, seq: u64) {
+    pipeline.shown(&app, seq);
 }
 
 pub fn run() -> tauri::Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::try_from_default_env()
+                // ONNX Runtime logs every allocation at info.
+                .unwrap_or_else(|_| EnvFilter::new("info,ort=warn")),
+        )
+        .init();
     tauri::Builder::default()
+        .manage(Arc::new(Pipeline::default()))
         .setup(|app| {
             download_models(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            sample_hand,
             models_ready,
-            download_models
+            download_models,
+            pipeline_status,
+            advice_shown
         ])
         .run(tauri::generate_context!())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn sample_hand_is_valid() {
-        assert_eq!(sample_hand().unwrap().len(), 14);
-    }
 }

@@ -55,9 +55,21 @@ body {
   background: var(--ok);
 }
 
+.status-dot.wait {
+  background: #d4a017;
+}
+
+.status-dot.bad {
+  background: var(--red);
+}
+
 .muted {
   color: var(--muted);
   margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 60%;
 }
 
 .hand {
@@ -67,7 +79,12 @@ body {
   margin-top: 10px;
 }
 
+.hand .drawn {
+  margin-left: 8px;
+}
+
 .tile {
+  position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -89,6 +106,66 @@ body {
 
 .tile.red {
   color: var(--red);
+}
+
+.tile.best {
+  border: 2px solid var(--red);
+  transform: translateY(-4px);
+}
+
+.tile .arrow {
+  position: absolute;
+  top: -15px;
+  font-size: 10px;
+  color: var(--red);
+}
+
+.tile .doubt {
+  position: absolute;
+  top: -6px;
+  right: -5px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #d4a017;
+  color: #fff;
+  font-size: 10px;
+  line-height: 13px;
+  text-align: center;
+}
+
+.info,
+.options,
+.debug,
+.placeholder {
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+
+.info {
+  display: flex;
+  gap: 12px;
+}
+
+.info strong {
+  color: var(--red);
+}
+
+.options {
+  display: flex;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.debug {
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.placeholder {
+  color: var(--muted);
 }
 
 .error {

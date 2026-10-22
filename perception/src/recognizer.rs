@@ -11,6 +11,9 @@
 //! Each zone of the table (the hand, each seat's river) keeps its own templates, since the
 //! same tile looks different in each (size, angle, light); they share the one classifier.
 //!
+//! A doubtful answer is remembered only for the same picture, so a tile that stays in doubt
+//! on the table (under a glare, or too small) is not sent to the classifier on every reading.
+//!
 //! Every other answer becomes a template. A stricter bar for templates (0.9) was tried and
 //! dropped: it cost hits and fixed nothing, since the one wrong hit seen repeated a mistake
 //! the classifier made with 0.95 confidence, and wherever a hit differed from what the
@@ -116,14 +119,26 @@ impl<C: Classify> TileRecognizer<C> {
         let mut results: Vec<Option<Recognition>> = crops
             .iter()
             .map(|crop| {
-                let hit = (crop.width() >= MIN_TILE_WIDTH)
-                    .then(|| cache.lookup(crop))
-                    .flatten()?;
+                let small = crop.width() < MIN_TILE_WIDTH;
+                if let Some(hit) = (!small).then(|| cache.lookup(crop)).flatten() {
+                    return Some(Recognition {
+                        tile: hit.tile,
+                        confidence: hit.confidence,
+                        source: Source::Cache,
+                        doubt: None,
+                    });
+                }
+                // The same doubtful picture as before keeps its answer and its doubt.
+                let (tile, confidence) = cache.recall_doubtful(crop)?;
                 Some(Recognition {
-                    tile: hit.tile,
-                    confidence: hit.confidence,
+                    tile,
+                    confidence,
                     source: Source::Cache,
-                    doubt: None,
+                    doubt: Some(if small {
+                        Doubt::TooSmall
+                    } else {
+                        Doubt::LowConfidence
+                    }),
                 })
             })
             .collect();
@@ -141,6 +156,8 @@ impl<C: Classify> TileRecognizer<C> {
                 };
                 if doubt.is_none() {
                     cache.insert(prediction.tile, prediction.confidence, &crops[i]);
+                } else {
+                    cache.remember_doubtful(prediction.tile, prediction.confidence, &crops[i]);
                 }
                 results[i] = Some(Recognition {
                     tile: prediction.tile,
@@ -232,6 +249,29 @@ mod tests {
         recognizer.clear_cache();
         recognizer.recognize(&hand).unwrap();
         assert_eq!(recognizer.classifier.asked, 6);
+    }
+
+    #[test]
+    fn the_same_doubtful_picture_is_not_asked_again() {
+        let mut recognizer = TileRecognizer::new(Fake {
+            confidence: 0.5,
+            asked: 0,
+        });
+        let first = recognizer
+            .recognize(&[crop(40, 240), crop(20, 60)])
+            .unwrap();
+        let again = recognizer
+            .recognize(&[crop(40, 240), crop(20, 60)])
+            .unwrap();
+        assert_eq!(recognizer.classifier.asked, 2);
+        assert_eq!(
+            again.iter().map(|r| r.doubt).collect::<Vec<_>>(),
+            [Some(Doubt::LowConfidence), Some(Doubt::TooSmall)]
+        );
+        assert_eq!(
+            again.iter().map(|r| r.tile).collect::<Vec<_>>(),
+            first.iter().map(|r| r.tile).collect::<Vec<_>>()
+        );
     }
 
     #[test]

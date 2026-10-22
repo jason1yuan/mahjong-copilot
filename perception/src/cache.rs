@@ -50,9 +50,15 @@ pub struct Match {
     pub margin: f32,
 }
 
+/// Doubtful readings remembered, so the same picture is not sent to the classifier again.
+const MAX_DOUBTFUL: usize = 64;
+
 #[derive(Default)]
 pub struct TemplateCache {
     templates: Vec<Template>,
+    /// Crops read with doubt, most recent last. Never templates: only the same picture
+    /// again (a tile that stays on the table under a glare) gets their answer.
+    doubtful: Vec<Template>,
 }
 
 impl TemplateCache {
@@ -70,6 +76,32 @@ impl TemplateCache {
 
     pub fn clear(&mut self) {
         self.templates.clear();
+        self.doubtful.clear();
+    }
+
+    /// Remembers what the classifier said, with doubt, about a crop.
+    pub fn remember_doubtful(&mut self, tile: Tile, confidence: f32, crop: &RgbImage) {
+        if self.doubtful.len() >= MAX_DOUBTFUL {
+            self.doubtful.remove(0);
+        }
+        self.doubtful.push(Template {
+            tile,
+            confidence,
+            thumb: thumbnail(crop),
+        });
+    }
+
+    /// What was said about this very picture, if it was read with doubt before.
+    pub fn recall_doubtful(&self, crop: &RgbImage) -> Option<(Tile, f32)> {
+        if self.doubtful.is_empty() {
+            return None;
+        }
+        let thumb = thumbnail(crop);
+        self.doubtful
+            .iter()
+            .rev()
+            .find(|t| distance(&t.thumb, &thumb) < DUPLICATE_DISTANCE)
+            .map(|t| (t.tile, t.confidence))
     }
 
     /// The cached tile for a crop, when the match is close and unambiguous.

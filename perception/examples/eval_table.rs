@@ -223,6 +223,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         (Score::default(), Score::default(), Score::default());
     let (mut frames_checked, mut frames_right) = (0, 0);
     let mut read_ms = Vec::new();
+    let mut part_ms: [Vec<f64>; 3] = Default::default();
 
     for path in frames(&paths)? {
         let frame_name = name_of(&path);
@@ -248,7 +249,9 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         let start = Instant::now();
         let rivers = river::read(&frame, &table, &river_layout, face, &mut recognizer)?;
+        let after_rivers = start.elapsed();
         let melds = meld::read(&frame, &table, &meld_layout, face, &mut recognizer)?;
+        let after_melds = start.elapsed();
         let indicators = dora::read(
             &frame,
             &area,
@@ -257,6 +260,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             face,
             &mut recognizer,
         )?;
+        let ms = |d: std::time::Duration| d.as_secs_f64() * 1e3;
+        part_ms[0].push(ms(after_rivers));
+        part_ms[1].push(ms(after_melds - after_rivers));
+        part_ms[2].push(ms(start.elapsed() - after_melds));
         read_ms.push(start.elapsed().as_secs_f64() * 1e3);
         if let Some(dir) = &views {
             for seat in Seat::ALL {
@@ -374,6 +381,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    for (part, times) in ["rivers", "melds", "dora"].iter().zip(&mut part_ms) {
+        times.sort_by(f64::total_cmp);
+        let median = times.get(times.len() / 2).copied().unwrap_or(0.0);
+        println!("{part}: median {median:.1} ms");
+    }
     read_ms.sort_by(f64::total_cmp);
     let at = |q: f64| {
         read_ms

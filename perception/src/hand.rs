@@ -147,6 +147,13 @@ impl Expect {
 
 /// A new tile size seen this many times in a row replaces the locked one.
 const RELOCK: u32 = 3;
+/// A hand never holds more: 13 concealed tiles and the one drawn. A longer row is something
+/// else (a results screen, a wall), or a wrong lock cutting the hand too fine.
+const MAX_TILES: usize = 14;
+
+fn plausible(layout: &HandLayout) -> bool {
+    layout.concealed.len() + usize::from(layout.drawn.is_some()) <= MAX_TILES
+}
 
 /// Finds the hand frame after frame. Once found for a frame size, the tile size is locked,
 /// so a hand partly covered (a popup, a dimmed table) still splits into the right tiles
@@ -172,18 +179,28 @@ impl HandTracker {
     pub fn find(&mut self, frame: &FrameView<'_>, face: TileFace) -> Option<HandLayout> {
         let size = (frame.width(), frame.height());
         let Some((locked_size, expect)) = self.lock.filter(|(s, _)| *s == size) else {
-            let layout = self.finder.find(frame, face)?;
+            let layout = self.finder.find(frame, face).filter(plausible)?;
             self.lock = Some((size, Expect::of(&layout)));
             self.candidate = None;
             return Some(layout);
         };
-        if let Some(layout) = self.finder.find_expecting(frame, face, Some(expect)) {
-            self.candidate = None;
-            return Some(layout);
+        match self.finder.find_expecting(frame, face, Some(expect)) {
+            Some(layout) if plausible(&layout) => {
+                self.candidate = None;
+                return Some(layout);
+            }
+            Some(_) => {
+                // The locked size cuts the hand too fine: it was wrong. Start over.
+                tracing::debug!("dropping a hand lock that reads too many tiles");
+                self.lock = None;
+                self.candidate = None;
+                return self.find(frame, face);
+            }
+            None => {}
         }
         // Not there at the locked size: maybe the game rescaled. Believe a new size only
         // once it repeats.
-        let layout = self.finder.find(frame, face)?;
+        let layout = self.finder.find(frame, face).filter(plausible)?;
         let seen = Expect::of(&layout);
         let count = match self.candidate {
             Some((c, n)) if c.matches(&seen) => n + 1,
@@ -707,6 +724,44 @@ mod tests {
         let layout = tracker.find(&view(&covered), FACE).unwrap();
         assert_eq!(layout.concealed.len(), 13);
         assert!((layout.pitch - 40.0).abs() < 1.6);
+    }
+
+    #[test]
+    fn a_row_too_long_for_a_hand_is_not_locked_onto() {
+        // A live session began on a screen with a long row of small tiles. Locked to their
+        // size, every later hand was cut into 42 tiles and the lock never let go.
+        fn view(data: &[u8]) -> FrameView<'_> {
+            FrameView::new(800, 580, 3200, data, 1.0).unwrap()
+        }
+        let small = table(800, 580, 0, &row(60, 20, 20, 500), 20, 30);
+        let hand = table(800, 580, 0, &row(100, 13, 40, 500), 40, 60);
+        let mut tracker = HandTracker::new();
+        assert!(tracker.find(&view(&small), FACE).is_none());
+        assert_eq!(
+            tracker.find(&view(&hand), FACE).unwrap().concealed.len(),
+            13
+        );
+    }
+
+    #[test]
+    fn a_lock_that_cuts_the_hand_too_fine_is_dropped() {
+        fn view(data: &[u8]) -> FrameView<'_> {
+            FrameView::new(800, 580, 3200, data, 1.0).unwrap()
+        }
+        let hand = table(800, 580, 0, &row(100, 13, 40, 500), 40, 60);
+        let mut tracker = HandTracker::new();
+        // Pretend an earlier screen locked a third of the real size.
+        tracker.lock = Some((
+            (800, 580),
+            Expect {
+                pitch: 13.3,
+                height: 20,
+            },
+        ));
+        let layout = (0..3)
+            .find_map(|_| tracker.find(&view(&hand), FACE))
+            .unwrap();
+        assert_eq!(layout.concealed.len(), 13);
     }
 
     #[test]

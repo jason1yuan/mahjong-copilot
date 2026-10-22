@@ -7,7 +7,7 @@
 //! [`Table::rectify`] resamples part of a seat's area into an upright picture as seen from
 //! that seat: tiles come out as same-sized upright rectangles, whichever seat they are in.
 
-use image::{Rgb, RgbImage};
+use image::RgbImage;
 
 use crate::capture::FrameView;
 use crate::hand::GameArea;
@@ -150,7 +150,8 @@ impl Table {
     }
 
     /// The rectangle of `seat`'s coordinates from `origin`, `size` tile widths large, as seen
-    /// from that seat at `scale` pixels per tile width. Outside the frame is black.
+    /// from that seat at `scale` pixels per tile width, sampled bilinearly. Outside the frame
+    /// is black.
     pub fn rectify(
         &self,
         frame: &FrameView<'_>,
@@ -159,44 +160,51 @@ impl Table {
         size: [f64; 2],
         scale: f64,
     ) -> RgbImage {
-        let to_frame = &self.seats[seat.index()];
+        let m = self.seats[seat.index()].0;
         let width = (size[0] * scale).round().max(1.0) as u32;
         let height = (size[1] * scale).round().max(1.0) as u32;
-        RgbImage::from_fn(width, height, |i, j| {
-            let x = origin[0] + (f64::from(i) + 0.5) / scale;
-            let y = origin[1] + (f64::from(j) + 0.5) / scale;
-            let (u, v) = to_frame.apply(x, y);
-            sample(frame, u, v)
-        })
+        let (fw, fh) = (frame.width() as usize, frame.height() as usize);
+        let (max_x, max_y) = (fw as f64 - 1.0, fh as f64 - 1.0);
+        let (bgra, stride) = (frame.bgra(), frame.stride());
+        let step = 1.0 / scale;
+        let mut out = vec![0u8; width as usize * height as usize * 3];
+        for (j, row) in out.chunks_exact_mut(width as usize * 3).enumerate() {
+            // Along a row the transform's numerators and denominator change linearly.
+            let y = origin[1] + (j as f64 + 0.5) * step;
+            let x = origin[0] + 0.5 * step;
+            let (mut nu, mut nv, mut nw) = (
+                m[0] * x + m[1] * y + m[2],
+                m[3] * x + m[4] * y + m[5],
+                m[6] * x + m[7] * y + m[8],
+            );
+            let (du, dv, dw) = (m[0] * step, m[3] * step, m[6] * step);
+            for px in row.as_chunks_mut::<3>().0 {
+                // Frame pixel centres are at +0.5.
+                let (u, v) = (nu / nw - 0.5, nv / nw - 0.5);
+                nu += du;
+                nv += dv;
+                nw += dw;
+                if !(u >= 0.0 && v >= 0.0 && u <= max_x && v <= max_y) {
+                    continue;
+                }
+                let (x0, y0) = (u as usize, v as usize);
+                let (fx, fy) = (u - x0 as f64, v - y0 as f64);
+                let x1 = (x0 + 1).min(fw - 1);
+                let y1 = (y0 + 1).min(fh - 1);
+                let at = |x: usize, y: usize| y * stride + x * 4;
+                let (a, b, c, d) = (at(x0, y0), at(x1, y0), at(x0, y1), at(x1, y1));
+                for (k, channel) in [2usize, 1, 0].into_iter().enumerate() {
+                    let top = f64::from(bgra[a + channel]) * (1.0 - fx)
+                        + f64::from(bgra[b + channel]) * fx;
+                    let bottom = f64::from(bgra[c + channel]) * (1.0 - fx)
+                        + f64::from(bgra[d + channel]) * fx;
+                    px[k] = (top * (1.0 - fy) + bottom * fy).round() as u8;
+                }
+            }
+        }
+        // The buffer was made for exactly this size.
+        RgbImage::from_raw(width, height, out).unwrap_or_else(|| RgbImage::new(width, height))
     }
-}
-
-/// Bilinear sample at frame position (`u`, `v`) in pixels, pixel centres at +0.5; black
-/// outside the frame.
-fn sample(frame: &FrameView<'_>, u: f64, v: f64) -> Rgb<u8> {
-    let (x, y) = (u - 0.5, v - 0.5);
-    let inside = x >= 0.0
-        && y >= 0.0
-        && x <= f64::from(frame.width()) - 1.0
-        && y <= f64::from(frame.height()) - 1.0;
-    if !inside {
-        return Rgb([0, 0, 0]);
-    }
-    let (fx, fy) = (x.fract(), y.fract());
-    let (x0, y0) = (x as u32, y as u32);
-    let x1 = (x0 + 1).min(frame.width() - 1);
-    let y1 = (y0 + 1).min(frame.height() - 1);
-    let p = [
-        frame.rgb(x0, y0),
-        frame.rgb(x1, y0),
-        frame.rgb(x0, y1),
-        frame.rgb(x1, y1),
-    ];
-    Rgb(std::array::from_fn(|c| {
-        let top = f64::from(p[0][c]) * (1.0 - fx) + f64::from(p[1][c]) * fx;
-        let bottom = f64::from(p[2][c]) * (1.0 - fx) + f64::from(p[3][c]) * fx;
-        (top * (1.0 - fy) + bottom * fy).round() as u8
-    }))
 }
 
 #[cfg(test)]

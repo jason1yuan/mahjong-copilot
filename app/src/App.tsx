@@ -21,10 +21,13 @@ type Advice = {
   shanten: number | null;
   ukeire: string[];
   ukeireCount: number | null;
+  dora: TileView[];
+  seen: number | null;
   times: {
     settleMs: number;
     findMs: number;
     recognizeMs: number;
+    tableMs: number;
     decideMs: number;
     sentMs: number;
   };
@@ -178,6 +181,12 @@ function App() {
                 {advice.discard === null && advice.ukeire.length > 0 && `（${advice.ukeire.map(name).join(" ")}）`}
               </span>
             )}
+            {advice.dora.length > 0 && (
+              <span>
+                宝牌指示 {advice.dora.map((d) => name(d.tile) + (d.doubt ? "?" : "")).join(" ")}
+              </span>
+            )}
+            {advice.seen !== null && <span className="muted-inline">已见 {advice.seen} 张</span>}
           </p>
           {advice.options.length > 1 && (
             <p className="options">
@@ -190,7 +199,7 @@ function App() {
           )}
           <p className="debug">
             稳定 {advice.times.settleMs.toFixed(0)} · 找牌 {advice.times.findMs.toFixed(1)} · 认牌{" "}
-            {advice.times.recognizeMs.toFixed(1)} · 计算 {advice.times.decideMs.toFixed(1)} ms
+            {advice.times.recognizeMs.toFixed(1)} · 牌桌 {advice.times.tableMs.toFixed(1)} · 计算 {advice.times.decideMs.toFixed(1)} ms
             {latency && ` · 显示 ${latency.lastMs.toFixed(0)} ms · P95 ${latency.p95Ms.toFixed(0)} ms（${latency.count} 次）`}
           </p>
         </>

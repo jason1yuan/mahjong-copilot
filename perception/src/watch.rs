@@ -2,9 +2,11 @@
 //! detection, hand finding and recognition on one background thread, with what each step
 //! cost. What to do with the hand is up to the caller (the decision core).
 //!
-//! Until the hand is found the whole window is watched; after that only the rows of the
-//! hand (a little above, for raised tiles), so animations elsewhere on the table cost
-//! nothing.
+//! Until the hand is found the whole window is watched; after that the rows of the hand (a
+//! little above, for raised tiles) and the table above them. When either settles, the hand
+//! and the table (rivers, melds, dora indicators; #8) are read together. A table that does
+//! not add up with the hand (five of a kind, two red fives of a suit: a misread tile, a
+//! results screen, a cut-in) is not trusted: the last one that did is kept.
 //!
 //! [`FrameTap`] gives the dev build's screenshot button and recording switch the frames
 //! (#8); nothing is saved unless they are used.
@@ -27,6 +29,7 @@ use crate::hand::{HandTracker, TileBox};
 use crate::profile::Profile;
 use crate::recognizer::{Recognition, TileRecognizer};
 use crate::record::Recorder;
+use crate::snapshot::{self, Snapshot};
 
 /// The whole window, watched until the hand is found.
 const WHOLE: Region = Region {
@@ -57,6 +60,8 @@ pub struct Timings {
     pub settled: Instant,
     pub find: Duration,
     pub recognize: Duration,
+    /// Reading the rivers, melds and dora indicators.
+    pub table: Duration,
 }
 
 /// The hand read from one settled frame.
@@ -66,6 +71,9 @@ pub struct HandReading {
     pub tiles: Vec<Recognition>,
     pub boxes: Vec<TileBox>,
     pub drawn: bool,
+    /// The rivers, melds and dora indicators; `None` when the profile does not describe the
+    /// table.
+    pub table: Option<Snapshot>,
     /// Frame size in pixels.
     pub frame: (u32, u32),
     pub timings: Timings,
@@ -74,7 +82,7 @@ pub struct HandReading {
 #[derive(Clone, Debug)]
 pub enum WatchEvent {
     /// The hand changed.
-    Hand(HandReading),
+    Hand(Box<HandReading>),
     /// The window settled without a hand on screen (lobby, results screen, ...).
     NoHand,
     /// Capture ended on its own, e.g. the window closed.
@@ -149,9 +157,10 @@ impl Watcher {
                 tracker: HandTracker::new(),
                 profile,
                 detector: ChangeDetector::new(&[WHOLE]),
-                watched: WHOLE,
+                watched: vec![WHOLE],
                 frame: (0, 0),
                 last: None,
+                last_table: None,
             };
             let mut on_event = on_event;
             std::thread::Builder::new()
@@ -240,10 +249,12 @@ struct State {
     tracker: HandTracker,
     profile: Profile,
     detector: ChangeDetector,
-    watched: Region,
+    watched: Vec<Region>,
     frame: (u32, u32),
-    /// The tiles last reported, to report only changes.
-    last: Option<Vec<String>>,
+    /// What was last reported, to report only changes.
+    last: Option<String>,
+    /// The last table that added up with its hand.
+    last_table: Option<Snapshot>,
 }
 
 impl State {
@@ -252,25 +263,29 @@ impl State {
         if size != self.frame {
             // A resized window: start over with the whole window and a fresh cache.
             self.frame = size;
-            self.watch(WHOLE);
+            self.watch(&[WHOLE]);
             self.recognizer.clear_cache();
+            self.last_table = None;
         }
         self.detector.observe(view, captured);
     }
 
-    fn watch(&mut self, region: Region) {
-        if region != self.watched {
-            self.watched = region;
-            self.detector = ChangeDetector::new(&[region]);
+    fn watch(&mut self, regions: &[Region]) {
+        if regions != self.watched.as_slice() {
+            self.watched = regions.to_vec();
+            self.detector = ChangeDetector::new(regions);
         }
     }
 
     fn read(&mut self, view: &FrameView<'_>) -> Option<WatchEvent> {
         let settled = Instant::now();
-        let still_since = self.detector.last_change(0).unwrap_or(settled);
+        let still_since = (0..self.watched.len())
+            .filter_map(|i| self.detector.last_change(i))
+            .max()
+            .unwrap_or(settled);
         let start = Instant::now();
         let Some(layout) = self.tracker.find(view, self.profile.tile_face) else {
-            self.watch(WHOLE);
+            self.watch(&[WHOLE]);
             let changed = self.last.take().is_some();
             return changed.then_some(WatchEvent::NoHand);
         };
@@ -287,40 +302,70 @@ impl State {
         };
         let recognize = start.elapsed();
 
-        // From now on watch the hand's rows, reaching up for raised tiles.
+        let start = Instant::now();
+        let table = match snapshot::read(view, &self.profile, &layout, &mut self.recognizer) {
+            Ok(Some(table)) if snapshot::consistent(&tiles, &table) => {
+                self.last_table = Some(table.clone());
+                Some(table)
+            }
+            Ok(Some(_)) => {
+                tracing::debug!("the table does not add up with the hand; keeping the last one");
+                self.last_table.clone()
+            }
+            Ok(None) => None,
+            Err(err) => {
+                tracing::warn!("reading the table: {err}");
+                self.last_table.clone()
+            }
+        };
+        let table_time = start.elapsed();
+
+        // From now on watch the hand's rows, reaching up for raised tiles, and the table
+        // above them.
         let (y0, y1) = layout.band;
         let height = view.height().max(1) as f32;
         let band = (y1 - y0) as f32;
-        self.watch(Region {
-            rect: RelRect::new(
-                0.0,
-                (y0 as f32 - 0.3 * band).max(0.0) / height,
-                1.0,
-                1.3 * band / height,
-            ),
-            cols: 48,
-            rows: 4,
-        });
+        let hand_top = (y0 as f32 - 0.3 * band).max(0.0) / height;
+        let table_top = layout
+            .game_area(&self.profile.hand)
+            .map_or(0.0, |area| (area.top / height).clamp(0.0, hand_top));
+        self.watch(&[
+            Region {
+                rect: RelRect::new(0.0, hand_top, 1.0, 1.3 * band / height),
+                cols: 48,
+                rows: 4,
+            },
+            Region {
+                rect: RelRect::new(0.0, table_top, 1.0, (hand_top - table_top).max(0.01)),
+                cols: 48,
+                rows: 24,
+            },
+        ]);
 
-        let names: Vec<String> = tiles
+        let mut summary: String = tiles
             .iter()
-            .map(|t| format!("{}{}", t.tile, if t.doubt.is_some() { "?" } else { "" }))
+            .map(|t| format!("{}{} ", t.tile, if t.doubt.is_some() { "?" } else { "" }))
             .collect();
-        if self.last.as_ref() == Some(&names) {
+        if let Some(table) = &table {
+            summary.push_str(&table.summary());
+        }
+        if self.last.as_ref() == Some(&summary) {
             return None;
         }
-        self.last = Some(names);
-        Some(WatchEvent::Hand(HandReading {
+        self.last = Some(summary);
+        Some(WatchEvent::Hand(Box::new(HandReading {
             tiles,
             boxes,
             drawn: layout.drawn.is_some(),
+            table,
             frame: (view.width(), view.height()),
             timings: Timings {
                 still_since,
                 settled,
                 find,
                 recognize,
+                table: table_time,
             },
-        }))
+        })))
     }
 }

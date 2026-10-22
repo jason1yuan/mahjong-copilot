@@ -33,6 +33,9 @@ const MIN_BACK: f64 = 0.6;
 const BACK_WIDTH: f64 = 0.95;
 /// Least pixels per tile width the band is rectified at.
 const MIN_SCALE: f64 = 8.0;
+/// Most pixels per tile width: the classifier and the cache shrink tiles further anyway,
+/// and the near seats would otherwise cost the most.
+const MAX_SCALE: f64 = 72.0;
 
 /// A seat's meld band rectified into an upright view from that seat.
 pub struct MeldView {
@@ -73,7 +76,9 @@ pub type Melds = [Vec<Meld>; 4];
 /// `seat`'s meld band as seen from that seat, at about the frame's own resolution there.
 pub fn rectify(frame: &FrameView<'_>, table: &Table, layout: &MeldLayout, seat: Seat) -> MeldView {
     let middle = [layout.right - 3.0, (layout.near + layout.far) / 2.0];
-    let scale = table.scale_at(seat, middle[0], middle[1]).max(MIN_SCALE);
+    let scale = table
+        .scale_at(seat, middle[0], middle[1])
+        .clamp(MIN_SCALE, MAX_SCALE);
     let origin = [layout.left, layout.near];
     let size = [layout.right - layout.left, layout.far - layout.near];
     MeldView {

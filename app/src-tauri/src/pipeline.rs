@@ -17,7 +17,10 @@ use std::time::{Duration, Instant};
 use mahjong_core::{Tile, TileCounts, outlook, rank_discards};
 use mahjong_perception::capture::{self, WindowInfo};
 use mahjong_perception::profile::{self, Profile};
-use mahjong_perception::{Doubt, FrameTap, HandReading, Recorder, WatchEvent, Watcher};
+use mahjong_perception::snapshot::{self, Snapshot};
+use mahjong_perception::{
+    Doubt, FrameTap, HandReading, Recognition, Recorder, WatchEvent, Watcher,
+};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
@@ -60,6 +63,8 @@ pub struct StepTimes {
     pub settle_ms: f64,
     pub find_ms: f64,
     pub recognize_ms: f64,
+    /// Reading the rivers, melds and dora indicators.
+    pub table_ms: f64,
     pub decide_ms: f64,
     /// Still screen to the advice being sent; the window adds its render time.
     pub sent_ms: f64,
@@ -79,6 +84,11 @@ pub struct Advice {
     pub shanten: Option<i8>,
     pub ukeire: Vec<Tile>,
     pub ukeire_count: Option<u8>,
+    /// The dora indicators, left to right.
+    pub dora: Vec<TileView>,
+    /// Tiles face up on the table (rivers, melds, dora indicators), which the counts above
+    /// leave out; `None` when the table is not read.
+    pub seen: Option<u32>,
     pub times: StepTimes,
 }
 
@@ -240,11 +250,13 @@ impl Pipeline {
     fn handle(&self, app: &AppHandle, event: WatchEvent) {
         let sent = match event {
             WatchEvent::Hand(reading) => {
-                let advice = self.advise(reading);
+                let advice = self.advise(&reading);
                 tracing::info!(
                     tiles = advice.tiles.len(),
                     find_ms = advice.times.find_ms,
                     recognize_ms = advice.times.recognize_ms,
+                    table_ms = advice.times.table_ms,
+                    seen = advice.seen,
                     decide_ms = advice.times.decide_ms,
                     sent_ms = advice.times.sent_ms,
                     "advice"
@@ -259,34 +271,32 @@ impl Pipeline {
         }
     }
 
-    fn advise(&self, reading: HandReading) -> Advice {
+    fn advise(&self, reading: &HandReading) -> Advice {
         let start = Instant::now();
         let hand: Vec<Tile> = reading.tiles.iter().map(|r| r.tile).collect();
-        // Rivers, melds and dora indicators are not read yet (#8).
-        let visible: TileCounts = [0; 34];
+        let visible = seen_counts(&hand, reading.table.as_ref());
         let mut advice = Advice {
             seq: self.seq.fetch_add(1, Ordering::Relaxed) + 1,
-            tiles: reading
-                .tiles
-                .iter()
-                .map(|r| TileView {
-                    tile: r.tile,
-                    doubt: r.doubt.map(|d| match d {
-                        Doubt::TooSmall => "small",
-                        Doubt::LowConfidence => "unsure",
-                    }),
-                })
-                .collect(),
+            tiles: reading.tiles.iter().map(view).collect(),
             drawn: reading.drawn,
             discard: None,
             options: Vec::new(),
             shanten: None,
             ukeire: Vec::new(),
             ukeire_count: None,
+            dora: reading
+                .table
+                .as_ref()
+                .map_or_else(Vec::new, |t| t.dora.iter().map(view).collect()),
+            seen: reading
+                .table
+                .as_ref()
+                .map(|_| visible.iter().map(|&n| u32::from(n)).sum()),
             times: StepTimes {
                 settle_ms: ms(reading.timings.settled - reading.timings.still_since),
                 find_ms: ms(reading.timings.find),
                 recognize_ms: ms(reading.timings.recognize),
+                table_ms: ms(reading.timings.table),
                 decide_ms: 0.0,
                 sent_ms: 0.0,
             },
@@ -414,6 +424,30 @@ impl Pipeline {
     }
 }
 
+fn view(r: &Recognition) -> TileView {
+    TileView {
+        tile: r.tile,
+        doubt: r.doubt.map(|d| match d {
+            Doubt::TooSmall => "small",
+            Doubt::LowConfidence => "unsure",
+        }),
+    }
+}
+
+/// Tiles of each kind face up on the table, capped so that with the hand there are never
+/// more than four: a misread tile must not make the hand impossible to advise on.
+fn seen_counts(hand: &[Tile], table: Option<&Snapshot>) -> TileCounts {
+    let mut seen = table.map_or([0; 34], snapshot::seen);
+    for (kind, count) in seen.iter_mut().enumerate() {
+        let in_hand = hand
+            .iter()
+            .filter(|t| usize::from(t.kind()) == kind)
+            .count() as u8;
+        *count = (*count).min(4u8.saturating_sub(in_hand));
+    }
+    seen
+}
+
 /// The first window a built-in profile recognises, with that profile.
 fn find_window(profiles: &[Profile]) -> Option<(WindowInfo, Profile)> {
     let windows = match capture::list_windows() {
@@ -426,4 +460,37 @@ fn find_window(profiles: &[Profile]) -> Option<(WindowInfo, Profile)> {
     windows
         .into_iter()
         .find_map(|w| profile::for_window(profiles, &w).cloned().map(|p| (w, p)))
+}
+
+#[cfg(test)]
+mod tests {
+    use mahjong_perception::river::RiverTile;
+    use mahjong_perception::{Recognition, Source};
+
+    use super::*;
+
+    #[test]
+    fn seen_tiles_never_make_more_than_four_with_the_hand() {
+        let tile = |name: &str| Recognition {
+            tile: name.parse().unwrap(),
+            confidence: 0.99,
+            source: Source::Classifier,
+            doubt: None,
+        };
+        let mut table = Snapshot::default();
+        // Three East discarded, one misread too many, and a red five.
+        table.rivers[2] = ["E", "E", "E", "5pr"]
+            .iter()
+            .map(|n| RiverTile {
+                tile: tile(n),
+                sideways: false,
+            })
+            .collect();
+        table.dora = vec![tile("E")];
+        let hand: Vec<Tile> = ["E", "E", "5p"].map(|n| n.parse().unwrap()).to_vec();
+        let seen = seen_counts(&hand, Some(&table));
+        assert_eq!(seen[27], 2);
+        assert_eq!(seen[13], 1);
+        assert_eq!(seen_counts(&hand, None), [0; 34]);
+    }
 }

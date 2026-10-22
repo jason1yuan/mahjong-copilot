@@ -63,7 +63,7 @@ cargo run -p mahjong-perception --release --example eval_cache -- recordings/sou
 ## 盯窗口（#7）
 
 - `watch`：`Watcher::start` 加载认牌模型并先空跑一次（免得第一手牌慢），开始采集，然后在后台线程上等新帧、做变化检测，稳定后找手牌（`HandTracker`）并认牌
-- 找到手牌后只盯手牌那几行；窗口大小变了就重新盯整个窗口，并清空模板缓存
+- 找到手牌后盯手牌那几行和上方的牌桌，哪块稳定了就把手牌和牌桌一起读（#8）；窗口大小变了就重新盯整个窗口，并清空模板缓存
 - 手牌变了发 `WatchEvent::Hand`，其中的 `HandReading` 带每张牌、牌框和各环节耗时；画面里没有手牌时发 `NoHand`，窗口关了发 `Stopped`
 - 拿到手牌后怎么打不在这里决定，由 app 交给 core
 - `FrameTap`：给开发版的截图按钮和连续录制用（#8）：`snapshot` 复制最新一帧；`record` 打开后，每次手牌变化都把读到的那一帧交给 `Recorder`，在发出建议之后才做
@@ -76,7 +76,8 @@ cargo run -p mahjong-perception --release --example eval_cache -- recordings/sou
 - `faces`：在校正后的正面图里找牌面（浅色、灰或粉、够大、不在别的牌面里面），判断横放，牌河和副露共用
 - `meld`：读四家副露。`rectify` 校正出每家的副露带子，`find_strip` 从右往左找出牌（含横放、加杠叠上的牌、扣着的牌），`group` 按牌本身分成一副副，`read` 用每家自己的模板缓存（`Zone::Meld`）认牌
 - `dora`：在左上角找宝牌指示框，`find` 找出翻开的格子，`read` 用自己的模板缓存（`Zone::Dora`）认牌
-- `recognizer`：模板缓存按区域（`Zone`）分开，共用一个认牌模型
+- `snapshot`：一帧里的牌桌（四家牌河、副露、宝牌指示）一起读出来（`Snapshot`），并检查它和手牌能不能同时成立（每种最多 4 张、每种花色最多一张赤五）；监视线程（`watch`）用它
+- `recognizer`：模板缓存按区域（`Zone`）分开，共用一个认牌模型；拿不准的牌只对同一张图沿用上次的结果，不会每次都再送进模型
 
 用录下的帧评测牌河、副露和宝牌指示（标签和图片都只在本机），用法和标签格式见文件开头：
 

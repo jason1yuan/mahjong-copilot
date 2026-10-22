@@ -1,13 +1,14 @@
-//! Reads the table (#8) of recorded frames: the four rivers, the four seats' melds and the
-//! dora indicators, in time order with one recognizer as the app would, and checks them
-//! against labels. Images stay local.
+//! Reads the table (#8) of recorded frames: the four rivers, the four seats' melds, the
+//! dora indicators and the round and dealer (#9), in time order with one recognizer as the
+//! app would, and checks them against labels. Images stay local.
 //!     cargo run -p mahjong-perception --release --example eval_table -- recordings/live
 //!     cargo run -p mahjong-perception --release --example eval_table -- recordings/live --labels recordings/live/table.json --views /tmp/views
 //!
 //! Each frame prints one line per seat: river tiles in discard order, then melds in the
 //! order they were made (`|` between melds, tiles left to right as their owner sees them);
 //! `*` marks a sideways tile, `+X` the tile added to a kan, `x` a tile face down and `?` a
-//! tile in doubt. `--views` saves each seat's rectified river and meld band.
+//! tile in doubt. `--views` saves each seat's rectified river and meld band, and the round
+//! label.
 //!
 //! Labels give each round's table once, as it is in the round's last frame; every earlier
 //! frame must show the start of it, which checks every frame without labelling each one. A
@@ -19,8 +20,15 @@
 //!   "rivers": {"own": "N E 1s ...", "right": "...", "across": "...", "left": "3m 4m* ..."},
 //!   "melds": {"own": "2m* 3m 4m | S S* S", "left": "5m 5mr 5m*"},
 //!   "dora": "W N",
-//!   "called": [{"seat": "own", "index": 6, "tile": "5m", "from": "17926495266", "to": "17926495266"}]}]}
+//!   "called": [{"seat": "own", "index": 6, "tile": "5m", "from": "17926495266", "to": "17926495266"}]}],
+//!  "centre": [{"first": "1792648832246", "last": "1792648886893", "round": "E1", "dealer": "across"},
+//!   {"first": "1792649477903", "last": "1792649478010"}]}
 //! ```
+//!
+//! `centre` gives the round and dealer for runs of frames, separately from `rounds` so that
+//! frames without labelled tiles count too; a run without them is a frame where the box is
+//! hidden (a results screen), where nothing should be read. Each label is also read with
+//! text recognition on every frame, without the cache, to measure it alone.
 
 use std::collections::BTreeMap;
 use std::error::Error;
@@ -31,8 +39,9 @@ use mahjong_perception::capture::FrameView;
 use mahjong_perception::hand::HandFinder;
 use mahjong_perception::meld::{self, Meld, MeldTile};
 use mahjong_perception::river::{self, RiverTile};
+use mahjong_perception::round::{self, Round, RoundReader};
 use mahjong_perception::table::{Seat, Table};
-use mahjong_perception::{Recognition, TileClassifier, TileRecognizer, dora, profile};
+use mahjong_perception::{Recognition, TileClassifier, TileRecognizer, dora, profile, text};
 use serde::Deserialize;
 
 const DEFAULT_MODEL: &str = "ml/models/mahjong_soul_vision/model.onnx";
@@ -40,11 +49,22 @@ const SEAT_NAMES: [&str; 4] = ["own", "right", "across", "left"];
 
 #[derive(Deserialize)]
 struct Labels {
-    rounds: Vec<Round>,
+    rounds: Vec<RoundLabel>,
+    #[serde(default)]
+    centre: Vec<CentreLabel>,
 }
 
 #[derive(Deserialize)]
-struct Round {
+struct CentreLabel {
+    first: String,
+    last: String,
+    /// `E1` for 東1局.
+    round: Option<String>,
+    dealer: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct RoundLabel {
     /// Names of the round's first and last frames (or the start of them).
     first: String,
     last: String,
@@ -133,14 +153,14 @@ fn name_of(path: &Path) -> String {
         .unwrap_or_default()
 }
 
-fn round_of<'a>(labels: &'a Labels, frame: &str) -> Option<&'a Round> {
+fn round_of<'a>(labels: &'a Labels, frame: &str) -> Option<&'a RoundLabel> {
     labels.rounds.iter().find(|r| {
         frame >= r.first.as_str() && (frame <= r.last.as_str() || frame.starts_with(&r.last))
     })
 }
 
 /// What `seat`'s river should be in `frame`: tile names, `*` for sideways.
-fn expected_river(round: &Round, frame: &str, seat: usize) -> Option<Vec<String>> {
+fn expected_river(round: &RoundLabel, frame: &str, seat: usize) -> Option<Vec<String>> {
     let mut river: Vec<String> = round
         .rivers
         .get(SEAT_NAMES[seat])?
@@ -157,6 +177,28 @@ fn expected_river(round: &Round, frame: &str, seat: usize) -> Option<Vec<String>
     Some(river)
 }
 
+fn centre_of<'a>(labels: &'a Labels, frame: &str) -> Option<&'a CentreLabel> {
+    labels.centre.iter().find(|r| {
+        frame >= r.first.as_str() && (frame <= r.last.as_str() || frame.starts_with(&r.last))
+    })
+}
+
+fn show_round(round: Option<Round>) -> String {
+    round.map_or("-".to_owned(), |r| r.to_string())
+}
+
+fn show_seat(seat: Option<Seat>) -> String {
+    seat.map_or("-".to_owned(), |s| SEAT_NAMES[s.index()].to_owned())
+}
+
+/// The value at quantile `q` of sorted `values`.
+fn quantile(values: &[f64], q: f64) -> f64 {
+    values
+        .get(((values.len() as f64 - 1.0) * q).round() as usize)
+        .copied()
+        .unwrap_or(0.0)
+}
+
 /// Whether a meld as read matches the label's, which may already hold the added kan tile.
 fn meld_matches(read: &str, label: &str) -> bool {
     let read: Vec<&str> = read.split_whitespace().collect();
@@ -166,6 +208,20 @@ fn meld_matches(read: &str, label: &str) -> bool {
             .iter()
             .zip(&label)
             .all(|(r, l)| r == l || (!r.contains('+') && l.split('+').next() == Some(*r)))
+}
+
+#[derive(Default)]
+struct CentreScore {
+    frames: u32,
+    dealer: u32,
+    round: u32,
+    /// Frames where something was read and it was not what the label says; the other
+    /// misses read nothing.
+    dealer_wrong: u32,
+    round_wrong: u32,
+    /// Frames with a round label, and those whose label read right without the cache.
+    labels: u32,
+    label_alone: u32,
 }
 
 #[derive(Default)]
@@ -212,6 +268,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let river_layout = profile.river.ok_or("the profile has no river")?;
     let meld_layout = profile.melds.ok_or("the profile has no melds")?;
     let dora_layout = profile.dora.ok_or("the profile has no dora box")?;
+    let centre_layout = profile.centre.ok_or("the profile has no centre box")?;
     let face = profile.tile_face;
 
     let environment = ort::init().build()?;
@@ -224,6 +281,21 @@ fn main() -> Result<(), Box<dyn Error>> {
     let (mut frames_checked, mut frames_right) = (0, 0);
     let mut read_ms = Vec::new();
     let mut part_ms: [Vec<f64>; 3] = Default::default();
+    let mut rounds = RoundReader::new(text::system());
+    let mut ocr = text::system().ok_or("no text recognition on this platform")?;
+    let start = Instant::now();
+    text::warm_up();
+    println!(
+        "text recognition warm-up: {:.0} ms",
+        start.elapsed().as_secs_f64() * 1e3
+    );
+    let mut centre_score = CentreScore::default();
+    let (mut dealer_ms, mut round_ms, mut ocr_ms) = (Vec::new(), Vec::new(), Vec::new());
+    // Label thumbnails seen so far with their labelled round, and each label's distance to
+    // the nearest earlier one of the same round and of another round, to calibrate the
+    // cache.
+    let mut thumbs: Vec<(image::GrayImage, Option<String>)> = Vec::new();
+    let (mut same, mut different) = (Vec::new(), Vec::new());
 
     for path in frames(&paths)? {
         let frame_name = name_of(&path);
@@ -232,11 +304,20 @@ fn main() -> Result<(), Box<dyn Error>> {
         if (w, h) != size {
             size = (w, h);
             recognizer.clear_cache();
+            rounds.clear();
         }
         let bgra: Vec<u8> = rgb.pixels().flat_map(|p| [p[2], p[1], p[0], 255]).collect();
         let frame = FrameView::new(w, h, w as usize * 4, &bgra, 2.0).ok_or("bad frame")?;
+        let centre = labels.as_ref().and_then(|l| centre_of(l, &frame_name));
         let Some(hand) = HandFinder::new().find(&frame, face) else {
             println!("{frame_name}: no hand");
+            // Nothing is read: right only where there is nothing to read.
+            if let Some(centre) = centre {
+                centre_score.frames += 1;
+                let empty = u32::from(centre.round.is_none() && centre.dealer.is_none());
+                centre_score.dealer += empty;
+                centre_score.round += empty;
+            }
             continue;
         };
         let Some(area) = hand.game_area(&profile.hand) else {
@@ -265,7 +346,72 @@ fn main() -> Result<(), Box<dyn Error>> {
         part_ms[1].push(ms(after_melds - after_rivers));
         part_ms[2].push(ms(start.elapsed() - after_melds));
         read_ms.push(start.elapsed().as_secs_f64() * 1e3);
+
+        // The round and dealer (#9) as the app reads them, then the label alone, every
+        // frame, without the cache.
+        let start = Instant::now();
+        let red = round::marker_red(&frame, &table, &centre_layout);
+        let dealer = round::dealer_of(red);
+        dealer_ms.push(ms(start.elapsed()));
+        let start = Instant::now();
+        let label = round::rectify_label(&frame, &table, &centre_layout);
+        let read_round = dealer.and_then(|_| rounds.read(&label));
+        if dealer.is_some() {
+            round_ms.push(ms(start.elapsed()));
+        }
+        let start = Instant::now();
+        let raw_round = round::parse_round(&ocr.read_text(&label)?);
+        ocr_ms.push(ms(start.elapsed()));
+        let mut centre_text = format!(
+            "  round {}  dealer {}  own wind {}  (label alone: {})",
+            show_round(read_round),
+            show_seat(dealer),
+            dealer.map_or("-".to_owned(), |d| round::seat_wind(d, Seat::Own)
+                .to_string()),
+            show_round(raw_round)
+        );
+        if dealer.is_none() {
+            centre_text.push_str(&format!("  red markers {red:.2?}"));
+        }
+        if let Some(centre) = centre {
+            centre_score.frames += 1;
+            let want_dealer = centre.dealer.as_deref().unwrap_or("-");
+            let want_round = centre.round.as_deref().unwrap_or("-");
+            if show_seat(dealer) == want_dealer {
+                centre_score.dealer += 1;
+            } else {
+                centre_score.dealer_wrong += u32::from(dealer.is_some());
+                centre_text.push_str(&format!("  dealer not {want_dealer}"));
+            }
+            if show_round(read_round) == want_round {
+                centre_score.round += 1;
+            } else {
+                centre_score.round_wrong += u32::from(read_round.is_some());
+                centre_text.push_str(&format!("  round not {want_round}"));
+            }
+            if centre.round.is_some() {
+                centre_score.labels += 1;
+                if show_round(raw_round) == want_round {
+                    centre_score.label_alone += 1;
+                }
+                // As the cache sees it: the nearest earlier label of the same round, and
+                // of any other round.
+                let thumb = round::thumbnail(&label);
+                let nearest = |same_round: bool| {
+                    thumbs
+                        .iter()
+                        .filter(|(_, r)| (*r == centre.round) == same_round)
+                        .map(|(t, _)| f64::from(round::distance(t, &thumb)))
+                        .min_by(f64::total_cmp)
+                };
+                same.extend(nearest(true));
+                different.extend(nearest(false));
+                thumbs.push((thumb, centre.round.clone()));
+            }
+        }
+
         if let Some(dir) = &views {
+            label.save(dir.join(format!("{frame_name}-round.png")))?;
             for seat in Seat::ALL {
                 let seat_name = SEAT_NAMES[seat.index()];
                 river::rectify(&frame, &table, &river_layout, seat)
@@ -282,7 +428,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             .map(|t| name(Some(t)))
             .collect::<Vec<_>>()
             .join(" ");
-        println!("{frame_name}  dora {dora_text}");
+        println!("{frame_name}  dora {dora_text}{centre_text}");
         let round = labels.as_ref().and_then(|l| round_of(l, &frame_name));
         let mut right = true;
         for seat in 0..4 {
@@ -387,16 +533,27 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("{part}: median {median:.1} ms");
     }
     read_ms.sort_by(f64::total_cmp);
-    let at = |q: f64| {
-        read_ms
-            .get(((read_ms.len() as f64 - 1.0) * q).round() as usize)
-            .copied()
-            .unwrap_or(0.0)
-    };
     println!(
         "\nread rivers, melds and dora: median {:.1} ms, p95 {:.1} ms",
-        at(0.5),
-        at(0.95)
+        quantile(&read_ms, 0.5),
+        quantile(&read_ms, 0.95)
+    );
+    for (what, times) in [
+        ("dealer marker", &mut dealer_ms),
+        ("round, as the app reads it", &mut round_ms),
+        ("round label alone, no cache", &mut ocr_ms),
+    ] {
+        times.sort_by(f64::total_cmp);
+        println!(
+            "{what}: median {:.2} ms, p95 {:.2} ms, max {:.2} ms",
+            quantile(times, 0.5),
+            quantile(times, 0.95),
+            quantile(times, 1.0)
+        );
+    }
+    println!(
+        "round labels sent to text recognition: {}",
+        rounds.recognized()
     );
     if labels.is_some() {
         for (what, s) in [
@@ -410,6 +567,21 @@ fn main() -> Result<(), Box<dyn Error>> {
             );
         }
         println!("frames with the whole table right: {frames_right} of {frames_checked}");
+        let s = &centre_score;
+        println!(
+            "centre box, {} frames: dealer right {} ({} wrong, the rest not read), round right {} ({} wrong); label alone right {} of {}",
+            s.frames, s.dealer, s.dealer_wrong, s.round, s.round_wrong, s.label_alone, s.labels
+        );
+        same.sort_by(f64::total_cmp);
+        different.sort_by(f64::total_cmp);
+        println!(
+            "nearest earlier label, same round: median {:.1}, p95 {:.1}, max {:.1}; other round: min {:.1}, p5 {:.1}",
+            quantile(&same, 0.5),
+            quantile(&same, 0.95),
+            quantile(&same, 1.0),
+            quantile(&different, 0.0),
+            quantile(&different, 0.05)
+        );
     }
     Ok(())
 }

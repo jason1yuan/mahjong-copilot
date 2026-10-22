@@ -18,6 +18,8 @@ pub struct Profile {
     pub river: Option<RiverLayout>,
     pub melds: Option<MeldLayout>,
     pub dora: Option<DoraLayout>,
+    /// The box in the middle of the table: round label and seat winds (#9).
+    pub centre: Option<CentreLayout>,
 }
 
 /// A window belongs to the game when its app is one of `apps` (any app if empty) and its
@@ -87,6 +89,18 @@ pub struct DoraLayout {
     pub height: f32,
     pub pitch: f32,
     pub slots: usize,
+}
+
+/// The box in the middle of the table (#9), in table coordinates (see [`TableGeometry`]).
+/// The box stands above the table, so its parts are given where they appear on the table
+/// plane instead of as one shape turned for each seat: `markers` are the centres of the
+/// seat wind markers in seat order (own, right, across, left), each `marker` tile widths
+/// square, and `label` is the round label (東1局) as `[left, top, right, bottom]`.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+pub struct CentreLayout {
+    pub markers: [[f64; 2]; 4],
+    pub marker: f64,
+    pub label: [f64; 4],
 }
 
 impl Profile {

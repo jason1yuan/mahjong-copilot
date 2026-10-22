@@ -15,8 +15,10 @@ pub mod recognizer;
 pub mod record;
 pub mod red_five;
 pub mod river;
+pub mod round;
 pub mod snapshot;
 pub mod table;
+pub mod text;
 pub mod watch;
 
 pub use classifier::{ClassifierError, Prediction, TileClassifier};

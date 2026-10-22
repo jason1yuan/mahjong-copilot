@@ -29,7 +29,9 @@ use crate::hand::{HandTracker, TileBox};
 use crate::profile::Profile;
 use crate::recognizer::{Recognition, TileRecognizer};
 use crate::record::Recorder;
+use crate::round::RoundReader;
 use crate::snapshot::{self, Snapshot};
+use crate::text;
 
 /// The whole window, watched until the hand is found.
 const WHOLE: Region = Region {
@@ -60,7 +62,7 @@ pub struct Timings {
     pub settled: Instant,
     pub find: Duration,
     pub recognize: Duration,
-    /// Reading the rivers, melds and dora indicators.
+    /// Reading the rivers, melds, dora indicators and round.
     pub table: Duration,
 }
 
@@ -134,6 +136,10 @@ impl Watcher {
         let mut classifier = TileClassifier::load(environment, model)?;
         classifier.warm_up()?;
         let recognizer = TileRecognizer::new(classifier);
+        // Text recognition loads on first use; get that done while the hand is looked for.
+        std::thread::Builder::new()
+            .name("text-warm-up".into())
+            .spawn(text::warm_up)?;
         let latest = Arc::new(LatestFrame::new());
         let session = {
             let latest = Arc::clone(&latest);
@@ -154,6 +160,7 @@ impl Watcher {
             let recorder = Arc::clone(&tap.recorder);
             let mut state = State {
                 recognizer,
+                rounds: RoundReader::new(text::system()),
                 tracker: HandTracker::new(),
                 profile,
                 detector: ChangeDetector::new(&[WHOLE]),
@@ -246,6 +253,7 @@ impl Drop for Watcher {
 
 struct State {
     recognizer: TileRecognizer,
+    rounds: RoundReader,
     tracker: HandTracker,
     profile: Profile,
     detector: ChangeDetector,
@@ -265,6 +273,7 @@ impl State {
             self.frame = size;
             self.watch(&[WHOLE]);
             self.recognizer.clear_cache();
+            self.rounds.clear();
             self.last_table = None;
         }
         self.detector.observe(view, captured);
@@ -303,7 +312,13 @@ impl State {
         let recognize = start.elapsed();
 
         let start = Instant::now();
-        let table = match snapshot::read(view, &self.profile, &layout, &mut self.recognizer) {
+        let table = match snapshot::read(
+            view,
+            &self.profile,
+            &layout,
+            &mut self.recognizer,
+            &mut self.rounds,
+        ) {
             Ok(Some(table)) if snapshot::consistent(&tiles, &table) => {
                 self.last_table = Some(table.clone());
                 Some(table)

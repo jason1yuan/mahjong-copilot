@@ -1,6 +1,6 @@
-//! What is on the table besides the hand (#8): the four rivers, the four seats' melds and
-//! the dora indicators, read together from one frame, and a check that they and the hand
-//! can all be true at once.
+//! What is on the table besides the hand (#8): the four rivers, the four seats' melds, the
+//! dora indicators, and the round and seat winds (#9), read together from one frame, and a
+//! check that they and the hand can all be true at once.
 
 use mahjong_core::Tile;
 
@@ -12,7 +12,8 @@ use crate::meld::{self, Melds};
 use crate::profile::Profile;
 use crate::recognizer::{Classify, Recognition, TileRecognizer};
 use crate::river::{self, Rivers};
-use crate::table::Table;
+use crate::round::{self, Round, RoundReader, Wind};
+use crate::table::{Seat, Table};
 
 /// The table as read from one frame.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -20,6 +21,11 @@ pub struct Snapshot {
     pub rivers: Rivers,
     pub melds: Melds,
     pub dora: Vec<Recognition>,
+    /// The round from the label in the middle of the table; `None` when it could not be
+    /// read.
+    pub round: Option<Round>,
+    /// Who deals, from the red wind marker; `None` when the box is not in sight.
+    pub dealer: Option<Seat>,
 }
 
 impl Snapshot {
@@ -35,6 +41,11 @@ impl Snapshot {
         rivers.chain(melds).chain(self.dora.iter())
     }
 
+    /// `seat`'s wind; `None` when the dealer is not known.
+    pub fn seat_wind(&self, seat: Seat) -> Option<Wind> {
+        self.dealer.map(|dealer| round::seat_wind(dealer, seat))
+    }
+
     /// A short text of everything read, to tell whether anything changed.
     pub fn summary(&self) -> String {
         self.tiles()
@@ -42,19 +53,24 @@ impl Snapshot {
             .collect::<Vec<_>>()
             .join(" ")
             + &format!(
-                " / {:?}",
-                self.melds.iter().map(Vec::len).collect::<Vec<_>>()
+                " / {:?} / {} {}",
+                self.melds.iter().map(Vec::len).collect::<Vec<_>>(),
+                self.round.map_or("-".to_owned(), |r| r.to_string()),
+                self.seat_wind(Seat::Own)
+                    .map_or("-".to_owned(), |w| w.to_string()),
             )
     }
 }
 
 /// Reads the table of a frame whose hand is `hand`; `None` when the profile does not describe
-/// the table or the game area is degenerate.
+/// the table or the game area is degenerate. The round is read only while a dealer marker
+/// shows, so a results screen costs no text recognition.
 pub fn read<C: Classify>(
     frame: &FrameView<'_>,
     profile: &Profile,
     hand: &HandLayout,
     recognizer: &mut TileRecognizer<C>,
+    rounds: &mut RoundReader,
 ) -> Result<Option<Snapshot>, ClassifierError> {
     let (Some(geometry), Some(river_layout), Some(meld_layout), Some(dora_layout)) =
         (profile.table, profile.river, profile.melds, profile.dora)
@@ -68,10 +84,19 @@ pub fn read<C: Classify>(
         return Ok(None);
     };
     let face = profile.tile_face;
+    let dealer = profile
+        .centre
+        .and_then(|centre| round::dealer(frame, &table, &centre));
+    let round = match (profile.centre, dealer) {
+        (Some(centre), Some(_)) => rounds.read(&round::rectify_label(frame, &table, &centre)),
+        _ => None,
+    };
     Ok(Some(Snapshot {
         rivers: river::read(frame, &table, &river_layout, face, recognizer)?,
         melds: meld::read(frame, &table, &meld_layout, face, recognizer)?,
         dora: dora::read(frame, &area, hand.pitch, &dora_layout, face, recognizer)?,
+        round,
+        dealer,
     }))
 }
 
@@ -126,6 +151,17 @@ mod tests {
             .collect();
         snapshot.dora = dora.iter().map(|n| tile(n)).collect();
         snapshot
+    }
+
+    #[test]
+    fn seat_winds_and_round_show_in_the_summary() {
+        let mut snapshot = table(&[], &[]);
+        assert!(snapshot.summary().ends_with("- -"));
+        snapshot.dealer = Some(Seat::Left);
+        snapshot.round = round::parse_round(&["東2局".to_owned()]);
+        assert_eq!(snapshot.seat_wind(Seat::Own), Some(Wind::South));
+        assert_eq!(snapshot.seat_wind(Seat::Left), Some(Wind::East));
+        assert!(snapshot.summary().ends_with("E2 S"));
     }
 
     #[test]

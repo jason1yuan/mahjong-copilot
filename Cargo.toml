@@ -20,6 +20,8 @@ image = { version = "0.25", default-features = false }
 # Prebuilt ONNX Runtime 1.31 is downloaded at build time only; `fetch-models` (downloads
 # at run time) stays off.
 ort = { version = "=2.0.0-rc.15", default-features = false, features = ["std", "tracing", "download-binaries", "tls-native", "copy-dylibs", "api-31"] }
+# macOS window capture (#1); macos_14_0 matches the app's minimum macOS.
+screencapturekit = { version = "11.0", features = ["macos_14_0"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"

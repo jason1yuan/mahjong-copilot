@@ -10,6 +10,24 @@ Rust crate，和界面无关。
 - 输出带置信度的局面快照，交给 [core](../core/)
 - 读取 [profiles](../profiles/) 里的游戏适配包
 
+## 采集（#1）
+
+- `capture`：`list_windows` 列出可以采集的窗口（不含我们自己的窗口），`start` 开始采集一个窗口，每一帧在采集线程上以 `FrameView`（BGRA，借用不复制）交给回调。位置用相对窗口内容的比例（`RelRect`），窗口缩放、Retina、全屏切换后不变。平台实现在 `capture/macos.rs`（ScreenCaptureKit），其他平台目前返回"不支持"
+- `LatestFrame`：从采集线程把最新一帧交给流水线，不排队，缓冲区重复使用
+- `change`：`FrameGate` 在采集线程上丢掉没变的帧；`ChangeDetector` 按区域判断变化，连续 70 ms 不变才算稳定，再交给认牌
+
+在真实窗口上看采集效果（帧数、变化帧、稳定事件、尺寸、CPU；不保存任何画面）：
+
+```bash
+cargo run -p mahjong-perception --release --example capture_probe
+```
+
+```bash
+cargo run -p mahjong-perception --release --example capture_probe -- 雀魂 20
+```
+
+第一次运行时 macOS 会要求屏幕录制权限。
+
 ## 认牌（#4）
 
 - `recognizer`：`TileRecognizer` 是流水线用的入口：先查模板缓存，没命中的牌一次交给认牌模型；牌宽不到 28 像素或置信度低于 0.7 时标为"不确定"（`Doubt`），这样的牌不进缓存。每个"游戏 + 牌面 + 窗口大小 + 区域种类"用一个，窗口大小变了就 `clear_cache`

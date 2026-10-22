@@ -14,9 +14,12 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = ["macos-private-api"] }
+anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+tracing.workspace = true
 mahjong-core.workspace = true
+mahjong-models.workspace = true
 mahjong-perception.workspace = true
 
 [lints]

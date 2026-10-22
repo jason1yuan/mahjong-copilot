@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["app/src-tauri", "core", "perception"]
+members = ["app/src-tauri", "core", "models", "perception"]
 # Vendored upstream code is kept as-is and not linted with our rules.
 exclude = ["third_party/libriichi"]
 
@@ -11,12 +11,23 @@ license = "AGPL-3.0-or-later"
 publish = false
 
 [workspace.dependencies]
+anyhow = "1"
 mahjong-core = { path = "core" }
+mahjong-models = { path = "models" }
 mahjong-perception = { path = "perception" }
 libriichi-algo = { path = "third_party/libriichi" }
+image = { version = "0.25", default-features = false }
+# Prebuilt ONNX Runtime 1.31 is downloaded at build time only; `fetch-models` (downloads
+# at run time) stays off.
+ort = { version = "=2.0.0-rc.15", default-features = false, features = ["std", "tracing", "download-binaries", "tls-native", "copy-dylibs", "api-31"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+sha2 = "0.10"
 thiserror = "2"
+tracing = "0.1"
+# Only for downloading models (the `models` crate): bundled rustls roots, no gzip, so a
+# resumed download is the raw bytes.
+ureq = { version = "3.5", default-features = false, features = ["rustls"] }
 
 [workspace.lints.clippy]
 unwrap_used = "warn"

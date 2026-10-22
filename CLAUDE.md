@@ -24,6 +24,7 @@
 | `core/` | 状态引擎、规则、决策（Rust）。向听、和牌、算点调用 `third_party/libriichi` | 依赖任何平台 API、界面或 perception |
 | `third_party/` | 原样引入的上游代码，目前是 libriichi 的算法部分。不在 Cargo workspace 内，不受我们的 clippy 规则约束 | 修改或格式化；确实要改时，先按它自己的 README 记录改动 |
 | `perception/` | 采集、画面配准和版面定位、变化检测、认牌（运行时模板缓存 + 认牌模型 + 赤五颜色规则）（Rust） | 包含决策逻辑；平台代码必须放在 `#[cfg(target_os = ...)]` 隔离的平台模块里 |
+| `models/` | 首次启动时下载模型（Rust）：固定地址、大小和 SHA-256，断点续传，校验通过才放进应用数据目录。整个项目只有这里联网 | 下载模型以外的任何联网；被采集、识别、决策的热路径调用 |
 | `app/src-tauri/` | Tauri 外壳：窗口、快捷键、串联各模块 | 写业务逻辑，它只负责组装 |
 | `app/src/` | React + TypeScript 界面 | 计算牌效或做任何决策，只渲染收到的结果 |
 | `ml/` | 模型评测和格式转换（Python）：认牌方案评测，认牌模型和 Mortal 导出 ONNX | 训练任何模型；提交截图、录屏、数据集或模型权重 |
@@ -37,9 +38,9 @@
   - "牌在哪里"用适配包和传统算法：画面配准、区域模板、变化检测；
   - "这是哪张牌"先查运行时模板缓存，没命中再交给认牌模型。它只认 34 种牌，认出是五时，再按笔画颜色判断是不是赤五（参考 `ml/vlm_eval/red_five.py`）。结果限定在 37 个牌名里，并缓存成模板；
   - 认牌模型转成 ONNX，用 ONNX Runtime 推理，转换后要写对照测试；
-  - 它是用游戏截图训练的，不由我们转存分发，尽量从原作者的仓库下载，具体做法见 #4。
+  - 原作者的仓库只有 PyTorch 权重，所以转换后的 ONNX 文件（fp32）放在我们自己的 Hugging Face 模型仓库 `xzhe121/mahjong_soul_vision-onnx`，app 从那里按固定修订版下载。它是用游戏截图训练的：仓库里只放这个模型文件和原有的配置，附原始许可（Apache-2.0）和来源、改动说明，不放截图或数据集；收到下架要求就撤下。用 `ml/convert/prepare_upload.py` 准备上传内容。
 - 不训练任何模型：识别和决策都用现成的。
-- 模型不打包进 app，也不提交到 git 或 GitHub：首次启动时从固定版本的地址下载，校验哈希后存到本机的应用数据目录，之后运行不再联网。
+- 模型不打包进 app，也不提交到 git 或 GitHub：首次启动时由 `models` crate 从固定版本的地址下载，校验哈希后存到本机的应用数据目录，之后运行不再联网。新增或更换模型时，在 `models/src/lib.rs` 里锁定地址、大小和 SHA-256。
 
 ## 约定
 
@@ -57,7 +58,7 @@
 
 ## 命令
 
-在仓库根目录（Cargo workspace：`app/src-tauri`、`core`、`perception`）：
+在仓库根目录（Cargo workspace：`app/src-tauri`、`core`、`models`、`perception`）：
 
 - `cargo fmt --all`
 - `cargo clippy --workspace --all-targets -- -D warnings`

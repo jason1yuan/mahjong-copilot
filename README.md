@@ -21,6 +21,7 @@ Tauri 2 + Rust + React / TypeScript，模型用 ONNX Runtime 推理。选型理�
 |---|---|
 | [app/](app/) | Tauri 2 应用：Rust 外壳（窗口、快捷键、把各模块串成流水线）和网页界面（React + TypeScript） |
 | [perception/](perception/) | 采集与识别（Rust）：按平台实现的窗口采集、ONNX Runtime 推理 |
+| [models/](models/) | 首次启动时下载模型（Rust）：固定地址和哈希，断点续传；整个项目只有这里联网 |
 | [core/](core/) | 状态与决策（Rust）：牌局状态引擎、向听 / 进张、打点、防守 |
 | [third_party/](third_party/) | 原样引入的上游代码：Mortal 的 libriichi（向听、和牌、算点） |
 | [ml/](ml/) | 模型评测和格式转换（Python）：认牌方案评测，认牌模型和 Mortal 导出 ONNX。不训练任何模型 |

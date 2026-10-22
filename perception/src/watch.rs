@@ -27,7 +27,7 @@ use crate::change::{ChangeDetector, FrameGate, Region};
 use crate::classifier::{ClassifierError, TileClassifier};
 use crate::hand::{HandTracker, TileBox};
 use crate::profile::Profile;
-use crate::recognizer::{Recognition, TileRecognizer};
+use crate::recognizer::{Doubt, Recognition, TileRecognizer};
 use crate::record::Recorder;
 use crate::round::RoundReader;
 use crate::snapshot::{self, Snapshot};
@@ -251,6 +251,20 @@ impl Drop for Watcher {
     }
 }
 
+/// More than this share of a hand's tiles unsure means it is not a hand.
+const MAX_UNSURE: f32 = 0.5;
+
+/// Whether recognized "tiles" are tiles at all: the classifier is unsure of most light
+/// blocks that are not tiles (the lobby's buttons). Tiles in doubt only for being small
+/// (a small window) still count as tiles.
+fn looks_like_tiles(tiles: &[Recognition]) -> bool {
+    let unsure = tiles
+        .iter()
+        .filter(|t| t.doubt == Some(Doubt::LowConfidence))
+        .count();
+    unsure as f32 <= MAX_UNSURE * tiles.len() as f32
+}
+
 struct State {
     recognizer: TileRecognizer,
     rounds: RoundReader,
@@ -310,6 +324,15 @@ impl State {
             }
         };
         let recognize = start.elapsed();
+        if !looks_like_tiles(&tiles) {
+            // Light blocks the size of tiles, e.g. in the lobby: not a hand, and not a tile
+            // size to keep.
+            tracing::debug!("the hand reads as unsure; not a hand");
+            self.tracker.forget();
+            self.watch(&[WHOLE]);
+            let changed = self.last.take().is_some();
+            return changed.then_some(WatchEvent::NoHand);
+        }
 
         let start = Instant::now();
         let table = match snapshot::read(
@@ -382,5 +405,35 @@ impl State {
                 table: table_time,
             },
         })))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::recognizer::Source;
+
+    fn tile(doubt: Option<Doubt>) -> Recognition {
+        Recognition {
+            tile: "P".parse().unwrap(),
+            confidence: 0.5,
+            source: Source::Classifier,
+            doubt,
+        }
+    }
+
+    #[test]
+    fn a_lobby_read_as_unsure_tiles_is_not_a_hand() {
+        // The lobby's light buttons read as seven tiles, each unsure.
+        let lobby = vec![tile(Some(Doubt::LowConfidence)); 7];
+        assert!(!looks_like_tiles(&lobby));
+        // A hand with a few unsure tiles, or every tile small in a small window, is a hand.
+        let mut hand = vec![tile(None); 11];
+        hand.extend([
+            tile(Some(Doubt::LowConfidence)),
+            tile(Some(Doubt::LowConfidence)),
+        ]);
+        assert!(looks_like_tiles(&hand));
+        assert!(looks_like_tiles(&[tile(Some(Doubt::TooSmall)); 13]));
     }
 }

@@ -176,6 +176,12 @@ impl HandTracker {
         self.lock.map(|(_, e)| e)
     }
 
+    /// Drops the locked tile size, e.g. when what was found turned out not to be a hand.
+    pub fn forget(&mut self) {
+        self.lock = None;
+        self.candidate = None;
+    }
+
     pub fn find(&mut self, frame: &FrameView<'_>, face: TileFace) -> Option<HandLayout> {
         let size = (frame.width(), frame.height());
         let Some((locked_size, expect)) = self.lock.filter(|(s, _)| *s == size) else {

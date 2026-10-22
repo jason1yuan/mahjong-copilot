@@ -26,6 +26,7 @@ use crate::capture::{
 use crate::change::{ChangeDetector, FrameGate, Region};
 use crate::classifier::{ClassifierError, TileClassifier};
 use crate::hand::{HandTracker, TileBox};
+use crate::numbers::NumberReader;
 use crate::profile::Profile;
 use crate::recognizer::{Doubt, Recognition, TileRecognizer};
 use crate::record::Recorder;
@@ -161,6 +162,7 @@ impl Watcher {
             let mut state = State {
                 recognizer,
                 rounds: RoundReader::new(text::system()),
+                numbers: NumberReader::new(text::system()),
                 tracker: HandTracker::new(),
                 profile,
                 detector: ChangeDetector::new(&[WHOLE]),
@@ -268,6 +270,7 @@ fn looks_like_tiles(tiles: &[Recognition]) -> bool {
 struct State {
     recognizer: TileRecognizer,
     rounds: RoundReader,
+    numbers: NumberReader,
     tracker: HandTracker,
     profile: Profile,
     detector: ChangeDetector,
@@ -288,6 +291,7 @@ impl State {
             self.watch(&[WHOLE]);
             self.recognizer.clear_cache();
             self.rounds.clear();
+            self.numbers.clear();
             self.last_table = None;
         }
         self.detector.observe(view, captured);
@@ -341,6 +345,7 @@ impl State {
             &layout,
             &mut self.recognizer,
             &mut self.rounds,
+            &mut self.numbers,
         ) {
             Ok(Some(table)) if snapshot::consistent(&tiles, &table) => {
                 self.last_table = Some(table.clone());

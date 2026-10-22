@@ -276,3 +276,15 @@ body {
   width: 30px;
   color: var(--text);
 }
+
+.game {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.table-debug .score {
+  display: inline-block;
+  width: 46px;
+  color: var(--text);
+}

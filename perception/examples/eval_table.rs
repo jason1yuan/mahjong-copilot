@@ -38,6 +38,7 @@ use std::time::Instant;
 use mahjong_perception::capture::FrameView;
 use mahjong_perception::hand::HandFinder;
 use mahjong_perception::meld::{self, Meld, MeldTile};
+use mahjong_perception::numbers::{self, NumberReader, Numbers};
 use mahjong_perception::river::{self, RiverTile};
 use mahjong_perception::round::{self, Round, RoundReader};
 use mahjong_perception::table::{Seat, Table};
@@ -282,6 +283,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut read_ms = Vec::new();
     let mut part_ms: [Vec<f64>; 3] = Default::default();
     let mut rounds = RoundReader::new(text::system());
+    let mut number_reader = NumberReader::new(text::system());
+    let mut numbers_ms = Vec::new();
+    // Frames with the box in sight; of them, with every number read, and the scores adding
+    // up; and tiles left that rose although the scores stayed the same.
+    let (mut box_frames, mut all_read, mut tiles_rose) = (0u32, 0u32, 0u32);
+    let mut last_numbers: Option<Numbers> = None;
+    // Round starts where the player deals (14 tiles, empty rivers), and those read wrong.
+    let (mut start_checks, mut start_wrong) = (0u32, 0u32);
     let mut ocr = text::system().ok_or("no text recognition on this platform")?;
     let start = Instant::now();
     text::warm_up();
@@ -305,6 +314,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             size = (w, h);
             recognizer.clear_cache();
             rounds.clear();
+            number_reader.clear();
         }
         let bgra: Vec<u8> = rgb.pixels().flat_map(|p| [p[2], p[1], p[0], 255]).collect();
         let frame = FrameView::new(w, h, w as usize * 4, &bgra, 2.0).ok_or("bad frame")?;
@@ -362,8 +372,61 @@ fn main() -> Result<(), Box<dyn Error>> {
         let start = Instant::now();
         let raw_round = round::parse_round(&ocr.read_text(&label)?);
         ocr_ms.push(ms(start.elapsed()));
+        // The scores, tiles left, riichi sticks and honba (#9), as the app reads them.
+        let start = Instant::now();
+        let dora_boxes = dora::find(&frame, &area, hand.pitch, &dora_layout, face);
+        let read_numbers = dealer.map(|_| {
+            numbers::read(
+                &frame,
+                &table,
+                &centre_layout,
+                &dora_layout,
+                dora_boxes.first(),
+                hand.pitch,
+                &mut number_reader,
+            )
+        });
+        // At a round's start only the dealer holds 14 tiles: with every river empty and 14
+        // in the player's hand, the player deals. A check that does not depend on labels.
+        if rivers.iter().all(Vec::is_empty) && hand.tiles().len() == 14 {
+            start_checks += 1;
+            if dealer != Some(Seat::Own) {
+                start_wrong += 1;
+                println!(
+                    "  round start: the player holds 14 tiles but the dealer reads {dealer:?}"
+                );
+            }
+        }
+        if let Some(n) = read_numbers {
+            numbers_ms.push(ms(start.elapsed()));
+            box_frames += 1;
+            let complete = n.scores.is_some()
+                && n.tiles_left.is_some()
+                && n.riichi_sticks.is_some()
+                && n.honba.is_some();
+            all_read += u32::from(complete);
+            if let Some(last) = last_numbers
+                && last.scores.is_some()
+                && last.scores == n.scores
+                && let (Some(before), Some(now)) = (last.tiles_left, n.tiles_left)
+                && now > before
+            {
+                tiles_rose += 1;
+                println!("  tiles left rose: {before} -> {now}");
+            }
+            last_numbers = Some(n);
+        }
+        let numbers_text = read_numbers.map_or("-".to_owned(), |n| {
+            format!(
+                "scores {}  left {}  sticks {}  honba {}",
+                n.scores.map_or("-".to_owned(), |s| format!("{s:?}")),
+                n.tiles_left.map_or("-".to_owned(), |v| v.to_string()),
+                n.riichi_sticks.map_or("-".to_owned(), |v| v.to_string()),
+                n.honba.map_or("-".to_owned(), |v| v.to_string()),
+            )
+        });
         let mut centre_text = format!(
-            "  round {}  dealer {}  own wind {}  (label alone: {})",
+            "  round {}  dealer {}  own wind {}  (label alone: {})  {numbers_text}",
             show_round(read_round),
             show_seat(dealer),
             dealer.map_or("-".to_owned(), |d| round::seat_wind(d, Seat::Own)
@@ -542,6 +605,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ("dealer marker", &mut dealer_ms),
         ("round, as the app reads it", &mut round_ms),
         ("round label alone, no cache", &mut ocr_ms),
+        ("numbers, as the app reads them", &mut numbers_ms),
     ] {
         times.sort_by(f64::total_cmp);
         println!(
@@ -554,6 +618,20 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!(
         "round labels sent to text recognition: {}",
         rounds.recognized()
+    );
+    println!(
+        "numbers: {box_frames} frames with the box in sight, every number read (scores adding up) in {all_read}; tiles left rose with the same scores {tiles_rose} times; {} pictures sent to text recognition",
+        number_reader.recognized()
+    );
+    println!(
+        "round starts with the player dealing: {start_checks}, dealer read wrong in {start_wrong}"
+    );
+    println!(
+        "  by field: scores {:?}, tiles left {}, riichi sticks {}, honba {}",
+        Seat::ALL.map(|seat| number_reader.recognized_by(numbers::Field::Score(seat))),
+        number_reader.recognized_by(numbers::Field::TilesLeft),
+        number_reader.recognized_by(numbers::Field::RiichiSticks),
+        number_reader.recognized_by(numbers::Field::Honba),
     );
     if labels.is_some() {
         for (what, s) in [

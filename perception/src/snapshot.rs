@@ -9,6 +9,7 @@ use crate::classifier::ClassifierError;
 use crate::dora;
 use crate::hand::HandLayout;
 use crate::meld::{self, Melds};
+use crate::numbers::{self, NumberReader, Numbers};
 use crate::profile::Profile;
 use crate::recognizer::{Classify, Recognition, TileRecognizer};
 use crate::river::{self, Rivers};
@@ -26,6 +27,8 @@ pub struct Snapshot {
     pub round: Option<Round>,
     /// Who deals, from the red wind marker; `None` when the box is not in sight.
     pub dealer: Option<Seat>,
+    /// Scores, tiles left, riichi sticks and honba (#9).
+    pub numbers: Numbers,
 }
 
 impl Snapshot {
@@ -53,8 +56,9 @@ impl Snapshot {
             .collect::<Vec<_>>()
             .join(" ")
             + &format!(
-                " / {:?} / {} {}",
+                " / {:?} / {:?} / {} {}",
                 self.melds.iter().map(Vec::len).collect::<Vec<_>>(),
+                self.numbers,
                 self.round.map_or("-".to_owned(), |r| r.to_string()),
                 self.seat_wind(Seat::Own)
                     .map_or("-".to_owned(), |w| w.to_string()),
@@ -71,6 +75,7 @@ pub fn read<C: Classify>(
     hand: &HandLayout,
     recognizer: &mut TileRecognizer<C>,
     rounds: &mut RoundReader,
+    number_reader: &mut NumberReader,
 ) -> Result<Option<Snapshot>, ClassifierError> {
     let (Some(geometry), Some(river_layout), Some(meld_layout), Some(dora_layout)) =
         (profile.table, profile.river, profile.melds, profile.dora)
@@ -91,12 +96,27 @@ pub fn read<C: Classify>(
         (Some(centre), Some(_)) => rounds.read(&round::rectify_label(frame, &table, &centre)),
         _ => None,
     };
+    let dora_boxes = dora::find(frame, &area, hand.pitch, &dora_layout, face);
+    // Like the round, the numbers are read only while the box is in sight.
+    let numbers = match (profile.centre, dealer) {
+        (Some(centre), Some(_)) => numbers::read(
+            frame,
+            &table,
+            &centre,
+            &dora_layout,
+            dora_boxes.first(),
+            hand.pitch,
+            number_reader,
+        ),
+        _ => Numbers::default(),
+    };
     Ok(Some(Snapshot {
         rivers: river::read(frame, &table, &river_layout, face, recognizer)?,
         melds: meld::read(frame, &table, &meld_layout, face, recognizer)?,
-        dora: dora::read(frame, &area, hand.pitch, &dora_layout, face, recognizer)?,
+        dora: dora::recognize(frame, &dora_boxes, recognizer)?,
         round,
         dealer,
+        numbers,
     }))
 }
 

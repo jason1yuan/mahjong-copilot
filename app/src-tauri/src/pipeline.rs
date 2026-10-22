@@ -18,6 +18,7 @@ use mahjong_core::{Tile, TileCounts, outlook, rank_discards};
 use mahjong_perception::capture::{self, WindowInfo};
 use mahjong_perception::profile::{self, Profile};
 use mahjong_perception::snapshot::{self, Snapshot};
+use mahjong_perception::table::Seat;
 use mahjong_perception::{
     Doubt, FrameTap, HandReading, Recognition, Recorder, WatchEvent, Watcher,
 };
@@ -91,7 +92,37 @@ pub struct Advice {
     pub seen: Option<u32>,
     /// The table as read, for the window's debug view and the player's own melds.
     pub table: Option<TableView>,
+    /// The round and the numbers on the table (#9); `None` when not read.
+    pub game: Option<GameView>,
     pub times: StepTimes,
+}
+
+/// The round, seat wind and numbers on the table (#9), for the window.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GameView {
+    /// mjai-style, e.g. `E2` for 東2局.
+    pub round: Option<String>,
+    /// The player's wind: `E`, `S`, `W` or `N`.
+    pub seat_wind: Option<String>,
+    /// In turn order from the player.
+    pub scores: Option<[u32; 4]>,
+    pub tiles_left: Option<u8>,
+    pub honba: Option<u8>,
+    pub riichi_sticks: Option<u8>,
+}
+
+impl GameView {
+    fn of(table: &Snapshot) -> Self {
+        Self {
+            round: table.round.map(|r| r.to_string()),
+            seat_wind: table.seat_wind(Seat::Own).map(|w| w.to_string()),
+            scores: table.numbers.scores,
+            tiles_left: table.numbers.tiles_left,
+            honba: table.numbers.honba,
+            riichi_sticks: table.numbers.riichi_sticks,
+        }
+    }
 }
 
 /// One tile on the table as read.
@@ -350,6 +381,7 @@ impl Pipeline {
                 .as_ref()
                 .map(|_| visible.iter().map(|&n| u32::from(n)).sum()),
             table: reading.table.as_ref().map(TableView::of),
+            game: reading.table.as_ref().map(GameView::of),
             times: StepTimes {
                 settle_ms: ms(reading.timings.settled - reading.timings.still_since),
                 find_ms: ms(reading.timings.find),

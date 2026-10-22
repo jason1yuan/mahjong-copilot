@@ -97,6 +97,16 @@ fn grey_share(image: &RgbImage, f: &faces::Face, face: TileFace) -> f64 {
     f64::from(grey) / f64::from((f.width() * f.height()).max(1))
 }
 
+/// Reads the indicators in `boxes` (from [`find`]), with their own template cache.
+pub fn recognize<C: Classify>(
+    frame: &FrameView<'_>,
+    boxes: &[TileBox],
+    recognizer: &mut TileRecognizer<C>,
+) -> Result<Vec<Recognition>, ClassifierError> {
+    let crops: Vec<RgbImage> = boxes.iter().map(|b| b.crop(frame)).collect();
+    recognizer.recognize_in(Zone::Dora, &crops)
+}
+
 /// Reads the revealed dora indicators, with their own template cache.
 pub fn read<C: Classify>(
     frame: &FrameView<'_>,
@@ -152,6 +162,8 @@ mod tests {
             height: 0.807,
             pitch: 0.594,
             slots: 5,
+            sticks: [0.56, 0.92, 0.62, 0.5],
+            honba: [2.0, 0.92, 0.62, 0.5],
         };
         let face = TileFace {
             min_brightness: 175,

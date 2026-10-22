@@ -23,7 +23,7 @@ Tauri 2 + Rust + React / TypeScript，模型用 ONNX Runtime 推理。选型理�
 | [perception/](perception/) | 采集与识别（Rust）：按平台实现的窗口采集、ONNX Runtime 推理 |
 | [core/](core/) | 状态与决策（Rust）：牌局状态引擎、向听 / 进张、打点、防守 |
 | [third_party/](third_party/) | 原样引入的上游代码：Mortal 的 libriichi（向听、和牌、算点） |
-| [ml/](ml/) | 模型评测和格式转换（Python）：VLM 选型评测，Mortal 导出 ONNX。不训练任何模型 |
+| [ml/](ml/) | 模型评测和格式转换（Python）：认牌方案评测，认牌模型和 Mortal 导出 ONNX。不训练任何模型 |
 | [profiles/](profiles/) | 游戏适配包：各游戏的版面模板、牌面样本、按钮文字 |
 | [docs/](docs/) | 设计文档 |
 
@@ -31,10 +31,10 @@ Tauri 2 + Rust + React / TypeScript，模型用 ONNX Runtime 推理。选型理�
 
 | 阶段 | 内容 |
 |---|---|
-| P0 原型 | 雀魂网页版四麻（macOS）：Tauri 工程搭建，VLM 选型评测，用本地 VLM 认出手牌，向听 / 进张计算，侧栏 UI 标出打哪张 |
+| P0 原型 | 雀魂网页版四麻（macOS）：Tauri 工程搭建，认牌方案评测，用现成的认牌模型 + 赤五规则认出手牌，向听 / 进张计算，侧栏 UI 标出打哪张 |
 | P1 MVP | 牌河 / 副露 / 宝牌识别，状态引擎和完整牌谱记录，鸣牌和立直建议，基础防守，目标牌型，叠加模式，首次启动引导 |
 | P2 | 接入 Mortal 策略模型（四麻），雀姬，三麻，Steam 客户端，皮肤自适应，Windows 支持 |
-| P3 | 国标 / 四川 / 广东 / 台湾等规则包，用 VLM 自动定位新游戏的版面 |
+| P3 | 国标 / 四川 / 广东 / 台湾等规则包，用户框选一次就生成新游戏的适配包 |
 
 ## 许可
 

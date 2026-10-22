@@ -40,6 +40,8 @@ struct Tracked {
     reported: Option<Vec<u8>>,
     /// When the region last differed from the frame before; `None` once handled.
     changed_at: Option<Instant>,
+    /// When the change behind the last report happened: the screen was still from then on.
+    reported_change: Option<Instant>,
 }
 
 pub struct ChangeDetector {
@@ -57,6 +59,7 @@ impl ChangeDetector {
                     scratch: Vec::new(),
                     reported: None,
                     changed_at: None,
+                    reported_change: None,
                 })
                 .collect(),
         }
@@ -92,10 +95,17 @@ impl ChangeDetector {
             };
             if new {
                 tracked.reported = Some(tracked.current.clone());
+                tracked.reported_change = Some(changed_at);
                 settled.push(i);
             }
         }
         settled
+    }
+
+    /// For a region [`settled`](Self::settled) reported: when it last changed before
+    /// settling, i.e. since when the screen has been still. Latency is measured from here.
+    pub fn last_change(&self, region: usize) -> Option<Instant> {
+        self.regions.get(region)?.reported_change
     }
 
     /// When to call [`settled`](Self::settled) next if no frame arrives: `None` when no
@@ -247,6 +257,11 @@ mod tests {
         let rest = frame_with(Some(90));
         d.observe(&view(&rest), now + Duration::from_millis(33));
         assert_eq!(d.settled(now + SETTLE), [0], "only the top region changed");
+        assert_eq!(
+            d.last_change(0),
+            Some(now),
+            "the screen was still from the last move on"
+        );
     }
 
     #[test]

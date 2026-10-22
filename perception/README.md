@@ -60,4 +60,11 @@ cargo run -p mahjong-perception --release --example eval_classifier -- recording
 cargo run -p mahjong-perception --release --example eval_cache -- recordings/source recordings/simulated_multi
 ```
 
+## 盯窗口（#7）
+
+- `watch`：`Watcher::start` 加载认牌模型并先空跑一次（免得第一手牌慢），开始采集，然后在后台线程上等新帧、做变化检测，稳定后找手牌（`HandTracker`）并认牌
+- 找到手牌后只盯手牌那几行；窗口大小变了就重新盯整个窗口，并清空模板缓存
+- 手牌变了发 `WatchEvent::Hand`，其中的 `HandReading` 带每张牌、牌框和各环节耗时；画面里没有手牌时发 `NoHand`，窗口关了发 `Stopped`
+- 拿到手牌后怎么打不在这里决定，由 app 交给 core
+
 ONNX Runtime 由 `ort` 在构建时下载预编译的静态库，运行时不联网。macOS 上它需要 clang 的运行时库，`build.rs` 会自动链接。

@@ -81,6 +81,13 @@ impl TileClassifier {
         })
     }
 
+    /// Runs the model once on blank input, so the first real tiles do not pay for ONNX
+    /// Runtime setting up its memory (about 0.5 s).
+    pub fn warm_up(&mut self) -> Result<(), ClassifierError> {
+        let blank = RgbImage::new(1, 1);
+        self.logits(std::slice::from_ref(&blank)).map(|_| ())
+    }
+
     /// Classifies tile crops in one batch. Red fives come out as plain fives.
     pub fn classify(&mut self, crops: &[RgbImage]) -> Result<Vec<Prediction>, ClassifierError> {
         let logits = self.logits(crops)?;

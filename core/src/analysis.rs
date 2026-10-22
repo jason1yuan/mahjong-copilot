@@ -34,6 +34,17 @@ pub struct DiscardOption {
     pub ukeire_count: u8,
 }
 
+/// Where a 3n+1 hand stands while waiting for its next draw.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Outlook {
+    /// 0 is tenpai.
+    pub shanten: i8,
+    /// Tile kinds that would lower the shanten and still have unseen copies.
+    pub ukeire: Vec<Tile>,
+    /// Unseen copies of those kinds, after subtracting the hand and `visible`.
+    pub ukeire_count: u8,
+}
+
 /// Decompresses the shanten tables, which otherwise happens on first use.
 pub fn warm_up() {
     shanten::ensure_init();
@@ -95,6 +106,23 @@ pub fn rank_discards(
         )
     });
     Ok(options)
+}
+
+/// Shanten and effective draws of a 3n+1 concealed hand waiting for its next tile, e.g.
+/// on another player's turn. `visible` only affects the unseen counts.
+pub fn outlook(hand: &[Tile], visible: &TileCounts) -> Result<Outlook, AnalysisError> {
+    if hand.len() % 3 != 1 {
+        return Err(AnalysisError::BadHandSize(hand.len()));
+    }
+    let groups = groups_for(hand.len()).ok_or(AnalysisError::BadHandSize(hand.len()))?;
+    let mut counts = counts(hand);
+    check_copies(&counts, visible)?;
+    let option = evaluate(hand[0], &mut counts, visible, groups);
+    Ok(Outlook {
+        shanten: option.shanten,
+        ukeire: option.ukeire,
+        ukeire_count: option.ukeire_count,
+    })
 }
 
 /// Shanten and ukeire of the 3n+1 hand left in `counts` after `discard`.
@@ -179,6 +207,30 @@ mod tests {
         for (tiles, expected) in cases {
             assert_eq!(shanten(&hand(tiles)).unwrap(), expected, "{tiles}");
         }
+    }
+
+    #[test]
+    fn outlook_of_a_waiting_hand() {
+        let ready = outlook(&hand("1m 2m 3m 4p 5p 6p 7s 8s 9s E E 5m 6m"), &NONE_VISIBLE).unwrap();
+        assert_eq!(ready.shanten, 0);
+        assert_eq!(ready.ukeire, hand("4m 7m"));
+        assert_eq!(ready.ukeire_count, 8);
+        // Seen elsewhere, two 4m are no longer drawable.
+        let mut seen = NONE_VISIBLE;
+        seen[usize::from(tile("4m").kind())] = 2;
+        let ready = outlook(&hand("1m 2m 3m 4p 5p 6p 7s 8s 9s E E 5m 6m"), &seen).unwrap();
+        assert_eq!(ready.ukeire_count, 6);
+        assert_eq!(
+            outlook(&hand("1m 2m 3m 4p"), &NONE_VISIBLE)
+                .unwrap()
+                .shanten,
+            0,
+            "a single-tile wait after three melds"
+        );
+        assert!(matches!(
+            outlook(&hand("1m 2m"), &NONE_VISIBLE),
+            Err(AnalysisError::BadHandSize(2))
+        ));
     }
 
     #[test]

@@ -78,6 +78,22 @@ type Advice = {
     sentMs: number;
   };
 };
+// One of Mortal's choices (#22): what to do, the tile discarded, called or made a kan of,
+// and for a call the tiles from the hand.
+type Suggestion = {
+  kind: "discard" | "riichi" | "chi" | "pon" | "kan" | "win" | "draw" | "pass";
+  tile: string | null;
+  consumed: string[];
+  q: number;
+};
+// Mortal's decision for the advice with the same `seq`.
+type MortalView = {
+  seq: number;
+  best: Suggestion;
+  riichiDiscard: Suggestion | null;
+  discards: Suggestion[];
+  decideMs: number;
+};
 type Latency = { count: number; lastMs: number; p50Ms: number; p95Ms: number };
 type Progress = { name: string; downloaded: number; total: number };
 // The dev build's debug recording (#8); null in a packaged app.
@@ -153,6 +169,30 @@ const YAKU: Record<string, string> = { yakuhai: "役牌", tanyao: "断幺", honi
 function callText(called: string, o: CallOptionView): string {
   const yaku = o.yaku.length > 0 ? o.yaku.map((y) => YAKU[y] ?? y).join(" ") : "无役";
   return `${CALLS[o.kind]} ${name(called)}（${o.with.map(name).join("")}）→ 打 ${name(o.discard)} · ${shantenText(o.shanten)} ${o.ukeireCount} 张 · ${yaku}`;
+}
+
+// 立直，打 5m · 吃 3p（4p5p） · 跳过
+function mortalText(m: MortalView): string {
+  const t = (s: Suggestion) => (s.tile ? name(s.tile) : "");
+  const b = m.best;
+  switch (b.kind) {
+    case "discard":
+      return `打 ${t(b)}`;
+    case "riichi":
+      return m.riichiDiscard ? `立直，打 ${t(m.riichiDiscard)}` : "立直";
+    case "chi":
+      return `吃 ${t(b)}（${b.consumed.map(name).join("")}）`;
+    case "pon":
+      return `碰 ${t(b)}`;
+    case "kan":
+      return `杠 ${t(b)}`;
+    case "win":
+      return "和了";
+    case "draw":
+      return "九种九牌，流局";
+    case "pass":
+      return "跳过";
+  }
 }
 
 // The call to take, or to let the discard go, then the other ways to call it.
@@ -334,6 +374,7 @@ function App() {
   const [models, setModels] = useState<string | null>(null);
   const [recording, setRecording] = useState<Recording | null>(null);
   const [engine, setEngine] = useState<EngineView | null>(null);
+  const [mortal, setMortal] = useState<MortalView | null>(null);
 
   useEffect(() => {
     invoke<Status | null>("pipeline_status").then(setStatus).catch(() => undefined);
@@ -347,6 +388,7 @@ function App() {
       listen<Status>("pipeline-status", (e) => setStatus(e.payload)),
       listen<Advice | null>("advice", (e) => setAdvice(e.payload)),
       listen<EngineView>("engine", (e) => setEngine(e.payload)),
+      listen<MortalView>("mortal", (e) => setMortal(e.payload)),
       listen<Latency>("latency", (e) => setLatency(e.payload)),
       listen<Progress>("model-progress", (e) => {
         const percent = Math.floor((100 * e.payload.downloaded) / e.payload.total);
@@ -373,15 +415,26 @@ function App() {
 
   const watching = status?.state === "watching";
   const concealed = advice ? advice.tiles.length - (advice.drawn ? 1 : 0) : 0;
+  // Mortal's decision for this hand comes first; the rule-based advice is the fallback.
+  const ai = advice && mortal?.seq === advice.seq ? mortal : null;
+  const lastIndex = (tile: string | null, skip: number | null) => {
+    if (!advice || tile === null) return null;
+    for (let i = advice.tiles.length - 1; i >= 0; i--) {
+      if (advice.tiles[i].tile === tile && i !== skip) return i;
+    }
+    return null;
+  };
+  const aiDiscard = ai?.best.kind === "discard" ? ai.best : (ai?.riichiDiscard ?? null);
+  const best = (aiDiscard && lastIndex(aiDiscard.tile, null)) ?? advice?.discard ?? null;
   // The second and third choices of discard, by their place in the hand.
   const choices = new Map<number, 2 | 3>();
-  advice?.options.slice(1, 3).forEach((o, k) => {
-    for (let i = advice.tiles.length - 1; i >= 0; i--) {
-      if (advice.tiles[i].tile === o.discard && i !== advice.discard) {
-        choices.set(i, k === 0 ? 2 : 3);
-        break;
-      }
-    }
+  const others =
+    ai && ai.discards.length > 0
+      ? ai.discards.slice(1, 3).map((d) => d.tile)
+      : (advice?.options.slice(1, 3).map((o) => o.discard) ?? []);
+  others.forEach((tile, k) => {
+    const i = lastIndex(tile, best);
+    if (i !== null) choices.set(i, k === 0 ? 2 : 3);
   });
 
   return (
@@ -398,13 +451,19 @@ function App() {
           <div className="hand">
             {advice.tiles.map((view, i) => (
               <div key={i} className={i === concealed ? "drawn" : undefined}>
-                <Tile view={view} best={i === advice.discard} choice={choices.get(i) ?? null} />
+                <Tile view={view} best={i === best} choice={choices.get(i) ?? null} />
               </div>
             ))}
             {advice.table && advice.table.melds[0].length > 0 && <OwnMelds melds={advice.table.melds[0]} />}
           </div>
+          {ai && <p className="mortal">Mortal：{mortalText(ai)}</p>}
           <p className="info">
-            {advice.discard !== null && <strong>打 {name(advice.tiles[advice.discard].tile)}</strong>}
+            {advice.discard !== null &&
+              (ai ? (
+                <span>牌效 打 {name(advice.tiles[advice.discard].tile)}</span>
+              ) : (
+                <strong>打 {name(advice.tiles[advice.discard].tile)}</strong>
+              ))}
             {advice.shanten !== null && <span>{shantenText(advice.shanten)}</span>}
             {advice.ukeireCount !== null && (
               <span>
@@ -442,7 +501,8 @@ function App() {
           )}
           <p className="debug">
             稳定 {advice.times.settleMs.toFixed(0)} · 找牌 {advice.times.findMs.toFixed(1)} · 认牌{" "}
-            {advice.times.recognizeMs.toFixed(1)} · 牌桌 {advice.times.tableMs.toFixed(1)} · 计算 {advice.times.decideMs.toFixed(1)} ms
+            {advice.times.recognizeMs.toFixed(1)} · 牌桌 {advice.times.tableMs.toFixed(1)} · 计算 {advice.times.decideMs.toFixed(1)}
+            {ai && ` · Mortal ${ai.decideMs.toFixed(1)}`} ms
             {latency && ` · 显示 ${latency.lastMs.toFixed(0)} ms · P95 ${latency.p95Ms.toFixed(0)} ms（${latency.count} 次）`}
           </p>
         </>

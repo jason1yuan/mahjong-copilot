@@ -3,6 +3,7 @@
 pub mod analysis;
 pub mod calls;
 pub mod game;
+pub mod mortal;
 pub mod tile;
 
 pub use analysis::{

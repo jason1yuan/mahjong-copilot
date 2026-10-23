@@ -27,6 +27,11 @@ fn models_dir(app: &AppHandle) -> tauri::Result<PathBuf> {
     Ok(app.path().app_data_dir()?.join("models"))
 }
 
+/// The decision model (#22), put in the models folder by `ml/convert/export_mortal.py
+/// --install`. It is not downloaded until its distribution is settled; without it the
+/// panel shows the rule-based advice only.
+const LOCAL_MORTAL: &str = "mortal-s42.onnx";
+
 /// Whether every model is downloaded and verified.
 #[tauri::command]
 fn models_ready(app: AppHandle) -> Result<bool, String> {
@@ -49,8 +54,9 @@ fn download_models(app: AppHandle) {
         let result = fetch_all(&app);
         DOWNLOADING.store(false, Ordering::SeqCst);
         let sent = match result {
-            Ok(classifier) => {
-                app.state::<Arc<Pipeline>>().start(app.clone(), classifier);
+            Ok((classifier, mortal)) => {
+                app.state::<Arc<Pipeline>>()
+                    .start(app.clone(), classifier, mortal);
                 app.emit("models-ready", ())
             }
             Err(err) => {
@@ -64,8 +70,9 @@ fn download_models(app: AppHandle) {
     });
 }
 
-/// Fetches every model; returns the tile classifier's path.
-fn fetch_all(app: &AppHandle) -> anyhow::Result<PathBuf> {
+/// Fetches every model; returns the tile classifier's path and the decision model's, if
+/// it is there.
+fn fetch_all(app: &AppHandle) -> anyhow::Result<(PathBuf, Option<PathBuf>)> {
     let dir = models_dir(app)?;
     for model in &mahjong_models::ALL {
         mahjong_models::fetch(&dir, model, &mut |p| {
@@ -78,7 +85,11 @@ fn fetch_all(app: &AppHandle) -> anyhow::Result<PathBuf> {
             let _ = app.emit("model-progress", progress);
         })?;
     }
-    Ok(mahjong_models::path(&dir, &mahjong_models::TILE_CLASSIFIER))
+    let mortal = Some(dir.join(LOCAL_MORTAL)).filter(|p| p.is_file());
+    Ok((
+        mahjong_models::path(&dir, &mahjong_models::TILE_CLASSIFIER),
+        mortal,
+    ))
 }
 
 /// What the pipeline is doing; the window asks once on load, then follows

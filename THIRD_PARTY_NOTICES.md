@@ -7,7 +7,7 @@
 - 位置：[third_party/libriichi/](third_party/libriichi/)
 - 来源：[Equim-chan/Mortal](https://github.com/Equim-chan/Mortal) 的 `libriichi/`，提交 `0cff2b52982be5b1163aa9a62fb01f03ce91e0d2`
 - 版权与许可：Copyright (C) 2021-2022 Equim，AGPL-3.0-or-later
-- 改动：只保留向听、和牌判定与番符、点数表、单人期望值计算、牌和手牌，以及 mjai 事件和牌局状态（`PlayerState`，不含输入编码 `obs_repr`）这几部分；去掉 Python 绑定（`Cargo.toml`、`src/lib.rs` 和几个 `state/` 文件里的属性）。详见该目录的 README
+- 改动：只保留向听、和牌判定与番符、点数表、单人期望值计算、牌和手牌，mjai 事件和牌局状态（`PlayerState`），以及 Mortal 的输入编码（`obs_repr`、`consts`、`array`）这几部分；去掉 Python 绑定（`Cargo.toml`、`src/lib.rs`、`consts.rs` 和几个 `state/` 文件里的属性和包装函数）。详见该目录的 README
 - 它所引用的更早实现：
   - 向听计算和数据表：[tomohxx/shanten-number-calculator](https://github.com/tomohxx/shanten-number-calculator)，LGPL-3.0
   - 和牌判定：[EndlessCheng/mahjong-helper](https://github.com/EndlessCheng/mahjong-helper)，MIT；算法出自山岡忠夫
@@ -21,9 +21,17 @@
 - 版权与许可：原作者 pjura，Apache-2.0
 - 训练数据：原作者用雀魂截图（[pjura/mahjong_souls_tiles](https://huggingface.co/datasets/pjura/mahjong_souls_tiles)）训练；游戏美术的版权归游戏方。我们的仓库里不放任何截图
 
+## 决策模型 Mortal-S42
+
+- 位置：不随安装包分发，也不在仓库里。分发方式定下来之前（要先向上传者确认权重的来历，并考虑天凤牌谱条款），只在本机用：`ml/convert/export_mortal.py` 下载、转换并放进本机的应用数据目录，app 找到它才启用
+- 来源：Hugging Face 上的 [haor/Mortal-S42](https://huggingface.co/haor/Mortal-S42)，修订版 `524981f21a929e3c3b269f65af79b84163bd02ca`，`weights/s42-inference.pth`（Mortal v4 结构）
+- 改动：用 `ml/convert/export_mortal.py` 把编码器和 Q 值头一起转成 ONNX（opset 18），权重不变
+- 版权与许可：权重 Apache-2.0（上传者 haor）；转换时用到的网络结构代码 `mortal/model.py` 出自 [Equim-chan/Mortal](https://github.com/Equim-chan/Mortal)，AGPL-3.0-or-later，只在转换时下载使用，不放进仓库
+- 训练数据：天凤牌谱
+
 ## ONNX Runtime
 
-- 位置：静态链接进 app（经 `perception` 的 `ort` 依赖）
+- 位置：静态链接进 app（经 `perception` 和 `core` 的 `ort` 依赖）
 - 来源：[microsoft/onnxruntime](https://github.com/microsoft/onnxruntime) 1.31，构建时由 `ort` 2.0.0-rc.15 从 pyke 的 CDN 下载预编译的静态库（[ort.pyke.io](https://ort.pyke.io/)）；运行时不联网
 - 版权与许可：Copyright (c) Microsoft Corporation，MIT
 

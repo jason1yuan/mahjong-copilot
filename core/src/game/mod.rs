@@ -5,7 +5,7 @@ mod ending;
 mod engine;
 mod scene;
 #[cfg(test)]
-mod sim;
+pub(crate) mod sim;
 
 pub use ending::{Ending, ending};
 pub use engine::{Engine, GameLog, Mark, MarkKind, Observed, Rejected};

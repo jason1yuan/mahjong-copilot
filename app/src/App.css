@@ -325,6 +325,13 @@ body {
   color: var(--ok);
 }
 
+.mortal {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--red);
+}
+
 .engine {
   margin: 4px 0 0;
   font-size: 11px;

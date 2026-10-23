@@ -2,6 +2,7 @@
 
 pub mod analysis;
 pub mod calls;
+pub mod defense;
 pub mod game;
 pub mod mortal;
 pub mod scoring;

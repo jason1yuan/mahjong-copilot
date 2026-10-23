@@ -11,11 +11,24 @@ type Props = {
   doubt?: boolean;
   // A tile still to draw: drawn faint in a dashed outline.
   missing?: boolean;
+  // How dangerous it is to discard (#12): a coloured bar under it, and why on hover.
+  danger?: { level: string; why: string } | null;
 };
 
 // A tile picture with the panel's marks.
-export function Tile({ tile, width, mark = null, dim = false, doubt = false, missing = false }: Props) {
-  const title = tile === null ? "扣着的牌" : name(tile) + (doubt ? "（拿不准）" : missing ? "（还缺）" : "");
+export function Tile({
+  tile,
+  width,
+  mark = null,
+  dim = false,
+  doubt = false,
+  missing = false,
+  danger = null,
+}: Props) {
+  const title =
+    tile === null
+      ? "扣着的牌"
+      : name(tile) + (doubt ? "（拿不准）" : missing ? "（还缺）" : "") + (danger ? `：${danger.why}` : "");
   const classes = ["tile", mark === "main" ? "main" : "", dim ? "dim" : "", missing ? "missing" : ""]
     .filter(Boolean)
     .join(" ");
@@ -27,6 +40,7 @@ export function Tile({ tile, width, mark = null, dim = false, doubt = false, mis
         {doubt && <span className="doubt">?</span>}
       </span>
       {(mark === 2 || mark === 3) && <span className={`bar bar-${mark}`} />}
+      {danger && <span className={`danger danger-${danger.level}`} />}
     </span>
   );
 }

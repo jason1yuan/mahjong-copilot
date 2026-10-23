@@ -137,6 +137,18 @@ export type TargetsView = {
   waits: WaitValue[];
   searchMs: number;
 };
+// Defense (#12), for the advice with the same `seq`: the players threatening to win (seat
+// 1 right, 2 across, 3 left), each tile in hand's danger against them and why, whether to
+// push, and the safest tile. Empty without threats.
+export type DangerLevel = "safe" | "nearlySafe" | "somewhat" | "dangerous";
+export type TileDanger = { tile: string; level: DangerLevel; reason: string; dora: boolean };
+export type DefenseView = {
+  seq: number;
+  threats: { seat: number; riichi: boolean; calls: number }[];
+  tiles: TileDanger[];
+  verdict: "push" | "careful" | "fold" | null;
+  safest: string | null;
+};
 // Still screen to shown: all advice, and on frames with action buttons the advice and
 // Mortal's decision (null until there is one).
 export type Spread = { count: number; p50Ms: number; p95Ms: number };

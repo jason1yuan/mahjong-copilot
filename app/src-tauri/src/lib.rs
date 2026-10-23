@@ -148,6 +148,7 @@ pub fn run() -> tauri::Result<()> {
             download_models(app.handle().clone());
             Ok(())
         })
+        .on_window_event(panel::on_window_event)
         .invoke_handler(tauri::generate_handler![
             models_ready,
             download_models,
@@ -157,5 +158,11 @@ pub fn run() -> tauri::Result<()> {
             save_frame,
             set_recording
         ])
-        .run(tauri::generate_context!())
+        .build(tauri::generate_context!())?
+        .run(|app, event| {
+            if let tauri::RunEvent::ExitRequested { .. } = event {
+                panel::before_exit(app);
+            }
+        });
+    Ok(())
 }

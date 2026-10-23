@@ -6,7 +6,7 @@ Rust crate，和界面无关。
 - 变化检测和稳定帧门控：画面不变就不推理，动画帧直接跳过
 - 画面配准和版面定位：用适配包里的标准截图和区域模板，传统算法，不训练
 - 认牌：先查运行时模板缓存，没命中再把单张牌的小图交给认牌模型 pjura/mahjong_soul_vision（ONNX Runtime，CPU），认出是五时用笔画颜色判断赤五，结果是 37 个牌名之一
-- 数字和按钮：方法在 #9 里评测后再定，不用 VLM
+- 数字和按钮（#9）：数字用系统自带的离线识字，按钮按颜色认，不用 VLM
 - 输出带置信度的局面快照，交给 [core](../core/)
 - 读取 [profiles](../profiles/) 里的游戏适配包
 
@@ -79,11 +79,18 @@ cargo run -p mahjong-perception --release --example eval_cache -- recordings/sou
 - `snapshot`：一帧里的牌桌（四家牌河、副露、宝牌指示）一起读出来（`Snapshot`），并检查它和手牌能不能同时成立（每种最多 4 张、每种花色最多一张赤五）；监视线程（`watch`）用它
 - `round`、`numbers`、`text`（#9）：中央框里的局数和自风（庄家看红色风牌），四家分数、余牌数，以及宝牌框下的供托和本场。数字用系统的离线识字（macOS 的 Vision），分数和余牌数逐个字形记住，之后按像素比对；分数要和供托加起来等于 100000 才采用
 - `recognizer`：模板缓存按区域（`Zone`）分开，共用一个认牌模型；拿不准的牌只对同一张图沿用上次的结果，不会每次都再送进模型
+- `buttons`（#9）：动作按钮。跳过按钮的框里是灰色面板，才算按钮出来了；然后从它左边一格一格往左，按每格的颜色认出吃、碰、杠、和、立直、自摸，碰到空格就停
 
 用录下的帧评测牌河、副露和宝牌指示（标签和图片都只在本机），用法和标签格式见文件开头：
 
 ```bash
 cargo run -p mahjong-perception --release --example eval_table -- recordings/live --labels recordings/live/table.json
+```
+
+用录下的帧评测动作按钮（标签只在本机）：
+
+```bash
+cargo run -p mahjong-perception --release --example eval_buttons -- recordings/live --labels recordings/live/buttons.json
 ```
 
 重新标定 `table` 和 `river`（换皮肤或别的游戏时）：

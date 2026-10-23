@@ -20,6 +20,8 @@ pub struct Profile {
     pub dora: Option<DoraLayout>,
     /// The box in the middle of the table: round label and seat winds (#9).
     pub centre: Option<CentreLayout>,
+    /// The action buttons (#9).
+    pub buttons: Option<ButtonLayout>,
 }
 
 /// A window belongs to the game when its app is one of `apps` (any app if empty) and its
@@ -111,6 +113,43 @@ pub struct CentreLayout {
     pub scores: [[f64; 4]; 4],
     /// The tiles-left digits (not the 余 before them), in the player's coordinates.
     pub tiles_left: [f64; 4],
+}
+
+/// The action buttons (#9), in fractions of the game area: the skip button's box and the
+/// slot next to it, as `[left, top, right, bottom]`, with up to `slots` more slots `pitch`
+/// apart to the left. Only the middle of each panel, clear of its slanted ends.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+pub struct ButtonLayout {
+    pub skip: [f32; 4],
+    pub first: [f32; 4],
+    pub pitch: f32,
+    pub slots: usize,
+    pub hues: ButtonHues,
+}
+
+/// Each button's colour, as a hue in degrees.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+pub struct ButtonHues {
+    pub chi: f64,
+    pub pon: f64,
+    pub kan: f64,
+    pub ron: f64,
+    pub riichi: f64,
+    pub tsumo: f64,
+}
+
+impl ButtonHues {
+    pub fn of(&self, button: crate::buttons::Button) -> f64 {
+        use crate::buttons::Button;
+        match button {
+            Button::Chi => self.chi,
+            Button::Pon => self.pon,
+            Button::Kan => self.kan,
+            Button::Ron => self.ron,
+            Button::Riichi => self.riichi,
+            Button::Tsumo => self.tsumo,
+        }
+    }
 }
 
 impl Profile {

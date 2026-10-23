@@ -1,9 +1,10 @@
 //! What is on the table besides the hand (#8): the four rivers, the four seats' melds, the
-//! dora indicators, and the round and seat winds (#9), read together from one frame, and a
-//! check that they and the hand can all be true at once.
+//! dora indicators, the round and seat winds and the action buttons (#9), read together from
+//! one frame, and a check that they and the hand can all be true at once.
 
 use mahjong_core::Tile;
 
+use crate::buttons::{self, Button};
 use crate::capture::FrameView;
 use crate::classifier::ClassifierError;
 use crate::dora;
@@ -29,6 +30,8 @@ pub struct Snapshot {
     pub dealer: Option<Seat>,
     /// Scores, tiles left, riichi sticks and honba (#9).
     pub numbers: Numbers,
+    /// The action buttons shown, left to right (#9).
+    pub buttons: Vec<Button>,
 }
 
 impl Snapshot {
@@ -56,12 +59,13 @@ impl Snapshot {
             .collect::<Vec<_>>()
             .join(" ")
             + &format!(
-                " / {:?} / {:?} / {} {}",
+                " / {:?} / {:?} / {} {} / {:?}",
                 self.melds.iter().map(Vec::len).collect::<Vec<_>>(),
                 self.numbers,
                 self.round.map_or("-".to_owned(), |r| r.to_string()),
                 self.seat_wind(Seat::Own)
                     .map_or("-".to_owned(), |w| w.to_string()),
+                self.buttons,
             )
     }
 }
@@ -117,6 +121,10 @@ pub fn read<C: Classify>(
         round,
         dealer,
         numbers,
+        buttons: profile
+            .buttons
+            .map(|layout| buttons::read(frame, &area, &layout))
+            .unwrap_or_default(),
     }))
 }
 
@@ -176,12 +184,12 @@ mod tests {
     #[test]
     fn seat_winds_and_round_show_in_the_summary() {
         let mut snapshot = table(&[], &[]);
-        assert!(snapshot.summary().ends_with("- -"));
+        assert!(snapshot.summary().ends_with("- - / []"));
         snapshot.dealer = Some(Seat::Left);
         snapshot.round = round::parse_round(&["東2局".to_owned()]);
         assert_eq!(snapshot.seat_wind(Seat::Own), Some(Wind::South));
         assert_eq!(snapshot.seat_wind(Seat::Left), Some(Wind::East));
-        assert!(snapshot.summary().ends_with("E2 S"));
+        assert!(snapshot.summary().ends_with("E2 S / []"));
     }
 
     #[test]

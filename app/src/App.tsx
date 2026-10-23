@@ -16,7 +16,8 @@ type TileView = { tile: string; doubt: "small" | "unsure" | null };
 // A tile on the table as read; `tile` is null for a tile face down.
 type TableTile = { tile: string | null; sideways: boolean; added: string | null; doubt: boolean };
 type TableView = { rivers: TableTile[][]; melds: TableTile[][][] };
-// The round, the player's wind and the numbers on the table; each null when not read.
+// The round, the player's wind and the numbers on the table, each null when not read, and
+// the action buttons shown, left to right.
 type GameView = {
   round: string | null;
   seatWind: string | null;
@@ -24,6 +25,7 @@ type GameView = {
   tilesLeft: number | null;
   honba: number | null;
   riichiSticks: number | null;
+  buttons: string[];
 };
 type OptionView = { discard: string; shanten: number; ukeireCount: number };
 type Advice = {
@@ -91,8 +93,16 @@ function statusText(status: Status | null, models: string | null): string {
 }
 
 const WINDS: Record<string, string> = { E: "东", S: "南", W: "西", N: "北" };
+const BUTTONS: Record<string, string> = {
+  chi: "吃",
+  pon: "碰",
+  kan: "杠",
+  ron: "和",
+  riichi: "立直",
+  tsumo: "自摸",
+};
 
-// 东2局 · 自风 北 · 余 45 · 1 本场 · 供托 0, leaving out what was not read.
+// 东2局 · 自风 北 · 余 45 · 1 本场 · 供托 0 · 可以 碰 杠, leaving out what was not read.
 function gameText(game: GameView): string {
   const parts = [];
   if (game.round) parts.push(`${WINDS[game.round[0]] ?? "?"}${game.round.slice(1)}局`);
@@ -100,6 +110,9 @@ function gameText(game: GameView): string {
   if (game.tilesLeft !== null) parts.push(`余 ${game.tilesLeft}`);
   if (game.honba !== null) parts.push(`${game.honba} 本场`);
   if (game.riichiSticks !== null) parts.push(`供托 ${game.riichiSticks}`);
+  if (game.buttons.length > 0) {
+    parts.push(`可以 ${game.buttons.map((b) => BUTTONS[b] ?? b).join(" ")}`);
+  }
   return parts.join(" · ");
 }
 

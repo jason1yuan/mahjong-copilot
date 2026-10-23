@@ -97,7 +97,7 @@ pub struct Advice {
     pub times: StepTimes,
 }
 
-/// The round, seat wind and numbers on the table (#9), for the window.
+/// The round, seat wind, numbers on the table and action buttons (#9), for the window.
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameView {
@@ -110,6 +110,9 @@ pub struct GameView {
     pub tiles_left: Option<u8>,
     pub honba: Option<u8>,
     pub riichi_sticks: Option<u8>,
+    /// The action buttons shown, left to right: `chi`, `pon`, `kan`, `ron`, `riichi`,
+    /// `tsumo`.
+    pub buttons: Vec<&'static str>,
 }
 
 impl GameView {
@@ -121,6 +124,7 @@ impl GameView {
             tiles_left: table.numbers.tiles_left,
             honba: table.numbers.honba,
             riichi_sticks: table.numbers.riichi_sticks,
+            buttons: table.buttons.iter().map(|b| b.as_str()).collect(),
         }
     }
 }

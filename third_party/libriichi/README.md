@@ -13,6 +13,7 @@
   - `src/state/mod.rs`、`src/mjai/mod.rs`：去掉 Python 模块注册，以及没引入的 `bot`
   - `src/state/obs_repr.rs`：去掉返回 numpy 数组的 Python 包装函数和 numpy、pyo3 的引用，编码代码本身不变
   - `src/consts.rs`：去掉 Python 模块注册和 `#[pyfunction]` 属性，常量不变；在 `lib.rs` 里改为公开
+  - `src/state/agent_helper.rs`（#11）：把 `agari_points` 拆成 `agari_value`（返回番和符）和 `agari_points`（换算成点数），计算本身不变
 - 其余文件和上游完全一致。
 
 这些代码本身也引用了更早的开源实现，许可都和 AGPL-3.0 兼容：

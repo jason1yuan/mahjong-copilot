@@ -4,10 +4,11 @@ pub mod analysis;
 pub mod calls;
 pub mod game;
 pub mod mortal;
+pub mod scoring;
 pub mod tile;
 
 pub use analysis::{
-    AnalysisError, DiscardOption, Outlook, TileCounts, outlook, rank_discards, shanten,
+    AnalysisError, DiscardOption, Outlook, TileCounts, outlook, rank_discards, shanten, unseen,
 };
 pub use calls::{CallAdvice, CallContext, CallKind, CallOption, Yaku};
 pub use tile::{ParseTileError, Tile, parse_tiles};

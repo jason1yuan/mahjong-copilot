@@ -99,10 +99,11 @@ fn pipeline_status(pipeline: State<'_, Arc<Pipeline>>) -> Option<Status> {
     pipeline.status()
 }
 
-/// The window drew advice `seq`; closes its latency measurement.
+/// The window drew advice `seq`, or Mortal's decision for it; closes that latency
+/// measurement.
 #[tauri::command]
-fn advice_shown(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>, seq: u64) {
-    pipeline.shown(&app, seq);
+fn advice_shown(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>, seq: u64, mortal: bool) {
+    pipeline.shown(&app, seq, mortal);
 }
 
 /// The dev build's debug recording (#8); `None` in a packaged app, which has none.
@@ -163,6 +164,7 @@ pub fn run() -> tauri::Result<()> {
             download_models(app.handle().clone());
             Ok(())
         })
+        .on_window_event(panel::on_window_event)
         .invoke_handler(tauri::generate_handler![
             models_ready,
             download_models,
@@ -172,5 +174,12 @@ pub fn run() -> tauri::Result<()> {
             save_frame,
             set_recording
         ])
-        .run(tauri::generate_context!())
+        .build(tauri::generate_context!())?
+        .run(|app, event| match event {
+            tauri::RunEvent::ExitRequested { .. } => panel::before_exit(app),
+            #[cfg(target_os = "macos")]
+            tauri::RunEvent::Reopen { .. } => panel::reopen(app),
+            _ => {}
+        });
+    Ok(())
 }

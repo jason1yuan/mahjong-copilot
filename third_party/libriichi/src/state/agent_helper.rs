@@ -1,5 +1,11 @@
+// Modified by mahjong-copilot on 2026-10-23: split `agari_points` into `agari_value`,
+// which returns the han and fu, and `agari_points`, which turns them into points (#11).
+// The scoring itself is unchanged.
+// The original file is libriichi/src/state/agent_helper.rs in Equim-chan/Mortal at commit
+// 0cff2b52982be5b1163aa9a62fb01f03ce91e0d2.
+
 use super::{PlayerState, SinglePlayerTables};
-use crate::algo::agari::AgariCalculator;
+use crate::algo::agari::{Agari, AgariCalculator};
 use crate::algo::point::Point;
 use crate::algo::shanten;
 use crate::algo::sp::{InitState, SPCalculator};
@@ -375,6 +381,13 @@ impl PlayerState {
     ///
     /// `ura_indicators` is used only when the actor has an accepted riichi.
     pub fn agari_points(&self, is_ron: bool, ura_indicators: &[Tile]) -> Result<Point> {
+        Ok(self
+            .agari_value(is_ron, ura_indicators)?
+            .point(self.oya == 0))
+    }
+
+    /// The han and fu of the win that `agari_points` scores, under the same conditions.
+    pub fn agari_value(&self, is_ron: bool, ura_indicators: &[Tile]) -> Result<Agari> {
         ensure!(
             is_ron && self.last_cans.can_ron_agari || self.last_cans.can_tsumo_agari,
             "cannot agari"
@@ -383,7 +396,7 @@ impl PlayerState {
         // Here, 天和 and 地和 are handled individually as special cases, and
         // there is no multi yakuman for these two.
         if !is_ron && self.can_w_riichi {
-            return Ok(Point::yakuman(self.oya == 0, 1));
+            return Ok(Agari::Yakuman(1));
         }
 
         let winning_tile = if is_ron {
@@ -454,11 +467,9 @@ impl PlayerState {
             winning_tile: winning_tile.deaka().as_u8(),
             is_ron,
         };
-        let agari = agari_calc
+        agari_calc
             .agari(additional_hans, final_doras_owned)
-            .context("not a hora hand")?;
-
-        Ok(agari.point(self.oya == 0))
+            .context("not a hora hand")
     }
 
     /// Calculate the actual shanten at this point. Unlike `self.shanten`, this

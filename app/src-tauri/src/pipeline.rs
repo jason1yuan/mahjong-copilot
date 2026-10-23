@@ -22,7 +22,7 @@ use mahjong_core::calls::{self, CallAdvice, CallContext, CallKind, Yaku};
 use mahjong_core::game::{Engine, Event, MarkKind, PlayerState, Rejected};
 use mahjong_core::mortal::{Kind, Mortal, Suggestion};
 use mahjong_core::scoring::{self, Value};
-use mahjong_core::{Tile, TileCounts, outlook, parse_tiles, rank_discards};
+use mahjong_core::{Tile, TileCounts, outlook, parse_tiles, rank_discards, unseen};
 use mahjong_perception::buttons::Button;
 use mahjong_perception::capture::{self, WindowInfo};
 use mahjong_perception::profile::{self, Profile};
@@ -38,16 +38,25 @@ use tauri::{AppHandle, Emitter, Manager};
 const RETRY: Duration = Duration::from_secs(2);
 /// Latencies kept for the percentiles.
 const KEEP: usize = 200;
-/// Discard options shown besides the best one.
+/// Mortal's discards sent: the best and two more.
 const OPTIONS: usize = 3;
+/// Game log events sent for the dev area.
+const RECENT: usize = 3;
 
 /// What the pipeline is doing, for the window's status line.
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "state", rename_all = "camelCase")]
 pub enum Status {
     NoWindow,
-    Watching { app: String, title: String },
-    Error { message: String },
+    /// `game` is the profile's name, e.g. 雀魂（网页版）.
+    Watching {
+        app: String,
+        title: String,
+        game: String,
+    },
+    Error {
+        message: String,
+    },
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -63,7 +72,26 @@ pub struct TileView {
 pub struct OptionView {
     pub discard: Tile,
     pub shanten: i8,
+    pub ukeire: Vec<TileLeft>,
     pub ukeire_count: u8,
+}
+
+/// A tile that improves the hand (or wins it), and how many copies are still unseen.
+#[derive(Clone, Copy, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TileLeft {
+    pub tile: Tile,
+    pub left: u8,
+}
+
+fn tiles_left(tiles: &[Tile], hand: &[Tile], visible: &TileCounts) -> Vec<TileLeft> {
+    tiles
+        .iter()
+        .map(|&tile| TileLeft {
+            tile,
+            left: unseen(hand, visible, tile),
+        })
+        .collect()
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -92,7 +120,7 @@ pub struct Advice {
     pub options: Vec<OptionView>,
     /// Shanten after the best discard, or of the waiting hand; 0 is tenpai.
     pub shanten: Option<i8>,
-    pub ukeire: Vec<Tile>,
+    pub ukeire: Vec<TileLeft>,
     pub ukeire_count: Option<u8>,
     /// The dora indicators, left to right.
     pub dora: Vec<TileView>,
@@ -114,6 +142,8 @@ pub struct Advice {
 #[serde(rename_all = "camelCase")]
 pub struct CallView {
     pub called: Tile,
+    /// Who discarded it: `right`, `across` or `left`; `None` when two of them did.
+    pub from: Option<&'static str>,
     /// Shanten and effective draws if not calling.
     pub stay_shanten: i8,
     pub stay_ukeire_count: u8,
@@ -137,9 +167,10 @@ pub struct CallOptionView {
 }
 
 impl CallView {
-    fn of(called: Tile, advice: &CallAdvice) -> Self {
+    fn of(called: Tile, from: Option<&'static str>, advice: &CallAdvice) -> Self {
         Self {
             called,
+            from,
             stay_shanten: advice.stay.shanten,
             stay_ukeire_count: advice.stay.ukeire_count,
             options: advice
@@ -397,6 +428,8 @@ pub struct EngineView {
     pub gaps: usize,
     /// How the last scene went: `taken`, `covered`, `unexplained` or `impossible`.
     pub last: &'static str,
+    /// The game log's latest events, newest first, each after its index (dev build).
+    pub recent: Vec<String>,
 }
 
 /// `recordings/live/` in the repository, which git ignores. The dev build runs from the
@@ -522,6 +555,7 @@ impl Pipeline {
             let (stopped, wait) = mpsc::channel();
             let pipeline = Arc::clone(self);
             let events = app.clone();
+            let game = profile.name.clone();
             let watcher = Watcher::start(&environment, model, &window, profile, move |event| {
                 if matches!(event, WatchEvent::Stopped) {
                     let _ = stopped.send(());
@@ -541,6 +575,7 @@ impl Pipeline {
                         Status::Watching {
                             app: window.app.clone(),
                             title: window.title.clone(),
+                            game,
                         },
                     );
                     // Until capture stops (the window closed) or the watcher goes away.
@@ -651,6 +686,18 @@ impl Pipeline {
                 g.marks.iter().filter(|m| m.kind == MarkKind::Gap).count()
             }),
             last,
+            recent: current.map_or_else(Vec::new, |g| {
+                let first = g.events.len().saturating_sub(RECENT);
+                g.events[first..]
+                    .iter()
+                    .enumerate()
+                    .rev()
+                    .map(|(i, e)| {
+                        let json = serde_json::to_string(e).unwrap_or_default();
+                        format!("{} {json}", first + i)
+                    })
+                    .collect()
+            }),
         };
         if let Err(err) = app.emit("engine", view) {
             tracing::warn!("sending the engine state: {err}");
@@ -735,21 +782,22 @@ impl Pipeline {
                 // Point at the drawn tile when it is the one to cut.
                 advice.discard = hand.iter().rposition(|t| *t == best.discard);
                 advice.shanten = Some(best.shanten);
-                advice.ukeire.clone_from(&best.ukeire);
+                advice.ukeire = tiles_left(&best.ukeire, &hand, &visible);
                 advice.ukeire_count = Some(best.ukeire_count);
+                // Every discard, so the window can show the one Mortal picks.
                 advice.options = options
                     .iter()
-                    .take(OPTIONS)
                     .map(|o| OptionView {
                         discard: o.discard,
                         shanten: o.shanten,
+                        ukeire: tiles_left(&o.ukeire, &hand, &visible),
                         ukeire_count: o.ukeire_count,
                     })
                     .collect();
             }
         } else if let Ok(outlook) = outlook(&hand, &visible) {
             advice.shanten = Some(outlook.shanten);
-            advice.ukeire = outlook.ukeire;
+            advice.ukeire = tiles_left(&outlook.ukeire, &hand, &visible);
             advice.ukeire_count = Some(outlook.ukeire_count);
             if let Some(table) = &reading.table {
                 advice.call = call_view(&hand, table, &visible);
@@ -909,6 +957,20 @@ fn call_view(hand: &[Tile], table: &Snapshot, visible: &TileCounts) -> Option<Ca
     let latest = [Seat::Right, Seat::Across, Seat::Left]
         .map(|seat| table.rivers[seat.index()].last().map(|t| t.tile.tile));
     let called = calls::offered(latest, hand, chi, pon, win)?;
+    let seats: Vec<&'static str> = ["right", "across", "left"]
+        .into_iter()
+        .zip(latest)
+        .filter(|(_, t)| t.is_some_and(|t| t.kind() == called.kind()))
+        .map(|(seat, _)| seat)
+        .collect();
+    let from = if chi {
+        Some("left")
+    } else {
+        match seats.as_slice() {
+            [one] => Some(*one),
+            _ => None,
+        }
+    };
     // The dragons, and the round and seat winds when they are read.
     let mut value_honors = parse_tiles("P F C").unwrap_or_default();
     for wind in [table.round.map(|r| r.wind), table.seat_wind(Seat::Own)]
@@ -931,7 +993,7 @@ fn call_view(hand: &[Tile], table: &Snapshot, visible: &TileCounts) -> Option<Ca
     };
     calls::advise(&ctx, called, chi, pon)
         .ok()
-        .map(|advice| CallView::of(called, &advice))
+        .map(|advice| CallView::of(called, from, &advice))
 }
 
 /// Tiles of each kind face up on the table, capped so that with the hand there are never

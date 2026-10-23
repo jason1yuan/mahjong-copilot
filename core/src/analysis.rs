@@ -58,6 +58,17 @@ pub fn counts(tiles: &[Tile]) -> TileCounts {
     counts
 }
 
+/// Copies of `tile`'s kind still unseen: four less those in `hand` and in `visible`.
+pub fn unseen(hand: &[Tile], visible: &TileCounts, tile: Tile) -> u8 {
+    let kind = usize::from(tile.kind());
+    let held = hand
+        .iter()
+        .filter(|t| usize::from(t.kind()) == kind)
+        .count();
+    4u8.saturating_sub(u8::try_from(held).unwrap_or(4))
+        .saturating_sub(visible[kind])
+}
+
 /// Shanten of a concealed hand of 3n+1 or 3n+2 tiles, considering regular hands,
 /// seven pairs and thirteen orphans. -1 means the hand is already complete.
 pub fn shanten(hand: &[Tile]) -> Result<i8, AnalysisError> {
@@ -179,6 +190,18 @@ fn check_copies(hand: &TileCounts, visible: &TileCounts) -> Result<(), AnalysisE
 mod tests {
     use super::*;
     use crate::tile::parse_tiles;
+
+    #[test]
+    fn unseen_counts_four_less_the_hand_and_the_table() {
+        let hand = parse_tiles("5m 5mr 5m 1p").unwrap();
+        let mut visible = [0; KINDS as usize];
+        let five = parse_tiles("5m").unwrap()[0];
+        assert_eq!(unseen(&hand, &visible, five), 1);
+        visible[usize::from(five.kind())] = 1;
+        assert_eq!(unseen(&hand, &visible, five), 0);
+        let one = parse_tiles("1p").unwrap()[0];
+        assert_eq!(unseen(&hand, &visible, one), 3);
+    }
 
     fn hand(s: &str) -> Vec<Tile> {
         parse_tiles(s).unwrap()

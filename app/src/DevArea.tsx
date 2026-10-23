@@ -1,0 +1,290 @@
+// The dev build's debug area: latency, what the reading and the engine made of the table,
+// the game log's latest events, the table as read, and the recording tools. A packaged
+// app has no debug recording, so it never shows this.
+
+import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { getVersion } from "@tauri-apps/api/app";
+import { name, SEAT_ORDER } from "./format";
+import { ALL_TILES, tileLabel, tilePicture } from "./tile";
+import type { Advice, EngineView, Latency, MortalView, Recording, TableTile, TableView } from "./types";
+
+// From the screen going still to the advice shown (docs/design.md).
+const BUDGET_MS = 300;
+
+const SCENES: Record<EngineView["last"], string> = {
+  taken: "跟上",
+  covered: "画面被挡住",
+  unexplained: "对不上",
+  impossible: "读错了",
+};
+
+// Whether a section is folded, kept per viewer; the panel works without it.
+function remembered(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function remember(key: string, folded: boolean) {
+  try {
+    localStorage.setItem(key, folded ? "1" : "0");
+  } catch {
+    // Storage is a convenience only.
+  }
+}
+
+function useFold(key: string): [boolean, () => void] {
+  const [folded, setFolded] = useState(() => remembered(key));
+  return [
+    folded,
+    () =>
+      setFolded((f) => {
+        remember(key, !f);
+        return !f;
+      }),
+  ];
+}
+
+function short(mjai: string): string {
+  const label = tileLabel(mjai);
+  return `${label.rank}${label.suit}${mjai.endsWith("r") ? "赤" : ""}`;
+}
+
+function tableText(t: TableTile): string {
+  const face = t.tile === null ? "▮" : short(t.tile);
+  return `${face}${t.sideways ? "↻" : ""}${t.added ? `+${short(t.added)}` : ""}${t.doubt ? "?" : ""}`;
+}
+
+function Bar({ label, ms, max }: { label: string; ms: number; max: number }) {
+  const width = max > 0 ? Math.min(100, (100 * ms) / max) : 0;
+  const tone = ms < 5 ? "fast" : ms >= max * 0.99 ? "slowest" : "";
+  return (
+    <div className="dev-bar">
+      <span>{label}</span>
+      <div className="track">
+        <div className={`fill ${tone}`} style={{ width: `${width}%` }} />
+      </div>
+      <span className="num">{ms.toFixed(ms < 10 ? 1 : 0)} ms</span>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="dev-row">
+      <span>{label}</span>
+      <span className="num">{value}</span>
+    </div>
+  );
+}
+
+// Every seat's river and melds as read, for debugging the table reading.
+function TableDebug({ table }: { table: TableView }) {
+  return (
+    <div className="table-debug">
+      <p className="legend">↻ 横放（被鸣的牌、立直宣言牌） · +X 加杠 · ▮ 扣着的牌 · ? 拿不准</p>
+      {SEAT_ORDER.map((seat, i) => (
+        <p key={seat}>
+          <span className="seat">{seat}</span>
+          <span>河 {table.rivers[i].map(tableText).join(" ") || "—"}</span>
+          {table.melds[i].length > 0 && (
+            <span> ｜ 副露 {table.melds[i].map((m) => `[${m.map(tableText).join(" ")}]`).join(" ")}</span>
+          )}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+// Every tile picture with its mjai name, to check them in both themes.
+function TileSheet() {
+  return (
+    <div className="tile-sheet">
+      {[...ALL_TILES, null].map((mjai) => (
+        <figure key={mjai ?? "back"}>
+          <img src={tilePicture(mjai)} alt={mjai ?? "back"} />
+          <figcaption>{mjai ?? "背"}</figcaption>
+        </figure>
+      ))}
+    </div>
+  );
+}
+
+type Props = {
+  initial: Recording;
+  advice: Advice | null;
+  engine: EngineView | null;
+  latency: Latency | null;
+  ai: MortalView | null;
+};
+
+export function DevArea({ initial, advice, engine, latency, ai }: Props) {
+  const [recording, setRecording] = useState(initial);
+  const [error, setError] = useState<string | null>(null);
+  const [sheet, setSheet] = useState(false);
+  const [version, setVersion] = useState("");
+  const [folded, toggle] = useFold("dev-folded");
+  const [tableFolded, toggleTable] = useFold("dev-table-folded");
+
+  useEffect(() => {
+    getVersion()
+      .then(setVersion)
+      .catch(() => undefined);
+    const unlisten = listen<number>("frame-saved", (e) => setRecording((r) => ({ ...r, saved: e.payload })));
+    return () => {
+      unlisten.then((stop) => stop());
+    };
+  }, []);
+
+  const report = (err: unknown) => setError(String(err));
+  const shoot = () => {
+    setError(null);
+    invoke("save_frame").catch(report);
+  };
+  const record = (on: boolean) => {
+    setError(null);
+    invoke<Recording>("set_recording", { on }).then(setRecording).catch(report);
+  };
+
+  const t = advice?.times;
+  const render = t && latency ? Math.max(0, latency.lastMs - t.sentMs) : null;
+  const steps: [string, number][] = t
+    ? [
+        ["稳定帧确认", t.settleMs],
+        ["找手牌", t.findMs],
+        ["认手牌", t.recognizeMs],
+        ["读牌桌", t.tableMs],
+        ["计算", t.decideMs],
+        ...(render !== null ? [["界面渲染", render] as [string, number]] : []),
+      ]
+    : [];
+  const slowest = Math.max(0, ...steps.map(([, ms]) => ms));
+  const doubts = advice?.tiles.filter((v) => v.doubt).length ?? 0;
+  const game = advice?.game;
+  const scores = game?.scores ?? null;
+
+  return (
+    <section className="dev">
+      <button type="button" className="dev-head" onClick={toggle}>
+        <span className="dev-badge">DEV</span>
+        <span>开发版 · 调试数据</span>
+        <span className="num dev-version">
+          {version && `v${version}-dev`} {folded ? "▸" : "▾"}
+        </span>
+      </button>
+      {!folded && (
+        <>
+          <h3>延迟 · 稳定帧 → 建议显示</h3>
+          {latency ? (
+            <div className="dev-latency">
+              <span className="big num">
+                {latency.lastMs.toFixed(0)}
+                <small> ms</small>
+              </span>
+              <span className="num">
+                P50 {latency.p50Ms.toFixed(0)} · P95 {latency.p95Ms.toFixed(0)} · 预算 {BUDGET_MS}（{latency.count} 次）
+              </span>
+              {latency.buttons && (
+                <span className="num">
+                  有按钮时 P95 {latency.buttons.p95Ms.toFixed(0)}（{latency.buttons.count} 次）
+                  {latency.buttonsMortal &&
+                    ` · Mortal P95 ${latency.buttonsMortal.p95Ms.toFixed(0)}（${latency.buttonsMortal.count} 次）`}
+                </span>
+              )}
+            </div>
+          ) : (
+            <p className="dev-empty">还没有数据</p>
+          )}
+          {steps.length > 0 && (
+            <div className="dev-bars">
+              {steps.map(([label, ms]) => (
+                <Bar key={label} label={label} ms={ms} max={slowest} />
+              ))}
+              {ai && <Bar label="Mortal" ms={ai.decideMs} max={slowest} />}
+            </div>
+          )}
+
+          <h3>识别与牌局状态</h3>
+          <div className="dev-grid">
+            <Row label="最后一帧" value={engine ? SCENES[engine.last] : "—"} />
+            <Row label="不确定牌" value={`${doubts}`} />
+            <Row
+              label="宝牌指示"
+              value={`${advice?.dora.map((d) => short(d.tile)).join(" ") || "—"}${advice?.seen !== null && advice?.seen !== undefined ? ` · 已见 ${advice.seen} 张` : ""}`}
+            />
+            <Row
+              label="供托 / 本场"
+              value={`${game?.riichiSticks ?? "—"} / ${game?.honba ?? "—"}`}
+            />
+            <Row label="牌谱事件" value={engine ? `${engine.events}` : "—"} />
+            <Row
+              label="补出 / 缺口"
+              value={engine ? `${engine.filled ? "是" : "否"} / ${engine.gaps}` : "—"}
+            />
+          </div>
+
+          {scores && (
+            <>
+              <h3>四家分数 · 合计 {scores.reduce((a, b) => a + b, 0)}</h3>
+              <div className="dev-scores">
+                {SEAT_ORDER.map((seat, i) => (
+                  <div key={seat}>
+                    <span>{seat}</span>
+                    <b className="num">{scores[i]}</b>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {engine && engine.recent.length > 0 && (
+            <>
+              <h3>牌谱事件流 · mjai</h3>
+              <div className="dev-events num">
+                {engine.recent.map((line) => (
+                  <div key={line}>{line}</div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {advice?.table && (
+            <>
+              <button type="button" className="dev-sub" onClick={toggleTable}>
+                读牌视图 · 四家牌河和副露 {tableFolded ? "▸" : "▾"}
+              </button>
+              {!tableFolded && <TableDebug table={advice.table} />}
+            </>
+          )}
+
+          <h3>工具</h3>
+          <div className="dev-tools">
+            <button type="button" onClick={shoot}>
+              截图
+            </button>
+            <button type="button" className={recording.on ? "on" : ""} onClick={() => record(!recording.on)}>
+              连续录制
+            </button>
+            <button type="button" className={sheet ? "on" : ""} onClick={() => setSheet((s) => !s)}>
+              牌图
+            </button>
+            <span className="dev-saved" title={recording.dir}>
+              已存 {recording.saved} 张
+            </span>
+            {error && <span className="dev-error">{error}</span>}
+          </div>
+          {sheet && <TileSheet />}
+          {advice && doubts > 0 && (
+            <p className="dev-empty">
+              拿不准：{advice.tiles.filter((v) => v.doubt).map((v) => name(v.tile)).join(" ")}
+            </p>
+          )}
+        </>
+      )}
+    </section>
+  );
+}

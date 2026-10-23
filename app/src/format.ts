@@ -102,6 +102,33 @@ export function valueText(v: { han: number; fu: number; yakuman: number }): stri
   return `${v.han} 番${v.fu > 0 ? ` ${v.fu} 符` : ""}`;
 }
 
+// Why a tile is as dangerous as it is, by the ids mahjong_core::defense sends.
+export const REASONS: Record<string, string> = {
+  genbutsu: "现物",
+  honorSeen: "字牌已见 3 张",
+  wall: "壁（两面听被挡住）",
+  suji: "筋",
+  oneChance: "One-chance",
+  honor: "字牌",
+  terminal: "幺九牌",
+  plain: "无筋",
+};
+export const LEVELS: Record<string, string> = {
+  safe: "安全",
+  nearlySafe: "较安全",
+  somewhat: "有些危险",
+  dangerous: "危险",
+};
+export const VERDICTS: Record<string, string> = { push: "推", careful: "绕着打", fold: "退" };
+const THREAT_SEATS = ["", "下家", "对家", "上家"];
+
+// 下家立直 · 对家副露 2 次
+export function threatText(threats: { seat: number; riichi: boolean; calls: number }[]): string {
+  return threats
+    .map((t) => `${THREAT_SEATS[t.seat] ?? "?"}${t.riichi ? "立直" : `副露 ${t.calls} 次`}`)
+    .join(" · ");
+}
+
 const SUIT_NAMES = ["万子", "筒子", "索子"];
 
 // 染手（万子） · 七对子 · 役牌（中） · 断幺

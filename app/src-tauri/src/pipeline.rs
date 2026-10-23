@@ -19,6 +19,7 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
 use mahjong_core::calls::{self, CallAdvice, CallContext, CallKind, Yaku};
+use mahjong_core::defense::{self, Defense, Own};
 use mahjong_core::game::{Engine, Event, MarkKind, PlayerState, Rejected};
 use mahjong_core::mortal::{Kind, Mortal, Suggestion};
 use mahjong_core::scoring::{self, Value};
@@ -383,6 +384,23 @@ pub struct WinView {
     pub value: Value,
 }
 
+/// How dangerous the hand's tiles are and whether to push (#12), for advice `seq`, sent
+/// as `defense`.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DefenseView {
+    pub seq: u64,
+    #[serde(flatten)]
+    pub defense: Defense,
+}
+
+/// What the state engine followed of the table: the player's state when it can act, and
+/// the round so far with the player's seat, when the engine took the scene.
+struct Followed {
+    state: Option<PlayerState>,
+    round: Option<(Vec<Event>, u8)>,
+}
+
 /// Target hands or the waits' values (#13) for advice `seq`, sent as `targets`.
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -643,9 +661,20 @@ impl Pipeline {
                     "advice"
                 );
                 let seq = advice.seq;
+                let shanten = advice.shanten;
+                let ukeire = advice.ukeire_count;
                 let sent = app.emit("advice", advice);
-                self.aim(app, seq, &reading);
-                if let Some(state) = self.follow(app, &reading) {
+                let points = self.aim(app, seq, &reading);
+                let followed = self.follow(app, &reading);
+                if let (Some((events, me)), Some(shanten)) = (&followed.round, shanten) {
+                    let own = Own {
+                        shanten,
+                        ukeire: ukeire.unwrap_or(0),
+                        points,
+                    };
+                    self.defend(app, seq, &reading, events, *me, &own);
+                }
+                if let Some(state) = followed.state {
                     if let Some(value) = scoring::value(&state) {
                         let sent = app.emit("win", WinView { seq, value });
                         if let Err(err) = sent {
@@ -671,9 +700,15 @@ impl Pipeline {
 
     /// Feeds the table to the state engine, after the advice so that it adds nothing to
     /// its latency, and saves the log when a round or game starts. Returns the player's
-    /// state when the engine took the scene and the player can act on it.
-    fn follow(&self, app: &AppHandle, reading: &HandReading) -> Option<PlayerState> {
-        let table = reading.table.as_ref()?;
+    /// state when the engine took the scene and the player can act on it, and the round so
+    /// far when the engine took the scene.
+    fn follow(&self, app: &AppHandle, reading: &HandReading) -> Followed {
+        let Some(table) = reading.table.as_ref() else {
+            return Followed {
+                state: None,
+                round: None,
+            };
+        };
         let scene = table.scene(&reading.tiles, reading.drawn);
         let mut game = lock(&self.game);
         let (last, new_round, new_game) = match game.engine.observe(&scene) {
@@ -735,20 +770,57 @@ impl Pipeline {
         if let Err(err) = app.emit("engine", view) {
             tracing::warn!("sending the engine state: {err}");
         }
-        game.engine
-            .player_state()
-            .filter(|s| last == "taken" && s.last_cans().can_act())
-            .cloned()
+        let taken = game.engine.player_state().filter(|_| last == "taken");
+        let round = taken.zip(current).map(|(s, g)| {
+            let start = g
+                .events
+                .iter()
+                .rposition(|e| matches!(e, Event::StartKyoku { .. }))
+                .unwrap_or(0);
+            (g.events[start..].to_vec(), s.player_id())
+        });
+        Followed {
+            state: taken.filter(|s| s.last_cans().can_act()).cloned(),
+            round,
+        }
+    }
+
+    /// Rates the hand's tiles against the players threatening to win and sends it, with
+    /// whether to push, for advice `seq`.
+    fn defend(
+        &self,
+        app: &AppHandle,
+        seq: u64,
+        reading: &HandReading,
+        events: &[Event],
+        me: u8,
+        own: &Own,
+    ) {
+        let hand: Vec<Tile> = reading.tiles.iter().map(|r| r.tile).collect();
+        let visible = seen_counts(&hand, reading.table.as_ref());
+        let view = DefenseView {
+            seq,
+            defense: defense::assess(events, me, &hand, &visible, own),
+        };
+        if let Err(err) = app.emit("defense", view) {
+            tracing::warn!("sending the defense: {err}");
+        }
     }
 
     /// Searches the target hands, or values the waits, for advice `seq` and sends them,
     /// after the advice so that it adds nothing to its latency.
-    fn aim(&self, app: &AppHandle, seq: u64, reading: &HandReading) {
-        let Some(table) = &reading.table else {
-            return;
-        };
+    /// Returns the best target's or wait's points, for the push-or-fold verdict.
+    fn aim(&self, app: &AppHandle, seq: u64, reading: &HandReading) -> Option<i32> {
+        let table = reading.table.as_ref()?;
         let start = Instant::now();
         let outlook = target::from_scene(&table.scene(&reading.tiles, reading.drawn));
+        let points = outlook
+            .targets
+            .targets
+            .iter()
+            .map(|t| t.points)
+            .chain(outlook.waits.iter().map(|w| w.points))
+            .max();
         let view = TargetsView {
             seq,
             outlook,
@@ -757,6 +829,7 @@ impl Pipeline {
         if let Err(err) = app.emit("targets", view) {
             tracing::warn!("sending the target hands: {err}");
         }
+        points
     }
 
     /// Asks Mortal what to do in `state`, the table of advice `seq`, and sends it.

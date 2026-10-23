@@ -7,6 +7,10 @@ import { DevArea } from "./DevArea";
 import {
   CALLS,
   directionText,
+  LEVELS,
+  REASONS,
+  threatText,
+  VERDICTS,
   hanText,
   name,
   paysText,
@@ -23,6 +27,7 @@ import { Tile } from "./TileImage";
 import type {
   Advice,
   CallOptionView,
+  DefenseView,
   EngineView,
   Latency,
   MortalView,
@@ -197,12 +202,20 @@ function Hand({
   p,
   keep,
   width,
+  defense = null,
 }: {
   advice: Advice;
   p: Plan;
   keep: string[] | null;
   width: number;
+  defense?: DefenseView | null;
 }) {
+  const dangerOf = (tile: string) => {
+    const d = defense?.tiles.find((t) => sameKind(t.tile, tile));
+    if (!d) return null;
+    const why = `${LEVELS[d.level] ?? d.level}（${REASONS[d.reason] ?? d.reason}${d.dora ? "，宝牌附近" : ""}）`;
+    return { level: d.level, why };
+  };
   const marks = new Map<number, "main" | 2 | 3>();
   const lastIndex = (tile: string, taken: Set<number>) => {
     for (let i = advice.tiles.length - 1; i >= 0; i--) {
@@ -247,6 +260,7 @@ function Hand({
             mark={marks.get(i) ?? null}
             dim={keep !== null && !bright.has(i)}
             doubt={view.doubt !== null}
+            danger={dangerOf(view.tile)}
           />
         </span>
       ))}
@@ -512,6 +526,7 @@ function App() {
   const [mortal, setMortal] = useState<MortalView | null>(null);
   const [win, setWin] = useState<WinView | null>(null);
   const [targets, setTargets] = useState<TargetsView | null>(null);
+  const [defense, setDefense] = useState<DefenseView | null>(null);
   const [compact, setCompact] = useState(rememberedCompact);
   const panel = useRef<HTMLElement>(null);
 
@@ -525,6 +540,7 @@ function App() {
       listen<MortalView>("mortal", (e) => setMortal(e.payload)),
       listen<WinView>("win", (e) => setWin(e.payload)),
       listen<TargetsView>("targets", (e) => setTargets(e.payload)),
+      listen<DefenseView>("defense", (e) => setDefense(e.payload)),
       listen<Latency>("latency", (e) => setLatency(e.payload)),
       listen<Progress>("model-progress", (e) => {
         const percent = Math.floor((100 * e.payload.downloaded) / e.payload.total);
@@ -588,6 +604,7 @@ function App() {
   const ai = advice && mortal?.seq === advice.seq ? mortal : null;
   const winNow = advice && win?.seq === advice.seq ? win : null;
   const aims = advice && targets?.seq === advice.seq ? targets : null;
+  const guard = advice && defense?.seq === advice.seq && defense.threats.length > 0 ? defense : null;
   // The target hands take the lower area when there are any; a tenpai hand waiting gets
   // its waits instead.
   const showTargets = aims !== null && (aims.targets.length > 0 || aims.directions.length > 0);
@@ -685,7 +702,7 @@ function App() {
       {advice && p ? (
         <>
           <section className="hand-area">
-            <Hand advice={advice} p={p} keep={keep} width={HAND} />
+            <Hand advice={advice} p={p} keep={keep} width={HAND} defense={guard} />
             {p.headline && (
               <div className="headline-row">
                 <span className={`headline${p.waiting ? " waiting" : ""}`}>{p.headline}</span>
@@ -704,6 +721,23 @@ function App() {
                     {p.others.length > 1 && <span className="third">▬ 候选3</span>}
                   </span>
                 )}
+              </div>
+            )}
+            {guard && (
+              <div className={`defense-line verdict-${guard.verdict ?? "none"}`}>
+                <span className="threats">{threatText(guard.threats)}</span>
+                {guard.verdict && <b>建议{VERDICTS[guard.verdict]}</b>}
+                {guard.safest && (guard.verdict === "fold" || guard.verdict === "careful") && (
+                  <span>最安全：{name(guard.safest)}</span>
+                )}
+                <span className="danger-legend">
+                  <i className="danger-safe" />
+                  安全
+                  <i className="danger-somewhat" />
+                  有些危险
+                  <i className="danger-dangerous" />
+                  危险
+                </span>
               </div>
             )}
           </section>

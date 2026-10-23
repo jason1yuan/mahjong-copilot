@@ -76,7 +76,7 @@ cargo run -p mahjong-perception --release --example eval_cache -- recordings/sou
 - `faces`：在校正后的正面图里找牌面（浅色、灰或染成粉色 / 浅蓝色、够大、不在别的牌面里面），判断横放，牌河和副露共用；手牌也用它的染色规则
 - `meld`：读四家副露。`rectify` 校正出每家的副露带子，`find_strip` 从右往左找出牌（含横放、加杠叠上的牌、扣着的牌），`group` 按牌本身分成一副副，`read` 用每家自己的模板缓存（`Zone::Meld`）认牌
 - `dora`：在左上角找宝牌指示框，`find` 找出翻开的格子，`read` 用自己的模板缓存（`Zone::Dora`）认牌
-- `snapshot`：一帧里的牌桌（四家牌河、副露、宝牌指示）一起读出来（`Snapshot`），并检查它和手牌能不能同时成立（每种最多 4 张、每种花色最多一张赤五）；监视线程（`watch`）用它
+- `snapshot`：一帧里的牌桌（四家牌河、副露、宝牌指示）一起读出来（`Snapshot`），并检查它和手牌能不能同时成立（每种最多 4 张、每种花色最多一张赤五）；监视线程（`watch`）用它；`Snapshot::scene` 把它和手牌一起转成牌局状态引擎（`mahjong_core::game`，#10）的输入
 - `round`、`numbers`、`text`（#9）：中央框里的局数和自风（庄家看红色风牌），四家分数、余牌数，以及宝牌框下的供托和本场。数字用系统的离线识字（macOS 的 Vision），分数和余牌数逐个字形记住，之后按像素比对；分数要和供托加起来等于 100000 才采用
 - `recognizer`：模板缓存按区域（`Zone`）分开，共用一个认牌模型；拿不准的牌只对同一张图沿用上次的结果，不会每次都再送进模型
 - `buttons`（#9）：动作按钮。跳过按钮的框里是灰色面板，才算按钮出来了；然后从它左边一格一格往左，按每格的颜色认出吃、碰、杠、和、立直、自摸，碰到空格就停
@@ -91,6 +91,12 @@ cargo run -p mahjong-perception --release --example eval_table -- recordings/liv
 
 ```bash
 cargo run -p mahjong-perception --release --example eval_buttons -- recordings/live --labels recordings/live/buttons.json
+```
+
+把录下的帧按时间顺序交给牌局状态引擎（#10），看它跟上了多少、每局怎么结束，可以把每场的 mjai 牌谱写出来（只在本机）：
+
+```bash
+cargo run -p mahjong-perception --release --example eval_engine -- recordings/live --logs /tmp/logs
 ```
 
 重新标定 `table` 和 `river`（换皮肤或别的游戏时）：

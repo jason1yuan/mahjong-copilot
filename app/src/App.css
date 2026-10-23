@@ -288,6 +288,12 @@ body {
   color: var(--ok);
 }
 
+.engine {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 .game {
   margin: 6px 0 0;
   font-size: 12px;

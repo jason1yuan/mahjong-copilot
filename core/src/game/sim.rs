@@ -846,7 +846,7 @@ fn a_tile_read_wrongly_once_is_corrected_later() {
         let mut engine = Engine::new();
         for moment in &kept {
             match engine.observe(&moment.scene) {
-                Ok(_) | Err(Rejected::Unexplained) => {}
+                Ok(_) | Err(Rejected::Unexplained | Rejected::Covered) => {}
                 Err(err) => panic!("seed {seed}: {err}"),
             }
         }
@@ -876,6 +876,14 @@ fn games_in_a_row_are_logged_one_after_another() {
     let all: Vec<&Moment> = second.moments.iter().collect();
     want.extend(expected(&second, &all));
     assert_eq!(comparable(&engine.events()), want);
+    // One log a game, each from start_game to end_game.
+    let games = engine.games();
+    assert_eq!(games.len(), 2);
+    for game in &games {
+        assert!(matches!(game.events.first(), Some(Event::StartGame { .. })));
+        assert!(matches!(game.events.last(), Some(Event::EndGame)));
+        assert_eq!(game.lines().lines().count(), game.events.len());
+    }
 }
 
 /// Feeds `moments` to a new engine, scenes it cannot explain allowed, and ends the game:
@@ -886,7 +894,7 @@ fn run_filling(moments: &[&Moment]) -> (Engine, usize) {
     for (i, moment) in moments.iter().enumerate() {
         match engine.observe(&moment.scene) {
             Ok(observed) if observed.rewritten || i == 0 => filled_at = i,
-            Ok(_) | Err(Rejected::Unexplained) => {}
+            Ok(_) | Err(Rejected::Unexplained | Rejected::Covered) => {}
             Err(err) => panic!("moment {i}: {err}"),
         }
     }

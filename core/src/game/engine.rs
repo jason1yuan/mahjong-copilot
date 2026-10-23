@@ -56,6 +56,10 @@ pub enum Rejected {
     NoRound,
     #[error("no run of events explains the scene")]
     Unexplained,
+    /// Part of the table is hidden (a cut-in, a win effect, the box in the middle not in
+    /// sight) or read short: nothing to learn from, and no sign of having lost track.
+    #[error("the table is covered")]
+    Covered,
 }
 
 /// What a scene added to the log.
@@ -86,6 +90,24 @@ pub struct Mark {
     pub first: usize,
     pub last: usize,
     pub kind: MarkKind,
+}
+
+/// One game's log.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GameLog {
+    pub events: Vec<Event>,
+    pub marks: Vec<Mark>,
+}
+
+impl GameLog {
+    /// The events as mjai JSON Lines, one event a line.
+    pub fn lines(&self) -> String {
+        self.events
+            .iter()
+            .filter_map(|e| serde_json::to_string(e).ok())
+            .map(|line| line + "\n")
+            .collect()
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -119,6 +141,8 @@ struct Model {
     tiles_left: u8,
     /// Riichi sticks on the table.
     sticks: u8,
+    /// A riichi was accepted by the last discard: the stick may not show yet.
+    just_riichi: bool,
 }
 
 struct Round {
@@ -189,6 +213,40 @@ impl Engine {
             .collect()
     }
 
+    /// The log split into games, each with its marks (indices into its own events): the
+    /// last one is the game going on, unless it has ended.
+    pub fn games(&self) -> Vec<GameLog> {
+        let events = self.events();
+        let marks = self.marks();
+        let starts: Vec<usize> = (0..events.len())
+            .filter(|&i| matches!(events[i], Event::StartGame { .. }))
+            .collect();
+        starts
+            .iter()
+            .enumerate()
+            .map(|(g, &first)| {
+                let last = starts.get(g + 1).copied().unwrap_or(events.len());
+                GameLog {
+                    events: events[first..last].to_vec(),
+                    marks: marks
+                        .iter()
+                        .filter(|m| m.first >= first && m.last <= last)
+                        .map(|m| Mark {
+                            first: m.first - first,
+                            last: m.last - first,
+                            kind: m.kind,
+                        })
+                        .collect(),
+                }
+            })
+            .collect()
+    }
+
+    /// The current round's label and honba.
+    pub fn round(&self) -> Option<(RoundLabel, Option<u8>)> {
+        self.round.as_ref().map(|r| (r.label, r.honba))
+    }
+
     /// The game state the events lead to, from the player's seat.
     pub fn player_state(&self) -> Option<&PlayerState> {
         self.round.as_ref().map(|r| &r.state)
@@ -217,12 +275,18 @@ impl Engine {
     /// Takes a settled scene: the events it implies, or why it was not taken.
     pub fn observe(&mut self, scene: &Scene) -> Result<Observed, Rejected> {
         scene.check().map_err(Rejected::Impossible)?;
+        if scene.round.is_none() || scene.dealer.is_none() {
+            return Err(Rejected::Covered);
+        }
         if self.starts_round(scene) {
             return self.begin_round(scene);
         }
         let Some(round) = self.round.as_mut() else {
             return Err(Rejected::NoRound);
         };
+        if read_short(&round.model, scene) {
+            return Err(Rejected::Covered);
+        }
         let observed = explain_scene(round, scene).or_else(|| correct(round, scene));
         let Some(observed) = observed else {
             round.unexplained += 1;
@@ -260,15 +324,25 @@ impl Engine {
 
     /// A scene starts a new round when there is none, the round label or honba changed,
     /// or nothing is discarded while the current round has discards.
+    /// A round moves on in wind, number and honba, or a new game starts: a label read
+    /// wrongly for a moment (back, or the same) does not end the round.
     fn starts_round(&self, scene: &Scene) -> bool {
         match &self.round {
             None => scene.round.is_some() && scene.dealer.is_some(),
             Some(round) => {
-                let label_changed = scene.round.is_some_and(|l| l != round.label)
-                    || (scene.honba.is_some() && scene.honba != round.honba);
-                let discarded = round.model.rivers.iter().any(|r| !r.is_empty())
-                    || round.model.melds.iter().any(|m| !m.is_empty());
-                label_changed || (is_empty(scene) && discarded)
+                let (Some(label), Some(honba)) = (scene.round, scene.honba) else {
+                    return false;
+                };
+                let order = |l: RoundLabel, h: u8| {
+                    let wind = ["E", "S", "W", "N"]
+                        .iter()
+                        .position(|w| *w == l.wind.to_string());
+                    (wind, l.number, h)
+                };
+                let later = order(label, honba) > order(round.label, round.honba.unwrap_or(0));
+                // 東1局 0本場 again after a later round: a new game.
+                let past_first = order(round.label, round.honba.unwrap_or(0)) > (Some(0), 1, 0);
+                later || (starts_game(scene) && past_first)
             }
         }
     }
@@ -277,12 +351,7 @@ impl Engine {
     /// the round `scene` shows: from its start if nothing is discarded yet, else with its
     /// history filled in.
     fn begin_round(&mut self, scene: &Scene) -> Result<Observed, Rejected> {
-        let new_game = self.round.is_some() && starts_game(scene);
-        self.close_round(if new_game { None } else { Some(scene) });
-        if new_game && self.in_game {
-            self.earlier.push(Event::EndGame);
-            self.in_game = false;
-        }
+        // The new round first: if it cannot start, the current one goes on.
         let (events, model, state, me, filled) = if is_empty(scene) {
             let (events, model, state, me) = start(scene)?;
             (events, model, state, me, None)
@@ -291,6 +360,12 @@ impl Engine {
             let n = events.len();
             (events, model, state, me, Some((n, MarkKind::Filled)))
         };
+        let new_game = self.round.is_some() && starts_game(scene);
+        self.close_round(if new_game { None } else { Some(scene) });
+        if new_game && self.in_game {
+            self.earlier.push(Event::EndGame);
+            self.in_game = false;
+        }
         let mut out = Vec::new();
         if !self.in_game {
             self.earlier.push(Event::StartGame {
@@ -380,6 +455,36 @@ impl Round {
             self.scores = Some(seen);
         }
     }
+}
+
+/// Whether the scene shows less than is known, so part of it was not read: a river or
+/// meld row shorter (a river's last tile is gone only when a new meld called it), or the
+/// player's hand a tile short with nothing new discarded, melded or called from it (a
+/// tile in flight).
+fn read_short(model: &Model, scene: &Scene) -> bool {
+    let called_from = |from: usize| {
+        (0..4).any(|c| {
+            scene.melds[c].iter().skip(model.melds[c].len()).any(|m| {
+                m.source()
+                    .is_some_and(|off| (c + usize::from(off)) % 4 == from)
+            })
+        })
+    };
+    let rows = (0..4).any(|s| {
+        let (seen, known) = (scene.rivers[s].len(), model.rivers[s].len());
+        scene.melds[s].len() < model.melds[s].len()
+            || seen + 1 < known
+            || (seen < known && !called_from(s))
+    });
+    let in_flight = scene.own_tiles().len() < model.hand.len()
+        && !called_from(0)
+        && scene.rivers[0].len() <= model.rivers[0].len()
+        && scene.melds[0].len() <= model.melds[0].len()
+        && !scene.melds[0]
+            .iter()
+            .zip(&model.melds[0])
+            .any(|(s, m)| s.added.is_some() && m.added.is_none());
+    rows || in_flight
 }
 
 /// The scene's scores and riichi sticks, when both are read and they add up.
@@ -514,6 +619,26 @@ fn start(scene: &Scene) -> Result<Started, Rejected> {
 /// tiles still held or melded from the hand, then the earliest discards; the turns from
 /// there are the first run of events found that leads to the scene.
 fn fill(scene: &Scene) -> Option<Started> {
+    fill_exactly(scene).or_else(|| nudged(scene).iter().find_map(fill_exactly))
+}
+
+/// The scene with the tiles left one more and one less: the counter can lag a moment
+/// behind the tiles, or be read one off.
+fn nudged(scene: &Scene) -> Vec<Scene> {
+    let Some(n) = scene.tiles_left else {
+        return Vec::new();
+    };
+    [n.checked_add(1), n.checked_sub(1)]
+        .into_iter()
+        .flatten()
+        .map(|n| Scene {
+            tiles_left: Some(n),
+            ..scene.clone()
+        })
+        .collect()
+}
+
+fn fill_exactly(scene: &Scene) -> Option<Started> {
     let empty = Model::default();
     let all = own_tiles_after(&empty, scene)?;
     let mut kept: Vec<Tile> = scene.hand.clone();
@@ -689,8 +814,17 @@ fn replay(events: &[Event], me: u8) -> Option<(Model, PlayerState)> {
     Some((model, state))
 }
 
-/// The shortest run of events that turns `model` into `scene`, if any.
+/// The run of events that turns `model` into `scene`, if any; failing that, one for a
+/// tiles-left counter one off.
 fn explain(model: &Model, scene: &Scene, me: u8) -> Option<Vec<Event>> {
+    explain_exactly(model, scene, me).or_else(|| {
+        nudged(scene)
+            .iter()
+            .find_map(|s| explain_exactly(model, s, me))
+    })
+}
+
+fn explain_exactly(model: &Model, scene: &Scene, me: u8) -> Option<Vec<Event>> {
     // The player's draws to come: what the scene shows in hand, discarded or melded,
     // less what the model holds.
     let came_in = own_tiles_after(model, scene)?;
@@ -1153,6 +1287,7 @@ impl Model {
                     .tiles_left
                     .checked_sub(1)
                     .ok_or("a draw from an empty wall")?;
+                self.just_riichi = false;
                 if seat == 0 {
                     let tile = core(pai).ok_or("the player drew an unknown tile")?;
                     self.hand.push(tile);
@@ -1184,7 +1319,10 @@ impl Model {
                 self.turn = (seat + 1) % 4;
                 self.phase = Phase::Draw;
             }
-            Event::ReachAccepted { .. } => self.sticks += 1,
+            Event::ReachAccepted { .. } => {
+                self.sticks += 1;
+                self.just_riichi = true;
+            }
             Event::Reach { actor } => {
                 if rel(actor, me) != self.turn || self.phase != Phase::Discard {
                     return Err("riichi out of turn");
@@ -1295,6 +1433,7 @@ impl Model {
         self.turn = caller;
         self.phase = Phase::Discard;
         self.last_discard = None;
+        self.just_riichi = false;
         Ok(())
     }
 
@@ -1311,7 +1450,9 @@ impl Model {
         held == shown
             && drawn_ok
             && scene.tiles_left.is_none_or(|n| n == self.tiles_left)
-            && scene.riichi_sticks.is_none_or(|n| n == self.sticks)
+            && scene
+                .riichi_sticks
+                .is_none_or(|n| n == self.sticks || (self.just_riichi && n + 1 == self.sticks))
             && self.rivers == scene.rivers
             && self.dora == scene.dora
             && (0..4).all(|s| {
@@ -1357,7 +1498,9 @@ impl Model {
             && melds
             && scene.dora.starts_with(&self.dora)
             && scene.tiles_left.is_none_or(|n| n <= self.tiles_left)
-            && scene.riichi_sticks.is_none_or(|n| n >= self.sticks)
+            && scene
+                .riichi_sticks
+                .is_none_or(|n| n + u8::from(self.just_riichi) >= self.sticks)
     }
 }
 

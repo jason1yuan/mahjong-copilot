@@ -8,5 +8,7 @@ mod scene;
 mod sim;
 
 pub use ending::{Ending, ending};
-pub use engine::{Engine, Mark, MarkKind, Observed, Rejected};
+pub use engine::{Engine, GameLog, Mark, MarkKind, Observed, Rejected};
+pub use riichi::mjai::Event;
+pub use riichi::state::PlayerState;
 pub use scene::{MeldView, RiverTile, RoundLabel, Scene};

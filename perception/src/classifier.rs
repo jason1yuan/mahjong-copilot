@@ -51,6 +51,8 @@ pub struct Prediction {
     pub tile: Tile,
     /// Softmax probability of the predicted kind.
     pub confidence: f32,
+    /// The next likeliest kinds, most likely first (#16: offered when correcting a tile).
+    pub alternatives: [Option<Tile>; 2],
 }
 
 pub struct TileClassifier {
@@ -163,9 +165,15 @@ fn best(labels: &[Tile], logits: &[f32]) -> Prediction {
                 if v > best.1 { (i, v) } else { best }
             });
     let total: f32 = logits.iter().map(|v| (v - top).exp()).sum();
+    let mut order: Vec<usize> = (0..logits.len()).filter(|&i| i != index).collect();
+    order.sort_by(|&a, &b| logits[b].total_cmp(&logits[a]));
     Prediction {
         tile: labels[index],
         confidence: 1.0 / total,
+        alternatives: [
+            order.first().map(|&i| labels[i]),
+            order.get(1).map(|&i| labels[i]),
+        ],
     }
 }
 

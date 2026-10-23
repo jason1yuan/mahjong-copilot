@@ -537,6 +537,7 @@ mod tests {
                 confidence: 0.99,
                 source: crate::recognizer::Source::Classifier,
                 doubt: None,
+                alternatives: [None; 2],
             }),
             sideways,
             added: None,

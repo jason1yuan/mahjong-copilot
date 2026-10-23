@@ -24,6 +24,7 @@ import {
   yakuText,
 } from "./format";
 import { Tile } from "./TileImage";
+import { ALL_TILES } from "./tile";
 import type {
   Advice,
   CallOptionView,
@@ -259,12 +260,14 @@ function Hand({
   keep,
   width,
   defense = null,
+  onPick,
 }: {
   advice: Advice;
   p: Plan;
   keep: string[] | null;
   width: number;
   defense?: DefenseView | null;
+  onPick?: (index: number) => void;
 }) {
   const dangerOf = (tile: string) => {
     const d = defense?.tiles.find((t) => sameKind(t.tile, tile));
@@ -317,6 +320,7 @@ function Hand({
             dim={keep !== null && !bright.has(i)}
             doubt={view.doubt !== null}
             danger={dangerOf(view.tile)}
+            onClick={onPick ? () => onPick(i) : undefined}
           />
         </span>
       ))}
@@ -567,9 +571,92 @@ function statusNote(status: Status | null, models: string | null): string | null
       return "未找到雀魂窗口：请在浏览器中打开雀魂";
     case "error":
       return status.message;
+    case "paused":
+      return "识别已暂停：点标题栏的「▶ 开始识别」继续";
     case "watching":
       return null;
   }
+}
+
+// The status light (#16): whether the advice can be trusted now, and why.
+type Light = { color: "green" | "yellow" | "red" | "gray"; why: string[] };
+
+// Scenes in a row the engine may miss (an animation, a hand covering the table) before the
+// advice counts as not following the game.
+const STUCK = 3;
+
+function light(status: Status | null, advice: Advice | null, engine: EngineView | null): Light {
+  if (!status || status.state === "paused") return { color: "gray", why: ["识别已暂停"] };
+  if (status.state === "noWindow") return { color: "red", why: ["找不到雀魂窗口"] };
+  if (status.state === "error") return { color: "red", why: [status.message] };
+  if (!advice) return { color: "gray", why: ["等待手牌出现"] };
+  const red: string[] = [];
+  if (engine?.textFailing) red.push("文字识别失效，读不到局数和分数");
+  if (engine && engine.stuck >= STUCK) red.push(`连续 ${engine.stuck} 帧没跟上牌局，只有牌效建议`);
+  if (red.length > 0) return { color: "red", why: red };
+  const yellow: string[] = [];
+  const doubts = advice.tiles.filter((v) => v.doubt).length;
+  if (doubts > 0) yellow.push(`${doubts} 张牌拿不准`);
+  if (engine?.filled) yellow.push("这一局是中途开始看的");
+  if (engine && engine.stuck > 0) yellow.push("这一帧没对上");
+  if (yellow.length > 0) return { color: "yellow", why: yellow };
+  return { color: "green", why: ["识别正常，跟上了牌局"] };
+}
+
+function StatusLight({ l }: { l: Light }) {
+  return <span className={`status-light light-${l.color}`} title={l.why.join("；")} aria-label={l.why.join("；")} />;
+}
+
+function PauseButton({ paused, onToggle }: { paused: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      className={`pause-button${paused ? " paused" : ""}`}
+      title={paused ? "开始识别（牌局开始时）" : "暂停识别（牌局结束后）：不截画面、不录制、不记牌谱"}
+      onClick={onToggle}
+    >
+      {paused ? "▶ 开始识别" : "⏸ 暂停识别"}
+    </button>
+  );
+}
+
+// Correcting a hand tile (#16): the classifier's next guesses first, then every tile.
+function TilePicker({
+  current,
+  alternatives,
+  onPick,
+  onCancel,
+}: {
+  current: string;
+  alternatives: string[];
+  onPick: (tile: string) => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="picker">
+      <div className="picker-head">
+        <span>
+          把 <b>{name(current)}</b> 改成
+        </span>
+        <button type="button" className="picker-close" onClick={onCancel}>
+          取消
+        </button>
+      </div>
+      {alternatives.length > 0 && (
+        <div className="picker-row picker-likely">
+          <span className="picker-label">可能是</span>
+          {alternatives.map((t) => (
+            <Tile key={t} tile={t} width={26} onClick={() => onPick(t)} />
+          ))}
+        </div>
+      )}
+      <div className="picker-grid">
+        {ALL_TILES.filter((t) => t !== current).map((t) => (
+          <Tile key={t} tile={t} width={22} onClick={() => onPick(t)} />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function App() {
@@ -585,13 +672,19 @@ function App() {
   const [defense, setDefense] = useState<DefenseView | null>(null);
   const [compact, setCompact] = useState(rememberedCompact);
   const [theme, nextTheme] = useTheme();
+  // The hand tile being corrected, by its place (#16).
+  const [picking, setPicking] = useState<number | null>(null);
+  const [pausing, setPausing] = useState<boolean | null>(null);
   const panel = useRef<HTMLElement>(null);
 
   useEffect(() => {
     invoke<Status | null>("pipeline_status").then(setStatus).catch(() => undefined);
     invoke<Recording | null>("debug_recording").then(setRecording).catch(() => undefined);
     const unlisten = [
-      listen<Status>("pipeline-status", (e) => setStatus(e.payload)),
+      listen<Status>("pipeline-status", (e) => {
+        setStatus(e.payload);
+        setPausing(null);
+      }),
       listen<Advice | null>("advice", (e) => setAdvice(e.payload)),
       listen<EngineView>("engine", (e) => setEngine(e.payload)),
       listen<MortalView>("mortal", (e) => setMortal(e.payload)),
@@ -684,7 +777,23 @@ function App() {
     }
   }
 
+  const paused = pausing ?? status?.state === "paused";
+  const togglePause = () => {
+    const next = !paused;
+    setPausing(next);
+    invoke("set_paused", { paused: next }).catch(() => setPausing(null));
+  };
+  const pick = (tile: string) => {
+    if (picking === null) return;
+    invoke("correct_tile", { index: picking, tile }).catch(() => undefined);
+    setPicking(null);
+  };
+  const lamp = light(paused ? { state: "paused" } : status, advice, engine);
+
   const notes: string[] = [];
+  if (advice?.tiles.some((v) => v.doubt === "small")) {
+    notes.push("游戏窗口太小，有的牌认不准：请把雀魂窗口的宽度调到至少约 960 像素");
+  }
   if (engine?.textFailing) notes.push("文字识别失效，读不到局数和分数，请重启");
   const statusLine = statusNote(status, models);
   if (statusLine && advice) notes.push(statusLine);
@@ -730,9 +839,11 @@ function App() {
     <main className="panel" ref={panel}>
       <header className="titlebar" data-tauri-drag-region>
         <WindowButtons compact={compact} onCompact={toggleCompact} />
+        <PauseButton paused={paused} onToggle={togglePause} />
         <ThemeButton theme={theme} onNext={nextTheme} />
       </header>
       <div className="status-bar" data-tauri-drag-region>
+        <StatusLight l={lamp} />
         <span className="game" data-tauri-drag-region>
           {gameName}
         </span>
@@ -760,7 +871,15 @@ function App() {
       {advice && p ? (
         <>
           <section className="hand-area">
-            <Hand advice={advice} p={p} keep={keep} width={HAND} defense={guard} />
+            <Hand advice={advice} p={p} keep={keep} width={HAND} defense={guard} onPick={setPicking} />
+            {picking !== null && advice.tiles[picking] && (
+              <TilePicker
+                current={advice.tiles[picking].tile}
+                alternatives={advice.tiles[picking].alternatives}
+                onPick={pick}
+                onCancel={() => setPicking(null)}
+              />
+            )}
             {p.headline && (
               <div className="headline-row">
                 <span className={`headline${p.waiting ? " waiting" : ""}`}>{p.headline}</span>
@@ -773,6 +892,7 @@ function App() {
                         </>
                       )}
                 </span>
+                {lamp.color === "red" && !ai && <span className="rules-only">只按牌效：引擎没跟上牌局</span>}
                 {p.discard && p.others.length > 0 && (
                   <span className="legend">
                     <span className="second">▬ 候选2</span>

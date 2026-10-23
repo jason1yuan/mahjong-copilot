@@ -13,7 +13,7 @@
 
 use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
@@ -32,11 +32,13 @@ use mahjong_perception::snapshot::{self, Snapshot};
 use mahjong_perception::table::Seat;
 use mahjong_perception::text;
 use mahjong_perception::{
-    Doubt, FrameTap, HandReading, Recognition, Recorder, WatchEvent, Watcher,
+    Corrector, Doubt, FrameTap, HandReading, Recognition, Recorder, WatchEvent, Watcher,
 };
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
+/// How often the pause switch is checked while waiting.
+const PAUSE_POLL: Duration = Duration::from_millis(200);
 /// How long to wait before looking for the game window again.
 const RETRY: Duration = Duration::from_secs(2);
 /// Latencies kept for the percentiles.
@@ -51,6 +53,8 @@ const RECENT: usize = 3;
 #[serde(tag = "state", rename_all = "camelCase")]
 pub enum Status {
     NoWindow,
+    /// The player paused recognition (#16): no capture, no reading, no recording.
+    Paused,
     /// `game` is the profile's name, e.g. 雀魂（网页版）.
     Watching {
         app: String,
@@ -68,6 +72,8 @@ pub struct TileView {
     pub tile: Tile,
     /// "small" (window too small) or "unsure" (low confidence); `None` when sure.
     pub doubt: Option<&'static str>,
+    /// The classifier's next likeliest tiles, offered when correcting it (#16).
+    pub alternatives: Vec<Tile>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -369,6 +375,14 @@ pub struct Pipeline {
     recorder: Mutex<Option<Arc<Recorder>>>,
     recording: AtomicBool,
     saved: Arc<AtomicU64>,
+    /// The player paused recognition (#16).
+    paused: AtomicBool,
+    /// The running watcher's way to learn the player's corrections (#16).
+    corrector: Mutex<Option<Corrector>>,
+    /// The last hand read, to correct and advise on again (#16).
+    last_reading: Mutex<Option<HandReading>>,
+    /// Scenes in a row the state engine did not take, for the status light (#16).
+    stuck: AtomicU32,
     /// The state engine (#10) and the file each game's log goes to.
     game: Mutex<GameRecord>,
     /// The decision model (#22), when it is in the models folder.
@@ -463,6 +477,8 @@ pub struct EngineView {
     pub text_failing: bool,
     /// The game log's latest events, newest first, each after its index (dev build).
     pub recent: Vec<String>,
+    /// Scenes in a row the engine did not take: the advice cannot follow the game (#16).
+    pub stuck: u32,
 }
 
 /// `recordings/live/` in the repository, which git ignores. The dev build runs from the
@@ -589,6 +605,16 @@ impl Pipeline {
             }
         };
         loop {
+            if self.paused.load(Ordering::Relaxed) {
+                if lock(&self.status)
+                    .as_ref()
+                    .is_none_or(|s| !matches!(s, Status::Paused))
+                {
+                    self.set_status(app, Status::Paused);
+                }
+                std::thread::sleep(PAUSE_POLL);
+                continue;
+            }
             let Some((window, profile)) = find_window(&profiles) else {
                 self.set_status(app, Status::NoWindow);
                 std::thread::sleep(RETRY);
@@ -618,6 +644,7 @@ impl Pipeline {
                         tap.record(lock(&self.recorder).clone());
                     }
                     *lock(&self.tap) = Some(tap);
+                    *lock(&self.corrector) = Some(watcher.corrector());
                     tracing::info!(app = %window.app, title = %window.title, "watching the game window");
                     self.set_status(
                         app,
@@ -627,10 +654,21 @@ impl Pipeline {
                             game,
                         },
                     );
-                    // Until capture stops (the window closed) or the watcher goes away.
-                    let _ = wait.recv();
+                    // Until capture stops (the window closed), the watcher goes away, or the
+                    // player pauses recognition.
+                    loop {
+                        match wait.recv_timeout(PAUSE_POLL) {
+                            Err(mpsc::RecvTimeoutError::Timeout)
+                                if !self.paused.load(Ordering::Relaxed) => {}
+                            _ => break,
+                        }
+                    }
                     lock(&self.tap).take();
+                    lock(&self.corrector).take();
                     watcher.stop();
+                    if self.paused.load(Ordering::Relaxed) {
+                        self.pause_game(app);
+                    }
                 }
                 Err(err) => {
                     tracing::warn!("cannot watch {}: {err}", window.title);
@@ -646,9 +684,51 @@ impl Pipeline {
         }
     }
 
+    /// Pauses or resumes recognition (#16); the supervisor stops or restarts the watcher.
+    pub fn set_paused(&self, paused: bool) {
+        self.paused.store(paused, Ordering::Relaxed);
+    }
+
+    /// Recognition just paused: ends the game being logged, saves it and clears the panel.
+    fn pause_game(&self, app: &AppHandle) {
+        {
+            let mut game = lock(&self.game);
+            game.engine.end_game();
+            save_games(&game, true);
+        }
+        lock(&self.last_reading).take();
+        self.stuck.store(0, Ordering::Relaxed);
+        if let Err(err) = app.emit("advice", None::<Advice>) {
+            tracing::warn!("clearing the advice: {err}");
+        }
+    }
+
+    /// The player says hand tile `index` of the last reading is `tile` (#16): advises
+    /// again at once on the corrected hand, and teaches the watcher for the next frames.
+    pub fn correct(&self, app: &AppHandle, index: usize, tile: Tile) -> Result<(), String> {
+        let mut reading = lock(&self.last_reading)
+            .clone()
+            .ok_or("no hand to correct")?;
+        let read = reading
+            .tiles
+            .get_mut(index)
+            .ok_or("no such tile in the hand")?;
+        read.tile = tile;
+        read.confidence = 1.0;
+        read.doubt = None;
+        read.alternatives = [None; 2];
+        if let Some(corrector) = lock(&self.corrector).as_ref() {
+            corrector.correct(index, tile);
+        }
+        tracing::info!(index, %tile, "the player corrected a tile");
+        self.handle(app, WatchEvent::Hand(Box::new(reading)));
+        Ok(())
+    }
+
     fn handle(&self, app: &AppHandle, event: WatchEvent) {
         let sent = match event {
             WatchEvent::Hand(reading) => {
+                *lock(&self.last_reading) = Some((*reading).clone());
                 let advice = self.advise(&reading);
                 tracing::info!(
                     tiles = advice.tiles.len(),
@@ -739,9 +819,16 @@ impl Pipeline {
         if new_round {
             save_games(&game, new_game);
         }
+        let stuck = if last == "taken" {
+            self.stuck.store(0, Ordering::Relaxed);
+            0
+        } else {
+            self.stuck.fetch_add(1, Ordering::Relaxed) + 1
+        };
         let games = game.engine.games();
         let current = games.last();
         let view = EngineView {
+            stuck,
             events: current.map_or(0, |g| g.events.len()),
             round: game
                 .engine
@@ -1070,6 +1157,7 @@ fn view(r: &Recognition) -> TileView {
             Doubt::TooSmall => "small",
             Doubt::LowConfidence => "unsure",
         }),
+        alternatives: r.alternatives.iter().flatten().copied().collect(),
     }
 }
 
@@ -1162,6 +1250,7 @@ mod tests {
             confidence: 0.99,
             source: Source::Classifier,
             doubt: None,
+            alternatives: [None; 2],
         };
         let mut table = Snapshot::default();
         // Three East discarded, one misread too many, and a red five.

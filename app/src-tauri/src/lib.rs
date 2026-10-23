@@ -106,6 +106,24 @@ fn advice_shown(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>, seq: u64, mo
     pipeline.shown(&app, seq, mortal);
 }
 
+/// Pauses (`true`) or resumes recognition (#16).
+#[tauri::command]
+fn set_paused(pipeline: State<'_, Arc<Pipeline>>, paused: bool) {
+    pipeline.set_paused(paused);
+}
+
+/// The player says hand tile `index` is `tile` (mjai); advice follows at once (#16).
+#[tauri::command]
+fn correct_tile(
+    app: AppHandle,
+    pipeline: State<'_, Arc<Pipeline>>,
+    index: usize,
+    tile: String,
+) -> Result<(), String> {
+    let tile = tile.parse().map_err(|err| format!("{err}"))?;
+    pipeline.correct(&app, index, tile)
+}
+
 /// The dev build's debug recording (#8); `None` in a packaged app, which has none.
 #[tauri::command]
 fn debug_recording(pipeline: State<'_, Arc<Pipeline>>) -> Option<Recording> {
@@ -170,6 +188,8 @@ pub fn run() -> tauri::Result<()> {
             download_models,
             pipeline_status,
             advice_shown,
+            set_paused,
+            correct_tile,
             debug_recording,
             save_frame,
             set_recording

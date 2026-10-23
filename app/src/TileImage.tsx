@@ -13,6 +13,8 @@ type Props = {
   missing?: boolean;
   // How dangerous it is to discard (#12): a coloured bar under it, and why on hover.
   danger?: { level: string; why: string } | null;
+  // Clicking it, e.g. to correct it (#16).
+  onClick?: () => void;
 };
 
 // A tile picture with the panel's marks.
@@ -24,6 +26,7 @@ export function Tile({
   doubt = false,
   missing = false,
   danger = null,
+  onClick,
 }: Props) {
   const title =
     tile === null
@@ -33,7 +36,12 @@ export function Tile({
     .filter(Boolean)
     .join(" ");
   return (
-    <span className={classes} style={{ width }} title={title}>
+    <span
+      className={onClick ? `${classes} clickable` : classes}
+      style={{ width }}
+      title={onClick ? `${title}（点击改正）` : title}
+      onClick={onClick}
+    >
       <span className="face">
         {mark === "main" && <span className="arrow">▼</span>}
         <img src={tilePicture(tile)} alt={title} draggable={false} />

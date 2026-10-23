@@ -213,6 +213,7 @@ mod tests {
             confidence: 0.99,
             source: Source::Classifier,
             doubt: None,
+            alternatives: [None; 2],
         }
     }
 

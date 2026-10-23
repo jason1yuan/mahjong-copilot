@@ -359,9 +359,13 @@ impl State {
                 self.last_table = Some(table.clone());
                 Some(table)
             }
-            Ok(Some(_)) => {
+            Ok(Some(read)) => {
                 tracing::debug!("the table does not add up with the hand; keeping the last one");
-                self.last_table.clone()
+                // The buttons are read apart from the tiles: keep this frame's.
+                self.last_table.clone().map(|last| Snapshot {
+                    buttons: read.buttons,
+                    ..last
+                })
             }
             Ok(None) => None,
             Err(err) => {

@@ -14,7 +14,9 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
-use mahjong_core::{Tile, TileCounts, outlook, rank_discards};
+use mahjong_core::calls::{self, CallAdvice, CallContext, CallKind, Yaku};
+use mahjong_core::{Tile, TileCounts, outlook, parse_tiles, rank_discards};
+use mahjong_perception::buttons::Button;
 use mahjong_perception::capture::{self, WindowInfo};
 use mahjong_perception::profile::{self, Profile};
 use mahjong_perception::snapshot::{self, Snapshot};
@@ -94,10 +96,75 @@ pub struct Advice {
     pub table: Option<TableView>,
     /// The round and the numbers on the table (#9); `None` when not read.
     pub game: Option<GameView>,
+    /// Whether and how to call the discard on offer (#11); `None` without a chi or pon
+    /// button.
+    pub call: Option<CallView>,
     pub times: StepTimes,
 }
 
-/// The round, seat wind and numbers on the table (#9), for the window.
+/// Call advice (#11) for the window.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CallView {
+    pub called: Tile,
+    /// Shanten and effective draws if not calling.
+    pub stay_shanten: i8,
+    pub stay_ukeire_count: u8,
+    /// Every way to call, best first.
+    pub options: Vec<CallOptionView>,
+    /// Index into `options` of the call to take; `None` to let it go.
+    pub take: Option<usize>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CallOptionView {
+    /// `chi` or `pon`.
+    pub kind: &'static str,
+    pub with: [Tile; 2],
+    pub discard: Tile,
+    pub shanten: i8,
+    pub ukeire_count: u8,
+    /// `yakuhai`, `tanyao`, `honitsu` or `toitoi`.
+    pub yaku: Vec<&'static str>,
+}
+
+impl CallView {
+    fn of(called: Tile, advice: &CallAdvice) -> Self {
+        Self {
+            called,
+            stay_shanten: advice.stay.shanten,
+            stay_ukeire_count: advice.stay.ukeire_count,
+            options: advice
+                .options
+                .iter()
+                .map(|o| CallOptionView {
+                    kind: match o.kind {
+                        CallKind::Chi => "chi",
+                        CallKind::Pon => "pon",
+                    },
+                    with: o.with,
+                    discard: o.after.discard,
+                    shanten: o.after.shanten,
+                    ukeire_count: o.after.ukeire_count,
+                    yaku: o
+                        .yaku
+                        .iter()
+                        .map(|y| match y {
+                            Yaku::Yakuhai => "yakuhai",
+                            Yaku::Tanyao => "tanyao",
+                            Yaku::Honitsu => "honitsu",
+                            Yaku::Toitoi => "toitoi",
+                        })
+                        .collect(),
+                })
+                .collect(),
+            take: advice.take,
+        }
+    }
+}
+
+/// The round, seat wind, numbers on the table and action buttons (#9), for the window.
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameView {
@@ -110,6 +177,9 @@ pub struct GameView {
     pub tiles_left: Option<u8>,
     pub honba: Option<u8>,
     pub riichi_sticks: Option<u8>,
+    /// The action buttons shown, left to right: `chi`, `pon`, `kan`, `ron`, `riichi`,
+    /// `tsumo`.
+    pub buttons: Vec<&'static str>,
 }
 
 impl GameView {
@@ -121,6 +191,7 @@ impl GameView {
             tiles_left: table.numbers.tiles_left,
             honba: table.numbers.honba,
             riichi_sticks: table.numbers.riichi_sticks,
+            buttons: table.buttons.iter().map(|b| b.as_str()).collect(),
         }
     }
 }
@@ -382,6 +453,7 @@ impl Pipeline {
                 .map(|_| visible.iter().map(|&n| u32::from(n)).sum()),
             table: reading.table.as_ref().map(TableView::of),
             game: reading.table.as_ref().map(GameView::of),
+            call: None,
             times: StepTimes {
                 settle_ms: ms(reading.timings.settled - reading.timings.still_since),
                 find_ms: ms(reading.timings.find),
@@ -414,6 +486,9 @@ impl Pipeline {
             advice.shanten = Some(outlook.shanten);
             advice.ukeire = outlook.ukeire;
             advice.ukeire_count = Some(outlook.ukeire_count);
+            if let Some(table) = &reading.table {
+                advice.call = call_view(&hand, table, &visible);
+            }
         }
         advice.times.decide_ms = ms(start.elapsed());
         advice.times.sent_ms = ms(reading.timings.still_since.elapsed());
@@ -522,6 +597,39 @@ fn view(r: &Recognition) -> TileView {
             Doubt::LowConfidence => "unsure",
         }),
     }
+}
+
+/// Call advice for the discard the table's buttons offer, if any.
+fn call_view(hand: &[Tile], table: &Snapshot, visible: &TileCounts) -> Option<CallView> {
+    let shown = |b: Button| table.buttons.contains(&b);
+    let (chi, pon) = (shown(Button::Chi), shown(Button::Pon));
+    let win = shown(Button::Ron) || shown(Button::Tsumo);
+    let latest = [Seat::Right, Seat::Across, Seat::Left]
+        .map(|seat| table.rivers[seat.index()].last().map(|t| t.tile.tile));
+    let called = calls::offered(latest, hand, chi, pon, win)?;
+    // The dragons, and the round and seat winds when they are read.
+    let mut value_honors = parse_tiles("P F C").unwrap_or_default();
+    for wind in [table.round.map(|r| r.wind), table.seat_wind(Seat::Own)]
+        .into_iter()
+        .flatten()
+    {
+        if let Ok(tile) = wind.to_string().parse() {
+            value_honors.push(tile);
+        }
+    }
+    let melds: Vec<Vec<Tile>> = table.melds[Seat::Own.index()]
+        .iter()
+        .map(|meld| meld.iter().filter_map(|t| t.tile.map(|r| r.tile)).collect())
+        .collect();
+    let ctx = CallContext {
+        hand,
+        melds: &melds,
+        value_honors: &value_honors,
+        visible,
+    };
+    calls::advise(&ctx, called, chi, pon)
+        .ok()
+        .map(|advice| CallView::of(called, &advice))
 }
 
 /// Tiles of each kind face up on the table, capped so that with the hand there are never

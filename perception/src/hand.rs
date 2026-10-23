@@ -363,10 +363,26 @@ impl HandFinder {
         let run = (band / 6).max(3);
         let solid = |x: usize| x + run <= w && strong[x..x + run].iter().all(|s| *s);
         let solid_before = |x: usize| x >= run && x <= w && strong[x - run..x].iter().all(|s| *s);
-        let mut g0 = (widest.0..widest.1.saturating_sub(run)).find(|&x| solid(x))?;
-        let mut g1 = (widest.0 + run + 1..=widest.1)
+        let solid_g0 = (widest.0..widest.1.saturating_sub(run)).find(|&x| solid(x))?;
+        let solid_g1 = (widest.0 + run + 1..=widest.1)
             .rev()
             .find(|&x| solid_before(x))?;
+        // A tile hovered at an end rises out of the band and is solid only in places, so
+        // the solid edge can fall inside it; the group's own edge is then the tile's. Keep
+        // the ends that fit the grid best.
+        let (mut g0, mut g1) = [
+            (solid_g0, solid_g1),
+            (widest.0, solid_g1),
+            (solid_g0, widest.1),
+            (widest.0, widest.1),
+        ]
+        .into_iter()
+        .filter_map(|(a, b)| {
+            let (count, score, _) = tile_count(&seams, a, b, band, self.expect)?;
+            (count >= MIN_TILES).then_some(((a, b), score))
+        })
+        .max_by(|x, y| x.1.total_cmp(&y.1))?
+        .0;
         let (mut n, mut shift);
         let mut rounds = 0;
         loop {
@@ -742,6 +758,17 @@ mod tests {
                 data[i..i + 3].copy_from_slice(&[40, 40, 40]);
             }
         }
+        let layout = find(&data, 800, 580).unwrap();
+        assert_near(&layout.tiles(), &tiles, h);
+    }
+
+    #[test]
+    fn a_last_tile_raised_far_is_still_part_of_the_hand() {
+        let (w, h) = (40, 60);
+        let mut tiles = row(100, 10, w, 500);
+        // The rightmost tile hovered, raised half its height.
+        tiles[9].1 = 470;
+        let data = table(800, 580, 0, &tiles, w, h);
         let layout = find(&data, 800, 580).unwrap();
         assert_near(&layout.tiles(), &tiles, h);
     }

@@ -16,7 +16,8 @@ type TileView = { tile: string; doubt: "small" | "unsure" | null };
 // A tile on the table as read; `tile` is null for a tile face down.
 type TableTile = { tile: string | null; sideways: boolean; added: string | null; doubt: boolean };
 type TableView = { rivers: TableTile[][]; melds: TableTile[][][] };
-// The round, the player's wind and the numbers on the table; each null when not read.
+// The round, the player's wind and the numbers on the table, each null when not read, and
+// the action buttons shown, left to right.
 type GameView = {
   round: string | null;
   seatWind: string | null;
@@ -24,8 +25,27 @@ type GameView = {
   tilesLeft: number | null;
   honba: number | null;
   riichiSticks: number | null;
+  buttons: string[];
 };
 type OptionView = { discard: string; shanten: number; ukeireCount: number };
+// One way to call (#11): the two tiles from the hand, the discard after it and where the
+// hand then stands, and the yaku still within reach.
+type CallOptionView = {
+  kind: "chi" | "pon";
+  with: string[];
+  discard: string;
+  shanten: number;
+  ukeireCount: number;
+  yaku: string[];
+};
+// Whether and how to call the discard on offer; `take` is null to let it go.
+type CallView = {
+  called: string;
+  stayShanten: number;
+  stayUkeireCount: number;
+  options: CallOptionView[];
+  take: number | null;
+};
 type Advice = {
   seq: number;
   tiles: TileView[];
@@ -39,6 +59,7 @@ type Advice = {
   seen: number | null;
   table: TableView | null;
   game: GameView | null;
+  call: CallView | null;
   times: {
     settleMs: number;
     findMs: number;
@@ -91,8 +112,16 @@ function statusText(status: Status | null, models: string | null): string {
 }
 
 const WINDS: Record<string, string> = { E: "东", S: "南", W: "西", N: "北" };
+const BUTTONS: Record<string, string> = {
+  chi: "吃",
+  pon: "碰",
+  kan: "杠",
+  ron: "和",
+  riichi: "立直",
+  tsumo: "自摸",
+};
 
-// 东2局 · 自风 北 · 余 45 · 1 本场 · 供托 0, leaving out what was not read.
+// 东2局 · 自风 北 · 余 45 · 1 本场 · 供托 0 · 可以 碰 杠, leaving out what was not read.
 function gameText(game: GameView): string {
   const parts = [];
   if (game.round) parts.push(`${WINDS[game.round[0]] ?? "?"}${game.round.slice(1)}局`);
@@ -100,7 +129,39 @@ function gameText(game: GameView): string {
   if (game.tilesLeft !== null) parts.push(`余 ${game.tilesLeft}`);
   if (game.honba !== null) parts.push(`${game.honba} 本场`);
   if (game.riichiSticks !== null) parts.push(`供托 ${game.riichiSticks}`);
+  if (game.buttons.length > 0) {
+    parts.push(`可以 ${game.buttons.map((b) => BUTTONS[b] ?? b).join(" ")}`);
+  }
   return parts.join(" · ");
+}
+
+const CALLS: Record<string, string> = { chi: "吃", pon: "碰" };
+const YAKU: Record<string, string> = { yakuhai: "役牌", tanyao: "断幺", honitsu: "混一色", toitoi: "对对和" };
+
+// 吃 3p（4p5p）→ 打 F · 1 向听 11 张 · 断幺
+function callText(called: string, o: CallOptionView): string {
+  const yaku = o.yaku.length > 0 ? o.yaku.map((y) => YAKU[y] ?? y).join(" ") : "无役";
+  return `${CALLS[o.kind]} ${name(called)}（${o.with.map(name).join("")}）→ 打 ${name(o.discard)} · ${shantenText(o.shanten)} ${o.ukeireCount} 张 · ${yaku}`;
+}
+
+// The call to take, or to let the discard go, then the other ways to call it.
+function CallAdvice({ call }: { call: CallView }) {
+  const take = call.take === null ? null : call.options[call.take];
+  const stay = `不鸣 ${name(call.called)} · ${shantenText(call.stayShanten)} ${call.stayUkeireCount} 张`;
+  const others = call.options.filter((_, i) => i !== call.take);
+  return (
+    <>
+      <p className={take ? "call take" : "call"}>{take ? `✓ ${callText(call.called, take)}` : `✗ ${stay}`}</p>
+      {(others.length > 0 || take) && (
+        <p className="options">
+          {take && <span>{stay}</span>}
+          {others.map((o) => (
+            <span key={`${o.kind}${o.with.join("")}`}>{callText(call.called, o)}</span>
+          ))}
+        </p>
+      )}
+    </>
+  );
 }
 
 // Seats in turn order from the player, as the table view lists them.
@@ -292,6 +353,7 @@ function App() {
             )}
             {advice.seen !== null && <span className="muted-inline">已见 {advice.seen} 张</span>}
           </p>
+          {advice.call && <CallAdvice call={advice.call} />}
           {advice.game && gameText(advice.game) && <p className="game">{gameText(advice.game)}</p>}
           {advice.options.length > 1 && (
             <p className="options">

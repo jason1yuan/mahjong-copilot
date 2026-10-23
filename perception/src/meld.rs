@@ -29,6 +29,11 @@ use crate::table::{Seat, Table};
 const MAX_GAP: f64 = 0.45;
 /// Share of a place that must be tile-coloured, not table, for a face-down tile.
 const MIN_BACK: f64 = 0.6;
+/// Most space, in tile widths, between a tile added to a kan and the sideways tile under it.
+const MAX_STACK_GAP: f64 = 0.3;
+/// Longest side a face may have, in tile widths, to be a tile: the perspective stretches
+/// tiles to about 1.8.
+const MAX_SIZE: f64 = 2.5;
 /// Width of a tile lying face down, in tile widths.
 const BACK_WIDTH: f64 = 0.95;
 /// Least pixels per tile width the band is rectified at.
@@ -91,39 +96,34 @@ pub fn rectify(frame: &FrameView<'_>, table: &Table, layout: &MeldLayout, seat: 
 pub fn find_strip(view: &MeldView, layout: &MeldLayout, face: TileFace) -> Vec<MeldSlot> {
     let s = view.scale;
     let found = faces::find(&view.image, face, s);
+    let wide = |f: &Face| f64::from(f.width()) > faces::SIDEWAYS_MIN_WIDTH * s;
 
-    // Pair each added tile with the sideways tile under it.
-    let sideways: Vec<&Face> = found
+    // A wide face lying right on another wide face is the tile added to a kan; it goes with
+    // the one under it and is not a slot of its own. A face further up (a river tile at the
+    // band's edge) is not.
+    let stacked = |upper: &Face, lower: &Face| {
+        upper != lower
+            && wide(upper)
+            && wide(lower)
+            && overlap(upper, lower) > 0.5
+            && upper.top < lower.top
+            && f64::from(lower.top) - f64::from(upper.bottom) <= MAX_STACK_GAP * s
+    };
+    let mut slots: Vec<MeldSlot> = found
         .faces
         .iter()
-        .filter(|f| found.is_sideways(f))
-        .collect();
-    let mut slots: Vec<MeldSlot> = Vec::new();
-    for f in &found.faces {
-        let is_sideways = found.is_sideways(f);
-        let below = is_sideways.then(|| {
-            sideways
-                .iter()
-                .find(|o| **o != f && overlap(f, o) > 0.5 && o.top > f.top)
-        });
-        if below.flatten().is_some() {
-            continue; // the added tile of the one below
-        }
-        let added = is_sideways
-            .then(|| {
-                sideways
-                    .iter()
-                    .find(|o| **o != f && overlap(f, o) > 0.5 && o.top < f.top)
-                    .map(|o| **o)
-            })
-            .flatten();
-        slots.push(MeldSlot {
+        .filter(|f| {
+            // Something far bigger than a tile (an arm in a cut-in) is not one.
+            f64::from(f.width().max(f.height())) <= MAX_SIZE * s
+                && !found.faces.iter().any(|o| stacked(f, o))
+        })
+        .map(|f| MeldSlot {
             face: *f,
             back: false,
-            sideways: is_sideways,
-            added,
-        });
-    }
+            sideways: false,
+            added: found.faces.iter().find(|o| stacked(o, f)).copied(),
+        })
+        .collect();
     slots.sort_by_key(|slot| std::cmp::Reverse(slot.face.right));
 
     // Walk leftwards from the rightmost tile near the band's right end.
@@ -188,6 +188,20 @@ pub fn find_strip(view: &MeldView, layout: &MeldLayout, face: TileFace) -> Vec<M
         });
     }
 
+    // Sideways is judged against the strip's own tallest tile, which stands upright: the band
+    // also holds other faces (river tiles, the hand's backs) whose heights would skew the
+    // view's, and with the perspective upright tiles can come out as wide as sideways ones.
+    let upright_height = strip
+        .iter()
+        .filter(|slot| !slot.back)
+        .map(|slot| f64::from(slot.face.height()))
+        .fold(0.0, f64::max);
+    for slot in strip.iter_mut().filter(|slot| !slot.back) {
+        slot.sideways = faces::is_sideways(&slot.face, s, upright_height);
+        if !slot.sideways {
+            slot.added = None;
+        }
+    }
     strip
 }
 
@@ -416,6 +430,57 @@ mod tests {
         let called = strip[1];
         assert!(called.sideways);
         assert_eq!(called.added.map(|a| a.top), Some(6));
+    }
+
+    #[test]
+    fn faces_off_the_strip_change_nothing() {
+        let mut image = band();
+        // A pon called from across...
+        fill(&mut image, 232, 20, 18, 26, FACE);
+        fill(&mut image, 205, 27, 26, 19, FACE);
+        fill(&mut image, 186, 20, 18, 26, FACE);
+        // ...a light face at the band's edge above the called tile, not added to it...
+        fill(&mut image, 205, 0, 26, 19, FACE);
+        // ...and low faces far to the left, more of them than upright tiles in the strip.
+        for x in [10, 45, 80] {
+            fill(&mut image, x, 40, 26, 19, FACE);
+        }
+        let view = MeldView { image, scale: S };
+        let strip = find_strip(&view, &layout(), face());
+        let sideways: Vec<bool> = strip.iter().map(|t| t.sideways).collect();
+        assert_eq!(sideways, [false, true, false]);
+        assert_eq!(strip[1].added, None);
+    }
+
+    #[test]
+    fn upright_tiles_as_wide_as_sideways_ones() {
+        let mut image = band();
+        // With the perspective, upright tiles near the band's end come out wide too...
+        fill(&mut image, 226, 20, 24, 26, FACE);
+        fill(&mut image, 201, 20, 24, 26, FACE);
+        fill(&mut image, 170, 28, 30, 18, FACE);
+        // ...and the band's other faces are mostly low ones (the hand's backs).
+        for x in [10, 40, 70, 100] {
+            fill(&mut image, x, 50, 20, 11, FACE);
+        }
+        let view = MeldView { image, scale: S };
+        let strip = find_strip(&view, &layout(), face());
+        let sideways: Vec<bool> = strip.iter().map(|t| t.sideways).collect();
+        assert_eq!(sideways, [false, false, true]);
+    }
+
+    #[test]
+    fn something_far_bigger_than_a_tile_is_not_one() {
+        let mut image = band();
+        fill(&mut image, 232, 20, 18, 26, FACE);
+        fill(&mut image, 205, 27, 26, 19, FACE);
+        fill(&mut image, 186, 20, 18, 26, FACE);
+        // An arm reaching in from a cut-in, touching the meld.
+        fill(&mut image, 100, 0, 85, 68, FACE);
+        let view = MeldView { image, scale: S };
+        let strip = find_strip(&view, &layout(), face());
+        let sideways: Vec<bool> = strip.iter().map(|t| t.sideways).collect();
+        assert_eq!(sideways, [false, true, false]);
     }
 
     #[test]

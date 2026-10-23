@@ -24,6 +24,7 @@
 use image::RgbImage;
 
 use crate::capture::FrameView;
+use crate::faces;
 use crate::profile::{HandGeometry, TileFace};
 
 /// A tile's box in frame pixels; `right` and `bottom` are exclusive.
@@ -275,7 +276,7 @@ impl HandFinder {
         self.mask[y * self.width + x]
     }
 
-    /// Light grey pixels. The brightness bar follows the frame's brightest greys when the
+    /// Light grey or tinted pixels. The brightness bar follows the frame's brightest greys when the
     /// picture is darker than usual, but is never stricter than the profile's.
     fn build_mask(&mut self, frame: &FrameView<'_>, face: TileFace) {
         let (w, h) = (self.width, self.height);
@@ -288,12 +289,13 @@ impl HandFinder {
             for x in 0..w {
                 let [r, g, b] = frame.rgb(x as u32, y as u32);
                 let mean = (f32::from(r) + f32::from(g) + f32::from(b)) / 3.0;
-                let is_grey = r.max(g).max(b) - r.min(g).min(b) < face.max_spread;
+                let spread = r.max(g).max(b) - r.min(g).min(b);
+                let is_grey = spread < face.max_spread;
                 if is_grey {
                     histogram[mean as usize] += 1;
                     greys += 1;
                 }
-                grey.push(is_grey);
+                grey.push(is_grey || faces::is_tinted(r, g, b, face));
                 self.mean.push(mean);
             }
         }
@@ -347,10 +349,11 @@ impl HandFinder {
         );
         // Plain light strips (window borders) have no symbols.
         groups.retain(|&(g0, g1)| self.contrast(g0, g1, y0 + band / 10, y1 - band / 10) > 12.0);
-        let widest = *groups.iter().max_by_key(|(a, b)| b - a)?;
-        if ((widest.1 - widest.0) as f32) < 2.5 * MIN_ASPECT * band as f32 {
-            return None;
-        }
+        // The concealed hand is the leftmost row of tiles: the melds to its right can be
+        // longer once there are a few of them.
+        let widest = *groups
+            .iter()
+            .find(|(a, b)| ((b - a) as f32) >= 2.5 * MIN_ASPECT * band as f32)?;
 
         let seams = self.seam_profile(y0, y1);
         // Clearly tile: a run of these marks a real tile edge.
@@ -503,9 +506,38 @@ impl HandFinder {
         top
     }
 
+    /// Bottom of a tile's face: scanning up from below the band to the first light row, the
+    /// face's plain bottom margin. `None` when the row below the band is light too, so the
+    /// bottom is not in sight.
+    fn tile_bottom(&self, x0: usize, x1: usize, y1: usize, band: usize) -> Option<usize> {
+        let (ix0, ix1) = (x0 + (x1 - x0) / 6, x1 - (x1 - x0) / 6);
+        let light = |y: usize| {
+            let n = ix1.saturating_sub(ix0);
+            n > 0 && (ix0..ix1).filter(|&x| self.at(x, y)).count() as f32 > 0.25 * n as f32
+        };
+        let start = (y1 + band / 10).min(self.height - 1);
+        if light(start) {
+            return None;
+        }
+        (y1.saturating_sub(band / 2)..start)
+            .rev()
+            .find(|&y| light(y))
+            .map(|y| y + 1)
+    }
+
     fn tile_box(&self, left: usize, right: usize, y0: usize, band: usize) -> TileBox {
-        let top = self.tile_top(left, right, y0, band);
         let height = self.expect.map_or(band, |e| e.height as usize);
+        // A hovered tile rises by up to a third of its height. Scanning up from inside the
+        // band then starts among its symbols, where a level stroke (一, the top of 伍) looks
+        // like the dark edge above the face; its bottom rises with it, below a plain margin.
+        let scanned = self.tile_top(left, right, y0, band);
+        let top = match self
+            .tile_bottom(left, right, y0 + band, band)
+            .map(|bottom| bottom.saturating_sub(height))
+        {
+            Some(raised) if raised + band / 12 < scanned => raised,
+            _ => scanned,
+        };
         TileBox {
             left: left as u32,
             top: top as u32,
@@ -649,6 +681,23 @@ mod tests {
     }
 
     #[test]
+    fn tiles_tinted_pink_are_part_of_the_hand() {
+        let (w, h) = (40, 60);
+        let tiles = row(100, 13, w, 500);
+        let mut data = table(800, 580, 0, &tiles, w, h);
+        // The first two are of the kind under the mouse.
+        let [r, g, b] = TILE;
+        for (i, px) in data.as_chunks_mut::<4>().0.iter_mut().enumerate() {
+            let x = i as u32 % 800;
+            if x < 100 + 2 * w && px[..3] == [b, g, r] {
+                px[..3].copy_from_slice(&[163, 166, 209]);
+            }
+        }
+        let layout = find(&data, 800, 580).unwrap();
+        assert_near(&layout.tiles(), &tiles, h);
+    }
+
+    #[test]
     fn ignores_a_toolbar_and_keeps_a_raised_tile() {
         let (w, h) = (40, 60);
         let mut tiles = row(100, 13, w, 500);
@@ -667,6 +716,34 @@ mod tests {
         let layout = find(&data, 800, 580).unwrap();
         assert_eq!(layout.drawn, None);
         assert_near(&layout.tiles(), &tiles[..10], h);
+    }
+
+    #[test]
+    fn a_short_hand_left_of_longer_melds_is_the_hand() {
+        let (w, h) = (40, 60);
+        // Three melds leave four tiles in hand; the melds' row is longer.
+        let mut tiles = row(60, 4, w, 500);
+        tiles.extend(row(300, 10, w, 500));
+        let data = table(800, 580, 0, &tiles, w, h);
+        let layout = find(&data, 800, 580).unwrap();
+        assert_near(&layout.tiles(), &tiles[..4], h);
+    }
+
+    #[test]
+    fn a_tile_raised_far_is_found_from_its_bottom() {
+        let (w, h) = (40, 60);
+        let mut tiles = row(100, 13, w, 500);
+        // Hovered a third of its height up, with a level stroke where the scan would start.
+        tiles[5].1 = 480;
+        let mut data = table(800, 580, 0, &tiles, w, h);
+        for y in 484..492 {
+            for x in 300..336 {
+                let i = (y * 800 + x) * 4;
+                data[i..i + 3].copy_from_slice(&[40, 40, 40]);
+            }
+        }
+        let layout = find(&data, 800, 580).unwrap();
+        assert_near(&layout.tiles(), &tiles, h);
     }
 
     #[test]

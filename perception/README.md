@@ -73,7 +73,7 @@ cargo run -p mahjong-perception --release --example eval_cache -- recordings/sou
 
 - `table`：牌桌的透视变换。`Table::new` 用适配包里 `table.corners` 和这一帧的游戏区域算出桌面到画面的变换，四家（`Seat`：自家、下家、对家、上家）各一个；`rectify` 把某一家的一块桌面重采样成从那一家看过去的正面图
 - `river`：读四家牌河。`rectify` 按 `river` 版面校正出每家的牌河，`find_tiles` 按牌面切牌（行、横放），`crop` 取出转正的牌图，`read` 用每家自己的模板缓存（`Zone::River`）认牌
-- `faces`：在校正后的正面图里找牌面（浅色、灰或粉、够大、不在别的牌面里面），判断横放，牌河和副露共用
+- `faces`：在校正后的正面图里找牌面（浅色、灰或染成粉色 / 浅蓝色、够大、不在别的牌面里面），判断横放，牌河和副露共用；手牌也用它的染色规则
 - `meld`：读四家副露。`rectify` 校正出每家的副露带子，`find_strip` 从右往左找出牌（含横放、加杠叠上的牌、扣着的牌），`group` 按牌本身分成一副副，`read` 用每家自己的模板缓存（`Zone::Meld`）认牌
 - `dora`：在左上角找宝牌指示框，`find` 找出翻开的格子，`read` 用自己的模板缓存（`Zone::Dora`）认牌
 - `snapshot`：一帧里的牌桌（四家牌河、副露、宝牌指示）一起读出来（`Snapshot`），并检查它和手牌能不能同时成立（每种最多 4 张、每种花色最多一张赤五）；监视线程（`watch`）用它

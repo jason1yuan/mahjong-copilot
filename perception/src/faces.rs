@@ -1,9 +1,10 @@
 //! Tile faces in a rectified view of the table (#8), where tiles are upright and about
 //! `scale` pixels wide: the rivers and melds are both read this way.
 //!
-//! - A face is light and grey, or tinted pink: the game tints tiles of the kind under the
-//!   mouse. The right and across seats get less light, and the whole table dims at times,
-//!   so "light" follows each view's lightest greys.
+//! - A face is light and grey, or tinted pink or light blue: the game tints tiles of the
+//!   kind under the mouse. The right and across seats get less light, the whole table dims
+//!   at times, and the game greys some discards, so "light" reaches well below each view's
+//!   lightest greys.
 //! - Light patches inside a face (the middle of a ring of circles) and specks smaller than a
 //!   tile are not faces.
 //! - A face wider and lower than the upright ones lies sideways (riichi, or the called tile
@@ -14,10 +15,14 @@ use image::RgbImage;
 
 use crate::profile::TileFace;
 
-/// How much more the pink tint spreads a face's channels than the profile allows.
-const TINT_SPREAD: u8 = 15;
+/// How much more the pink tint spreads a face's channels than the profile allows...
+const PINK_SPREAD: u8 = 15;
+/// ...and the blue one.
+const BLUE_SPREAD: u8 = 25;
+/// Most a pink-tinted face's green and blue differ.
+const PINK_GREEN_BLUE: u8 = 12;
 /// In a darker view, faces are the greys within this of the lightest one...
-const LIGHT_MARGIN: u8 = 25;
+const LIGHT_MARGIN: u8 = 60;
 /// ...but never darker than this, so an empty view does not make the table a face.
 const MIN_LIGHT: u8 = 130;
 /// Share of grey pixels lighter than "the lightest grey", so stray specks do not count.
@@ -72,24 +77,29 @@ pub struct Faces {
 }
 
 impl Faces {
-    /// Whether `face` lies sideways.
+    /// Whether `face` lies sideways, measured against the whole view's upright faces.
     pub fn is_sideways(&self, face: &Face) -> bool {
-        f64::from(face.width()) > SIDEWAYS_MIN_WIDTH * self.scale
-            && f64::from(face.height()) < SIDEWAYS_MAX_HEIGHT * self.upright_height
+        is_sideways(face, self.scale, self.upright_height)
     }
+}
+
+/// Whether `face` lies sideways in a view of `scale` pixels per tile width, next to upright
+/// faces `upright_height` pixels high.
+pub fn is_sideways(face: &Face, scale: f64, upright_height: f64) -> bool {
+    f64::from(face.width()) > SIDEWAYS_MIN_WIDTH * scale
+        && f64::from(face.height()) < SIDEWAYS_MAX_HEIGHT * upright_height
 }
 
 /// The tile faces in `image`, a view where tiles are about `scale` pixels wide.
 pub fn find(image: &RgbImage, face: TileFace, scale: f64) -> Faces {
     let (width, height) = image.dimensions();
-    let max_spread = face.max_spread.saturating_add(TINT_SPREAD);
     let light = face_light(image, face);
     let mask: Vec<bool> = image
         .pixels()
         .map(|p| {
             let [r, g, b] = p.0;
             let (hi, lo) = (r.max(g).max(b), r.min(g).min(b));
-            hi >= light && hi - lo <= max_spread
+            hi >= light && (hi - lo <= face.max_spread || is_tinted(r, g, b, face))
         })
         .collect();
     let sized: Vec<Face> = components(&mask, width as usize, height as usize)
@@ -118,6 +128,18 @@ pub fn find(image: &RgbImage, face: TileFace, scale: f64) -> Faces {
         upright_height,
         scale,
     }
+}
+
+/// Whether a pixel is of a tinted face. The game tints tiles pink (red leads, green and blue
+/// stay together) or light blue (blue leads, then green); the green glow around a tile that
+/// can be called and the table's wooden rim (red, then green well above blue) are neither.
+pub(crate) fn is_tinted(r: u8, g: u8, b: u8, face: TileFace) -> bool {
+    let pink = r >= g
+        && r >= b
+        && g.abs_diff(b) <= PINK_GREEN_BLUE
+        && r - g.min(b) <= face.max_spread.saturating_add(PINK_SPREAD);
+    let blue = b >= g && g >= r && b - r <= face.max_spread.saturating_add(BLUE_SPREAD);
+    pink || blue
 }
 
 /// How light a face must be in this view: the profile's bar, or a little below the view's
@@ -219,5 +241,43 @@ mod tests {
                 },
             ]
         );
+    }
+
+    const FACE: TileFace = TileFace {
+        min_brightness: 175,
+        max_spread: 45,
+    };
+
+    /// A row of 20 x 26 tiles on the table, two pixels apart, in the given colours.
+    fn row(colours: &[[u8; 3]]) -> RgbImage {
+        let mut image = RgbImage::from_pixel(200, 40, image::Rgb([54, 73, 115]));
+        for (i, colour) in colours.iter().enumerate() {
+            let left = 5 + 22 * i as u32;
+            for y in 7..33 {
+                for x in left..left + 20 {
+                    image.put_pixel(x, y, image::Rgb(*colour));
+                }
+            }
+        }
+        image
+    }
+
+    #[test]
+    fn greyed_and_tinted_tiles_are_faces() {
+        let image = row(&[
+            [218, 218, 216],
+            [169, 169, 168],
+            [209, 166, 163],
+            [147, 183, 213],
+        ]);
+        assert_eq!(find(&image, FACE, 20.0).faces.len(), 4);
+    }
+
+    #[test]
+    fn the_glow_round_a_tile_to_call_is_not_a_face() {
+        let image = row(&[[218, 218, 216], [150, 210, 170]]);
+        assert_eq!(find(&image, FACE, 20.0).faces.len(), 1);
+        assert!(!is_tinted(150, 210, 170, FACE));
+        assert!(!is_tinted(200, 120, 40, FACE));
     }
 }

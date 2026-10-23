@@ -118,11 +118,12 @@ function tableText(t: TableTile): string {
   return `${face}${t.sideways ? "↻" : ""}${t.added ? `+${short(t.added)}` : ""}${t.doubt ? "?" : ""}`;
 }
 
-// The player's own melds, beside the hand: sideways tiles lie turned.
+// The player's own melds, beside the hand: sideways tiles lie turned. They come in the order
+// they were made, the first at the right on the table, so they are drawn reversed.
 function OwnMelds({ melds }: { melds: TableTile[][] }) {
   return (
     <div className="melds">
-      {melds.map((meld, i) => (
+      {[...melds].reverse().map((meld, i) => (
         <div key={i} className="meld">
           {meld.map((t, j) => (
             <span key={j} className={`meld-tile${t.sideways ? " sideways" : ""}`} title={tableText(t)}>

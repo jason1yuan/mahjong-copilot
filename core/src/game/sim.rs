@@ -82,6 +82,9 @@ pub struct Moment {
 pub struct Game {
     /// The watched seat's log.
     pub log: Vec<Event>,
+    /// For each event of the log, whether it is another player's discard of the tile just
+    /// drawn, which the screen does not tell (#22).
+    pub tsumogiri: Vec<bool>,
     pub moments: Vec<Moment>,
     pub me: u8,
 }
@@ -98,6 +101,7 @@ struct Sim {
     kyoku: u8,
     oya: u8,
     log: Vec<Event>,
+    tsumogiri: Vec<bool>,
     moments: Vec<Moment>,
     /// The watched seat's last draw, shown apart until it discards or melds.
     drawn: Option<Tile>,
@@ -183,6 +187,10 @@ impl Sim {
     /// Logs an event: the watched seat sees others' draws and starting hands as unknown,
     /// and others' discards as from the hand.
     fn emit(&mut self, event: Event) {
+        self.tsumogiri.push(matches!(
+            event,
+            Event::Dahai { actor, tsumogiri: true, .. } if actor != self.me
+        ));
         let event = match event {
             Event::Tsumo { actor, .. } if actor != self.me => Event::Tsumo {
                 actor,
@@ -637,6 +645,7 @@ pub fn play(seed: u64, rounds: u8) -> Game {
         kyoku: 1,
         oya: 0,
         log: Vec::new(),
+        tsumogiri: Vec::new(),
         moments: Vec::new(),
         drawn: None,
         forbidden: Vec::new(),
@@ -653,6 +662,7 @@ pub fn play(seed: u64, rounds: u8) -> Game {
     sim.emit(Event::EndGame);
     Game {
         log: sim.log,
+        tsumogiri: sim.tsumogiri,
         moments: sim.moments,
         me: sim.me,
     }

@@ -4,6 +4,10 @@
 //! to the advice being shown. Assembly only: the reading lives in perception, the advice
 //! in core.
 //!
+//! With the decision model (#22) in the models folder, it also asks Mortal what to do
+//! whenever the state engine has followed the table to a point where the player can act,
+//! and sends that as `mortal` right after the advice, which it comes before in the window.
+//!
 //! The dev build also saves frames for the table evaluation set (#8): a screenshot button
 //! and a switch that saves each frame changing the hand, into `recordings/live/`.
 
@@ -15,7 +19,8 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
 use mahjong_core::calls::{self, CallAdvice, CallContext, CallKind, Yaku};
-use mahjong_core::game::{Engine, Event, MarkKind, Rejected};
+use mahjong_core::game::{Engine, Event, MarkKind, PlayerState, Rejected};
+use mahjong_core::mortal::{Kind, Mortal, Suggestion};
 use mahjong_core::{Tile, TileCounts, outlook, parse_tiles, rank_discards};
 use mahjong_perception::buttons::Button;
 use mahjong_perception::capture::{self, WindowInfo};
@@ -290,6 +295,21 @@ pub struct Pipeline {
     saved: Arc<AtomicU64>,
     /// The state engine (#10) and the file each game's log goes to.
     game: Mutex<GameRecord>,
+    /// The decision model (#22), when it is in the models folder.
+    mortal: Mutex<Option<Mortal>>,
+}
+
+/// Mortal's decision (#22) for advice `seq`, sent as `mortal`.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MortalView {
+    pub seq: u64,
+    pub best: Suggestion,
+    /// When the best is riichi, the discard declaring it.
+    pub riichi_discard: Option<Suggestion>,
+    /// The best discards, best first, when discarding is a choice.
+    pub discards: Vec<Suggestion>,
+    pub decide_ms: f64,
 }
 
 #[derive(Default)]
@@ -384,21 +404,23 @@ impl Pipeline {
     }
 
     /// Starts the pipeline once; later calls do nothing.
-    pub fn start(self: &Arc<Self>, app: AppHandle, model: PathBuf) {
+    /// Starts watching with the tile classifier at `model` and, if given, the decision
+    /// model at `mortal`.
+    pub fn start(self: &Arc<Self>, app: AppHandle, model: PathBuf, mortal: Option<PathBuf>) {
         if self.started.swap(true, Ordering::SeqCst) {
             return;
         }
         let pipeline = Arc::clone(self);
         let spawned = std::thread::Builder::new()
             .name("pipeline".into())
-            .spawn(move || pipeline.supervise(&app, &model));
+            .spawn(move || pipeline.supervise(&app, &model, mortal.as_deref()));
         if let Err(err) = spawned {
             tracing::error!("could not start the pipeline: {err}");
         }
     }
 
     /// Finds the game window, watches it until capture stops, and starts over.
-    fn supervise(self: &Arc<Self>, app: &AppHandle, model: &std::path::Path) {
+    fn supervise(self: &Arc<Self>, app: &AppHandle, model: &Path, mortal: Option<&Path>) {
         mahjong_core::analysis::warm_up();
         let (environment, profiles) = match (ort::init().build(), profile::builtin()) {
             (Ok(environment), Ok(profiles)) => (environment, profiles),
@@ -419,6 +441,15 @@ impl Pipeline {
                 );
             }
         };
+        if let Some(path) = mortal {
+            match Mortal::load(&environment, path).and_then(|mut m| m.warm_up().map(|()| m)) {
+                Ok(m) => {
+                    tracing::info!(path = %path.display(), "decision model loaded");
+                    *lock(&self.mortal) = Some(m);
+                }
+                Err(err) => tracing::warn!("the decision model did not load: {err}"),
+            }
+        }
         loop {
             let Some((window, profile)) = find_window(&profiles) else {
                 self.set_status(app, Status::NoWindow);
@@ -482,8 +513,11 @@ impl Pipeline {
                     sent_ms = advice.times.sent_ms,
                     "advice"
                 );
+                let seq = advice.seq;
                 let sent = app.emit("advice", advice);
-                self.follow(app, &reading);
+                if let Some(state) = self.follow(app, &reading) {
+                    self.consult(app, seq, &state);
+                }
                 sent
             }
             WatchEvent::NoHand => app.emit("advice", None::<Advice>),
@@ -500,11 +534,10 @@ impl Pipeline {
     }
 
     /// Feeds the table to the state engine, after the advice so that it adds nothing to
-    /// its latency, and saves the log when a round or game starts.
-    fn follow(&self, app: &AppHandle, reading: &HandReading) {
-        let Some(table) = &reading.table else {
-            return;
-        };
+    /// its latency, and saves the log when a round or game starts. Returns the player's
+    /// state when the engine took the scene and the player can act on it.
+    fn follow(&self, app: &AppHandle, reading: &HandReading) -> Option<PlayerState> {
+        let table = reading.table.as_ref()?;
         let scene = table.scene(&reading.tiles, reading.drawn);
         let mut game = lock(&self.game);
         let (last, new_round, new_game) = match game.engine.observe(&scene) {
@@ -552,6 +585,44 @@ impl Pipeline {
         };
         if let Err(err) = app.emit("engine", view) {
             tracing::warn!("sending the engine state: {err}");
+        }
+        game.engine
+            .player_state()
+            .filter(|s| last == "taken" && s.last_cans().can_act())
+            .cloned()
+    }
+
+    /// Asks Mortal what to do in `state`, the table of advice `seq`, and sends it.
+    fn consult(&self, app: &AppHandle, seq: u64, state: &PlayerState) {
+        let mut mortal = lock(&self.mortal);
+        let Some(mortal) = mortal.as_mut() else {
+            return;
+        };
+        let start = Instant::now();
+        let decision = match mortal.decide(state) {
+            Ok(decision) => decision,
+            Err(err) => {
+                tracing::warn!("the decision model: {err}");
+                return;
+            }
+        };
+        let discards = decision
+            .choices
+            .iter()
+            .map(|c| c.suggestion())
+            .filter(|s| s.kind == Kind::Discard)
+            .take(OPTIONS)
+            .collect();
+        let view = MortalView {
+            seq,
+            best: decision.best().suggestion(),
+            riichi_discard: decision.riichi_discard.as_ref().map(|c| c.suggestion()),
+            discards,
+            decide_ms: ms(start.elapsed()),
+        };
+        tracing::info!(kind = ?view.best.kind, decide_ms = view.decide_ms, "mortal");
+        if let Err(err) = app.emit("mortal", view) {
+            tracing::warn!("sending the decision: {err}");
         }
     }
 

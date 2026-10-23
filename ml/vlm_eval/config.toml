@@ -94,6 +94,17 @@ repo = "pjura/mahjong_soul_vision"
 revision = "ea01ca0bcb9be0fc10a5fa09ee8356770c25adc5"
 license = "Apache-2.0"
 
+# The decision model (#22): Mortal v4 with the Mortal-S42 weights, converted to ONNX by
+# ml/convert/export_mortal.py. Kept local until distribution is settled.
+[mortal]
+repo = "haor/Mortal-S42"
+revision = "524981f21a929e3c3b269f65af79b84163bd02ca"
+weights = "weights/s42-inference.pth"
+weights_sha256 = "e5f6955b6f19007fd65315e53291b36994493046bc118b991b959e9dc596d660"
+model_code = "runtime/mortal/model.py"
+model_code_sha256 = "217e2d3dc20631c769a57ea3f09ca4fac232430fc28f76b21d5f37cec7bf84f2"
+license = "Apache-2.0 (weights), AGPL-3.0-or-later (model code)"
+
 [mlx_models.qwen3-vl-2b]
 repo = "mlx-community/Qwen3-VL-2B-Instruct-4bit"
 revision = "9c4f5209e57b31f4b9dfba735de3fb983739c9cc"

@@ -8,6 +8,8 @@ publish.workspace = true
 
 [dependencies]
 libriichi-algo.workspace = true
+# The decision model (mortal.rs); its library is fetched at build time, never at run time.
+ort.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

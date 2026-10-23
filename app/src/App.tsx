@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { LogicalSize } from "@tauri-apps/api/dpi";
-import { tileLabel } from "./tile";
+import { ALL_TILES, tileLabel, tilePicture } from "./tile";
 import "./App.css";
 
 // Payloads sent by app/src-tauri/src/pipeline.rs; rendering only.
@@ -94,15 +94,17 @@ function name(mjai: string): string {
   return `${label.rank}${label.suit}${mjai.endsWith("r") ? "（赤）" : ""}`;
 }
 
-function Tile({ view, best }: { view: TileView; best: boolean }) {
-  const label = tileLabel(view.tile);
-  const classes = ["tile", label.red ? "red" : "", best ? "best" : ""].join(" ");
+// A tile in hand: the suggested discard raised in a red frame with an arrow, the second
+// and third choices with a bar under them.
+function Tile({ view, best, choice }: { view: TileView; best: boolean; choice: 2 | 3 | null }) {
+  const classes = ["tile", best ? "best" : ""].join(" ");
+  const title = name(view.tile) + (view.doubt ? "（拿不准）" : "");
   return (
-    <div className={classes} title={view.doubt ? "拿不准" : undefined}>
+    <div className={classes} title={title}>
       {best && <span className="arrow">▼</span>}
-      <span>{label.rank}</span>
-      {label.suit && <small>{label.suit}</small>}
+      <img src={tilePicture(view.tile)} alt={title} draggable={false} />
       {view.doubt && <span className="doubt">?</span>}
+      {choice && <span className={`choice choice-${choice}`} />}
     </div>
   );
 }
@@ -220,8 +222,8 @@ function OwnMelds({ melds }: { melds: TableTile[][] }) {
         <div key={i} className="meld">
           {meld.map((t, j) => (
             <span key={j} className={`meld-tile${t.sideways ? " sideways" : ""}`} title={tableText(t)}>
-              {t.tile === null ? "" : short(t.tile)}
-              {t.added && <small>+</small>}
+              {t.added && <img className="added" src={tilePicture(t.added)} alt="" draggable={false} />}
+              <img src={tilePicture(t.tile)} alt={tableText(t)} draggable={false} />
             </span>
           ))}
         </div>
@@ -267,9 +269,24 @@ function WindowButtons() {
 }
 
 // Screenshot button and recording switch for the table evaluation set; dev build only.
+// Every tile picture with its mjai name, to check them in both themes; dev build only.
+function TileSheet() {
+  return (
+    <div className="tile-sheet">
+      {[...ALL_TILES, null].map((mjai) => (
+        <figure key={mjai ?? "back"}>
+          <img src={tilePicture(mjai)} alt={mjai ?? "back"} />
+          <figcaption>{mjai ?? "背"}</figcaption>
+        </figure>
+      ))}
+    </div>
+  );
+}
+
 function DebugRecording({ initial }: { initial: Recording }) {
   const [recording, setRecording] = useState(initial);
   const [error, setError] = useState<string | null>(null);
+  const [sheet, setSheet] = useState(false);
 
   useEffect(() => {
     const unlisten = listen<number>("frame-saved", (e) =>
@@ -300,7 +317,12 @@ function DebugRecording({ initial }: { initial: Recording }) {
         连续录制
       </label>
       <span title={recording.dir}>已存 {recording.saved} 张</span>
+      <label>
+        <input type="checkbox" checked={sheet} onChange={(e) => setSheet(e.target.checked)} />
+        牌图
+      </label>
       {error && <span className="dev-error">{error}</span>}
+      {sheet && <TileSheet />}
     </div>
   );
 }
@@ -351,6 +373,16 @@ function App() {
 
   const watching = status?.state === "watching";
   const concealed = advice ? advice.tiles.length - (advice.drawn ? 1 : 0) : 0;
+  // The second and third choices of discard, by their place in the hand.
+  const choices = new Map<number, 2 | 3>();
+  advice?.options.slice(1, 3).forEach((o, k) => {
+    for (let i = advice.tiles.length - 1; i >= 0; i--) {
+      if (advice.tiles[i].tile === o.discard && i !== advice.discard) {
+        choices.set(i, k === 0 ? 2 : 3);
+        break;
+      }
+    }
+  });
 
   return (
     <main className="panel">
@@ -366,7 +398,7 @@ function App() {
           <div className="hand">
             {advice.tiles.map((view, i) => (
               <div key={i} className={i === concealed ? "drawn" : undefined}>
-                <Tile view={view} best={i === advice.discard} />
+                <Tile view={view} best={i === advice.discard} choice={choices.get(i) ?? null} />
               </div>
             ))}
             {advice.table && advice.table.melds[0].length > 0 && <OwnMelds melds={advice.table.melds[0]} />}
@@ -381,8 +413,17 @@ function App() {
               </span>
             )}
             {advice.dora.length > 0 && (
-              <span>
-                宝牌指示 {advice.dora.map((d) => name(d.tile) + (d.doubt ? "?" : "")).join(" ")}
+              <span className="dora">
+                宝牌指示
+                {advice.dora.map((d, i) => (
+                  <img
+                    key={i}
+                    src={tilePicture(d.tile)}
+                    alt={name(d.tile)}
+                    title={name(d.tile) + (d.doubt ? "（拿不准）" : "")}
+                    draggable={false}
+                  />
+                ))}
               </span>
             )}
             {advice.seen !== null && <span className="muted-inline">已见 {advice.seen} 张</span>}

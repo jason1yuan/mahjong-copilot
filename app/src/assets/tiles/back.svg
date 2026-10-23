@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A tile lying face down, drawn for mahjong-copilot: the same size and frame as the
+     faces from lietxia/mahjong_graphic, in plain green. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19 26">
+  <rect x=".12" y=".12" width="18.75" height="25.75" rx="1.88" ry="1.88" fill="#3d8b5a"/>
+  <rect x="1.6" y="1.6" width="15.8" height="22.8" rx="1.1" ry="1.1" fill="none" stroke="#5fae7c" stroke-width=".5"/>
+  <path fill="#2b6b43" d="M17,.25c.96,0,1.75,.79,1.75,1.75V24c0,.96-.79,1.75-1.75,1.75H2c-.96,0-1.75-.79-1.75-1.75V2C.25,1.04,1.04,.25,2,.25h15m0-.25H2C.9,0,0,.9,0,2V24c0,1.1,.9,2,2,2h15c1.1,0,2-.9,2-2V2c0-1.1-.9-2-2-2h0Z"/>
+</svg>

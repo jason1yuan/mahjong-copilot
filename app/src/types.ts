@@ -41,6 +41,8 @@ export type EngineView = {
   filled: boolean;
   gaps: number;
   last: "taken" | "covered" | "unexplained" | "impossible";
+  // Text recognition fails even after starting it again: no round or scores (#49).
+  textFailing: boolean;
   recent: string[];
 };
 // Whether and how to call the discard on offer; `take` is null to let it go. `from` is

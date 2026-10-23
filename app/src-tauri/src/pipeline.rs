@@ -28,6 +28,7 @@ use mahjong_perception::capture::{self, WindowInfo};
 use mahjong_perception::profile::{self, Profile};
 use mahjong_perception::snapshot::{self, Snapshot};
 use mahjong_perception::table::Seat;
+use mahjong_perception::text;
 use mahjong_perception::{
     Doubt, FrameTap, HandReading, Recognition, Recorder, WatchEvent, Watcher,
 };
@@ -428,6 +429,9 @@ pub struct EngineView {
     pub gaps: usize,
     /// How the last scene went: `taken`, `covered`, `unexplained` or `impossible`.
     pub last: &'static str,
+    /// Text recognition fails even in a fresh helper: the round and scores cannot be read
+    /// until the app restarts, unless a later retry works (#49).
+    pub text_failing: bool,
     /// The game log's latest events, newest first, each after its index (dev build).
     pub recent: Vec<String>,
 }
@@ -546,6 +550,15 @@ impl Pipeline {
                 Err(err) => tracing::warn!("the decision model did not load: {err}"),
             }
         }
+        // Labels are read in a helper process, this executable started again, which is
+        // replaced when the system's text recognition breaks down (#49).
+        let text = match std::env::current_exe() {
+            Ok(exe) => text::helper(exe),
+            Err(err) => {
+                tracing::warn!("no text recognition: cannot find this executable: {err}");
+                None
+            }
+        };
         loop {
             let Some((window, profile)) = find_window(&profiles) else {
                 self.set_status(app, Status::NoWindow);
@@ -556,12 +569,19 @@ impl Pipeline {
             let pipeline = Arc::clone(self);
             let events = app.clone();
             let game = profile.name.clone();
-            let watcher = Watcher::start(&environment, model, &window, profile, move |event| {
-                if matches!(event, WatchEvent::Stopped) {
-                    let _ = stopped.send(());
-                }
-                pipeline.handle(&events, event);
-            });
+            let watcher = Watcher::start(
+                &environment,
+                model,
+                &window,
+                profile,
+                text.clone(),
+                move |event| {
+                    if matches!(event, WatchEvent::Stopped) {
+                        let _ = stopped.send(());
+                    }
+                    pipeline.handle(&events, event);
+                },
+            );
             match watcher {
                 Ok(watcher) => {
                     let tap = watcher.tap();
@@ -686,6 +706,7 @@ impl Pipeline {
                 g.marks.iter().filter(|m| m.kind == MarkKind::Gap).count()
             }),
             last,
+            text_failing: reading.text_failing,
             recent: current.map_or_else(Vec::new, |g| {
                 let first = g.events.len().saturating_sub(RECENT);
                 g.events[first..]

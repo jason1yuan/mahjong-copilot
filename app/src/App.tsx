@@ -517,6 +517,7 @@ function App() {
   }
 
   const notes: string[] = [];
+  if (engine?.textFailing) notes.push("文字识别失效，读不到局数和分数，请重启");
   const statusLine = statusNote(status, models);
   if (statusLine && advice) notes.push(statusLine);
   if (engine?.filled) notes.push("这一局是中途开始看的，前面是补出的，Mortal 的建议可能偏弱");

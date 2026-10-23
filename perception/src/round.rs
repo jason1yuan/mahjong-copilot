@@ -235,7 +235,8 @@ impl RoundReader {
         let lines = match text.read_text(label) {
             Ok(lines) => lines,
             Err(err) => {
-                tracing::warn!("reading the round label: {err}");
+                // At debug: the helper warns once for a run of failures (#49).
+                tracing::debug!("reading the round label: {err}");
                 return None;
             }
         };

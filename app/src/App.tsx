@@ -46,6 +46,8 @@ type EngineView = {
   filled: boolean;
   gaps: number;
   last: "taken" | "covered" | "unexplained" | "impossible";
+  // Text recognition fails even after starting it again: no round or scores (#49).
+  textFailing: boolean;
 };
 // Whether and how to call the discard on offer; `take` is null to let it go.
 type CallView = {
@@ -489,6 +491,7 @@ function App() {
           </p>
           {advice.call && <CallAdvice call={advice.call} />}
           {advice.game && gameText(advice.game) && <p className="game">{gameText(advice.game)}</p>}
+          {engine?.textFailing && <p className="error">文字识别失效，读不到局数和分数，请重启</p>}
           {engine && <EngineLine engine={engine} dev={recording !== null} />}
           {advice.options.length > 1 && (
             <p className="options">

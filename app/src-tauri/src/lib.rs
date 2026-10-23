@@ -127,7 +127,7 @@ fn set_recording(
     pipeline.set_recording(&app, on)
 }
 
-pub fn run() -> tauri::Result<()> {
+fn init_logging() {
     tracing_subscriber::fmt()
         .with_env_filter(
             EnvFilter::try_from_default_env()
@@ -135,6 +135,22 @@ pub fn run() -> tauri::Result<()> {
                 .unwrap_or_else(|_| EnvFilter::new("info,ort=warn")),
         )
         .init();
+}
+
+/// Whether this process was started as the text recognition helper (#49).
+pub fn is_text_helper() -> bool {
+    std::env::args().nth(1).as_deref() == Some(mahjong_perception::text::HELPER_ARG)
+}
+
+/// The text recognition helper's whole life, instead of [`run`]: reads labels for the app
+/// that started it until the app closes its stdin.
+pub fn serve_text_helper() -> std::io::Result<()> {
+    init_logging();
+    mahjong_perception::text::serve()
+}
+
+pub fn run() -> tauri::Result<()> {
+    init_logging();
     let builder = tauri::Builder::default();
     #[cfg(target_os = "macos")]
     let builder = builder.plugin(tauri_nspanel::init());

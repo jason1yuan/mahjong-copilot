@@ -257,14 +257,15 @@ impl NumberReader {
         self.recognized_by.get(&field).copied().unwrap_or(0)
     }
 
-    /// The whole picture through text recognition; `None` (logged) when that fails.
+    /// The whole picture through text recognition; `None` when that fails.
     fn recognize(&mut self, field: Field, picture: &RgbImage) -> Option<Vec<String>> {
         let text = self.text.as_mut()?;
         *self.recognized_by.entry(field).or_default() += 1;
         match text.read_text(picture) {
             Ok(lines) => Some(lines),
             Err(err) => {
-                tracing::warn!("reading {field:?}: {err}");
+                // At debug: the helper warns once for a run of failures (#49).
+                tracing::debug!("reading {field:?}: {err}");
                 None
             }
         }

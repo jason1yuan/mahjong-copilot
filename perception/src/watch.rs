@@ -33,7 +33,7 @@ use crate::record::Recorder;
 use crate::round::RoundReader;
 use crate::snapshot::{self, Snapshot};
 use crate::table::Seat;
-use crate::text;
+use crate::text::{self, ReadText};
 
 /// The whole window, watched until the hand is found.
 const WHOLE: Region = Region {
@@ -80,6 +80,9 @@ pub struct HandReading {
     pub table: Option<Snapshot>,
     /// Frame size in pixels.
     pub frame: (u32, u32),
+    /// Text recognition fails even in a fresh helper, so the round, scores and other
+    /// labels cannot be read (#49).
+    pub text_failing: bool,
     pub timings: Timings,
 }
 
@@ -126,22 +129,27 @@ fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
 }
 
 impl Watcher {
-    /// Starts watching `window`. The model is loaded and capture started before this
-    /// returns, so those errors come back here; `on_event` then runs on the watcher thread.
+    /// Starts watching `window`, reading labels with `text` (`None`: no text recognition
+    /// on this platform). The model is loaded and capture started before this returns, so
+    /// those errors come back here; `on_event` then runs on the watcher thread.
     pub fn start(
         environment: &Environment,
         model: &Path,
         window: &WindowInfo,
         profile: Profile,
+        text: Option<text::Helper>,
         on_event: impl FnMut(WatchEvent) + Send + 'static,
     ) -> Result<Self, WatchError> {
         let mut classifier = TileClassifier::load(environment, model)?;
         classifier.warm_up()?;
         let recognizer = TileRecognizer::new(classifier);
         // Text recognition loads on first use; get that done while the hand is looked for.
-        std::thread::Builder::new()
-            .name("text-warm-up".into())
-            .spawn(text::warm_up)?;
+        if let Some(text) = text.clone() {
+            std::thread::Builder::new()
+                .name("text-warm-up".into())
+                .spawn(move || text.warm_up())?;
+        }
+        let boxed = |text: &text::Helper| Box::new(text.clone()) as Box<dyn ReadText>;
         let latest = Arc::new(LatestFrame::new());
         let session = {
             let latest = Arc::clone(&latest);
@@ -162,8 +170,9 @@ impl Watcher {
             let recorder = Arc::clone(&tap.recorder);
             let mut state = State {
                 recognizer,
-                rounds: RoundReader::new(text::system()),
-                numbers: NumberReader::new(text::system()),
+                rounds: RoundReader::new(text.as_ref().map(boxed)),
+                numbers: NumberReader::new(text.as_ref().map(boxed)),
+                text,
                 tracker: HandTracker::new(),
                 profile,
                 detector: ChangeDetector::new(&[WHOLE]),
@@ -279,6 +288,8 @@ struct State {
     recognizer: TileRecognizer,
     rounds: RoundReader,
     numbers: NumberReader,
+    /// What `rounds` and `numbers` read with, to tell when it fails.
+    text: Option<text::Helper>,
     tracker: HandTracker,
     profile: Profile,
     detector: ChangeDetector,
@@ -426,6 +437,7 @@ impl State {
             drawn: layout.drawn.is_some(),
             table,
             frame: (view.width(), view.height()),
+            text_failing: self.text.as_ref().is_some_and(text::Helper::failing),
             timings: Timings {
                 still_since,
                 settled,

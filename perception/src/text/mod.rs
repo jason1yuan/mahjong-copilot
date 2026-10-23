@@ -5,9 +5,16 @@
 //!
 //! Only small crops of fixed labels are read, and only when they change (see
 //! `round::RoundReader`), so this is not on the per-frame path.
+//!
+//! The app reads in a helper process ([`Helper`]), which it replaces when the system's
+//! recognition breaks down; the evaluation examples read in their own process
+//! ([`system`]).
 
+mod helper;
 #[cfg(target_os = "macos")]
 mod macos;
+
+pub use helper::{HELPER_ARG, Helper, serve};
 
 use image::RgbImage;
 
@@ -17,6 +24,10 @@ pub enum TextError {
     Encode(#[from] image::ImageError),
     #[error("text recognition failed: {0}")]
     Recognize(String),
+    #[error("the text recognition helper failed: {0}")]
+    Helper(String),
+    #[error("text recognition is failing; skipped until the next retry")]
+    Unavailable,
 }
 
 /// Reads the lines of text in a picture.
@@ -37,6 +48,12 @@ pub fn system() -> Option<Box<dyn ReadText>> {
     {
         None
     }
+}
+
+/// Text recognition in a helper process: `exe` started with [`HELPER_ARG`], which must
+/// call [`serve`]; `None` on a platform without text recognition yet.
+pub fn helper(exe: std::path::PathBuf) -> Option<Helper> {
+    system().is_some().then(|| Helper::new(exe))
 }
 
 /// Runs the system's text recognition once on a blank picture, so the first real reading

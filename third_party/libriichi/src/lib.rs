@@ -3,6 +3,8 @@
 // Modified by mahjong-copilot on 2026-10-22: added back the chi_type, mjai, rankings
 // and state modules (#10), and allowed dead code: without the Python bindings a few
 // helpers they called go unused.
+// Modified by mahjong-copilot on 2026-10-23: added the array and consts modules, which
+// the observation encoding needs (#22); consts is public for the observation shape.
 // The original file is libriichi/src/lib.rs in Equim-chan/Mortal at commit
 // 0cff2b52982be5b1163aa9a62fb01f03ce91e0d2.
 
@@ -101,12 +103,14 @@
     clippy::useless_let_if_seq
 )]
 
+mod array;
 mod macros;
 mod rankings;
 mod vec_ops;
 
 pub mod algo;
 pub mod chi_type;
+pub mod consts;
 pub mod hand;
 pub mod mjai;
 pub mod state;

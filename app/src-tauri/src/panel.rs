@@ -1,5 +1,9 @@
 //! The floating panel (#2): on macOS a panel that leaves the game's window focused when
 //! clicked; ⌥ Space shows and hides it.
+//!
+//! Before the window closes (its close button, or the app quitting) it is turned back
+//! into a plain window, as tauri-nspanel requires: closing it as a panel made WebKit throw
+//! while taking its view off the window, and the app crashed.
 
 use anyhow::Context;
 use tauri::AppHandle;
@@ -23,6 +27,37 @@ pub fn set_up(app: &AppHandle) -> anyhow::Result<()> {
         .register(shortcut)
         .context("registering ⌥ Space")?;
     Ok(())
+}
+
+/// Handles the main window's close request: on macOS, turns the panel back into a window
+/// and closes that instead.
+pub fn on_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
+    #[cfg(target_os = "macos")]
+    {
+        use tauri::Manager;
+        let app = window.app_handle();
+        if let tauri::WindowEvent::CloseRequested { api, .. } = event
+            && macos::unpanel(app, window.label())
+        {
+            api.prevent_close();
+            if let Some(window) = app.get_webview_window(window.label())
+                && let Err(err) = window.close()
+            {
+                tracing::warn!("closing the window: {err}");
+            }
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = (window, event);
+}
+
+/// Turns the panel back into a window before the app quits, so it is not torn down as
+/// a panel either.
+pub fn before_exit(app: &AppHandle) {
+    #[cfg(target_os = "macos")]
+    macos::unpanel(app, "main");
+    #[cfg(not(target_os = "macos"))]
+    let _ = app;
 }
 
 /// Shows the panel if hidden, hides it if shown.
@@ -84,6 +119,15 @@ mod macos {
                 .into(),
         );
         Ok(())
+    }
+
+    /// Turns panel `label` back into a plain window; false when it is not a panel (any
+    /// more).
+    pub fn unpanel<R: tauri::Runtime>(app: &AppHandle<R>, label: &str) -> bool {
+        app.get_webview_panel(label)
+            .ok()
+            .and_then(|panel| panel.to_window())
+            .is_some()
     }
 
     pub fn toggle(app: &AppHandle) {

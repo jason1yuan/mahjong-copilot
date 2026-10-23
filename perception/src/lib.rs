@@ -27,4 +27,4 @@ pub use classifier::{ClassifierError, Prediction, TileClassifier};
 pub use recognizer::{Doubt, Recognition, Source, TileRecognizer, Zone};
 pub use record::{RecordError, Recorder};
 pub use snapshot::Snapshot;
-pub use watch::{FrameTap, HandReading, Timings, WatchError, WatchEvent, Watcher};
+pub use watch::{Corrector, FrameTap, HandReading, Timings, WatchError, WatchEvent, Watcher};

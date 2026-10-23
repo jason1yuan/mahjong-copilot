@@ -72,6 +72,8 @@ pub struct Recognition {
     pub confidence: f32,
     pub source: Source,
     pub doubt: Option<Doubt>,
+    /// The classifier's next likeliest kinds; none for a cache hit (#16).
+    pub alternatives: [Option<Tile>; 2],
 }
 
 /// Where on the table a tile is, which picks its template cache.
@@ -107,6 +109,12 @@ impl<C: Classify> TileRecognizer<C> {
         self.caches.clear();
     }
 
+    /// The player says a crop of `zone` is `tile` (#16): its template replaces any other
+    /// close to it, so the next frames read it so.
+    pub fn teach(&mut self, zone: Zone, crop: &RgbImage, tile: Tile) {
+        self.caches.entry(zone).or_default().correct(tile, crop);
+    }
+
     /// Recognizes hand tiles; see [`recognize_in`](Self::recognize_in).
     pub fn recognize(&mut self, crops: &[RgbImage]) -> Result<Vec<Recognition>, ClassifierError> {
         self.recognize_in(Zone::Hand, crops)
@@ -130,6 +138,7 @@ impl<C: Classify> TileRecognizer<C> {
                         confidence: hit.confidence,
                         source: Source::Cache,
                         doubt: None,
+                        alternatives: [None; 2],
                     });
                 }
                 // The same doubtful picture as before keeps its answer and its doubt.
@@ -143,6 +152,7 @@ impl<C: Classify> TileRecognizer<C> {
                     } else {
                         Doubt::LowConfidence
                     }),
+                    alternatives: [None; 2],
                 })
             })
             .collect();
@@ -168,6 +178,7 @@ impl<C: Classify> TileRecognizer<C> {
                     confidence: prediction.confidence,
                     source: Source::Classifier,
                     doubt,
+                    alternatives: prediction.alternatives,
                 });
             }
         }
@@ -213,6 +224,7 @@ mod tests {
                     .parse()
                     .unwrap(),
                     confidence: self.confidence,
+                    alternatives: [None; 2],
                 })
                 .collect())
         }
@@ -275,6 +287,7 @@ mod tests {
                 .map(|c| Prediction {
                     tile: red_five::refine(five, c),
                     confidence: 0.95,
+                    alternatives: [None; 2],
                 })
                 .collect())
         }

@@ -115,6 +115,17 @@ impl TemplateCache {
         self.closest(&thumbnail(crop))
     }
 
+    /// Keeps a crop as `tile` because the player said so (#16): templates of other tiles
+    /// close enough to be taken for it, and any doubtful answer for it, are forgotten.
+    pub fn correct(&mut self, tile: Tile, crop: &RgbImage) {
+        let thumb = thumbnail(crop);
+        self.templates
+            .retain(|t| t.tile == tile || distance(&t.thumb, &thumb) > MAX_DISTANCE + MIN_MARGIN);
+        self.doubtful
+            .retain(|t| distance(&t.thumb, &thumb) >= DUPLICATE_DISTANCE);
+        self.insert(tile, 1.0, crop);
+    }
+
     /// Keeps a crop the classifier recognized for sure.
     pub fn insert(&mut self, tile: Tile, confidence: f32, crop: &RgbImage) {
         let thumb = thumbnail(crop);
@@ -200,6 +211,21 @@ fn distance(a: &[u8], b: &[u8]) -> f32 {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_correction_replaces_the_wrong_template() {
+        let mut cache = TemplateCache::new();
+        let crop = RgbImage::from_fn(30, 40, |x, y| {
+            image::Rgb([(x * 8) as u8, (y * 6) as u8, 90])
+        });
+        let wrong: Tile = "9s".parse().unwrap();
+        let right: Tile = "5s".parse().unwrap();
+        cache.insert(wrong, 0.95, &crop);
+        assert_eq!(cache.lookup(&crop).map(|m| m.tile), Some(wrong));
+        cache.correct(right, &crop);
+        assert_eq!(cache.lookup(&crop).map(|m| m.tile), Some(right));
+        assert_eq!(cache.len(), 1);
+    }
+
     use image::Rgb;
 
     use super::*;

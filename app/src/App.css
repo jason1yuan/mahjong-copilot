@@ -232,6 +232,121 @@ body {
   text-align: center;
 }
 
+/* Status light (#16): green following, yellow unsure, red not following, grey paused. */
+.status-light {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 50%;
+  cursor: help;
+}
+
+.light-green {
+  background: var(--green);
+}
+
+.light-yellow {
+  background: var(--yellow);
+}
+
+.light-red {
+  background: #e5484d;
+  box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.25);
+}
+
+.light-gray {
+  background: var(--faint);
+}
+
+.rules-only {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e5484d;
+}
+
+/* Pause switch (#16), in the title bar. */
+.pause-button {
+  margin-left: auto;
+  padding: 2px 9px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--chip);
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.pause-button:hover {
+  color: var(--text);
+}
+
+.pause-button.paused {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.pause-button + .theme-button {
+  margin-left: 6px;
+}
+
+/* Correcting a tile (#16). */
+.tile.clickable {
+  cursor: pointer;
+}
+
+.tile.clickable:hover img {
+  filter: brightness(0.92) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+
+.picker {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--chip);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.picker-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.picker-head b {
+  color: var(--text);
+}
+
+.picker-close {
+  margin-left: auto;
+  padding: 1px 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.picker-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.picker-label {
+  margin-right: 4px;
+}
+
+.picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 /* Danger bars (#12): green safe, yellow somewhat, red dangerous. */
 .tile .danger {
   width: 100%;

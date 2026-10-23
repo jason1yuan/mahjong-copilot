@@ -2,10 +2,12 @@
 
 export type Status =
   | { state: "noWindow" }
+  | { state: "paused" }
   | { state: "watching"; app: string; title: string; game: string }
   | { state: "error"; message: string };
 
-export type TileView = { tile: string; doubt: "small" | "unsure" | null };
+// `alternatives`: the classifier's next likeliest tiles, offered when correcting it (#16).
+export type TileView = { tile: string; doubt: "small" | "unsure" | null; alternatives: string[] };
 // A tile on the table as read; `tile` is null for a tile face down.
 export type TableTile = { tile: string | null; sideways: boolean; added: string | null; doubt: boolean };
 export type TableView = { rivers: TableTile[][]; melds: TableTile[][][] };
@@ -44,6 +46,8 @@ export type EngineView = {
   // Text recognition fails even after starting it again: no round or scores (#49).
   textFailing: boolean;
   recent: string[];
+  // Scenes in a row the engine did not take: the advice cannot follow the game (#16).
+  stuck: number;
 };
 // Whether and how to call the discard on offer; `take` is null to let it go. `from` is
 // the seat that discarded it, null when unsure.

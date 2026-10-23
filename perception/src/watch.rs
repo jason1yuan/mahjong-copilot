@@ -18,6 +18,7 @@ use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
 use image::RgbImage;
+use mahjong_core::Tile;
 use ort::environment::Environment;
 
 use crate::capture::{
@@ -28,7 +29,7 @@ use crate::classifier::{ClassifierError, TileClassifier};
 use crate::hand::{HandTracker, TileBox};
 use crate::numbers::NumberReader;
 use crate::profile::Profile;
-use crate::recognizer::{Doubt, Recognition, TileRecognizer};
+use crate::recognizer::{Doubt, Recognition, TileRecognizer, Zone};
 use crate::record::Recorder;
 use crate::round::RoundReader;
 use crate::snapshot::{self, Snapshot};
@@ -100,6 +101,7 @@ pub enum WatchEvent {
 pub struct Watcher {
     stop: Arc<AtomicBool>,
     tap: FrameTap,
+    corrector: Corrector,
     thread: Option<JoinHandle<()>>,
 }
 
@@ -120,6 +122,24 @@ impl FrameTap {
     /// From now on saves each frame that changed the hand with `recorder`; `None` stops.
     pub fn record(&self, recorder: Option<Arc<Recorder>>) {
         *lock(&self.recorder) = recorder;
+    }
+}
+
+/// Corrections the player made to the hand (#16), taught to the template cache on the
+/// watcher thread before it reads the next frame. Cheap to clone.
+#[derive(Clone, Default)]
+pub struct Corrector {
+    pending: Arc<Mutex<Vec<(usize, Tile)>>>,
+}
+
+impl Corrector {
+    /// The hand's tile `index` (left to right, as last reported) is `tile`.
+    pub fn correct(&self, index: usize, tile: Tile) {
+        lock(&self.pending).push((index, tile));
+    }
+
+    fn take(&self) -> Vec<(usize, Tile)> {
+        std::mem::take(&mut *lock(&self.pending))
     }
 }
 
@@ -161,6 +181,7 @@ impl Watcher {
             })?
         };
         let stop = Arc::new(AtomicBool::new(false));
+        let corrector = Corrector::default();
         let tap = FrameTap {
             latest: Arc::clone(&latest),
             recorder: Arc::new(Mutex::new(None)),
@@ -168,6 +189,7 @@ impl Watcher {
         let thread = {
             let stop = Arc::clone(&stop);
             let recorder = Arc::clone(&tap.recorder);
+            let corrections = corrector.clone();
             let mut state = State {
                 recognizer,
                 rounds: RoundReader::new(text.as_ref().map(boxed)),
@@ -180,6 +202,7 @@ impl Watcher {
                 frame: (0, 0),
                 last: None,
                 last_table: None,
+                hand_crops: Vec::new(),
             };
             let mut on_event = on_event;
             std::thread::Builder::new()
@@ -187,6 +210,9 @@ impl Watcher {
                 .spawn(move || {
                     let mut seen = 0;
                     while !stop.load(Ordering::Relaxed) {
+                        for (index, tile) in corrections.take() {
+                            state.teach(index, tile);
+                        }
                         if session.stats().stopped {
                             on_event(WatchEvent::Stopped);
                             break;
@@ -235,12 +261,18 @@ impl Watcher {
         Ok(Self {
             stop,
             tap,
+            corrector,
             thread: Some(thread),
         })
     }
 
     pub fn tap(&self) -> FrameTap {
         self.tap.clone()
+    }
+
+    /// Where the player's corrections of hand tiles go (#16).
+    pub fn corrector(&self) -> Corrector {
+        self.corrector.clone()
     }
 
     pub fn stop(mut self) {
@@ -299,9 +331,18 @@ struct State {
     last: Option<String>,
     /// The last table that added up with its hand.
     last_table: Option<Snapshot>,
+    /// The hand's tile pictures as last read, for corrections.
+    hand_crops: Vec<RgbImage>,
 }
 
 impl State {
+    /// The player says hand tile `index` of the last reading is `tile`.
+    fn teach(&mut self, index: usize, tile: Tile) {
+        if let Some(crop) = self.hand_crops.get(index) {
+            self.recognizer.teach(Zone::Hand, crop, tile);
+        }
+    }
+
     fn observe(&mut self, view: &FrameView<'_>, captured: Instant) {
         let size = (view.width(), view.height());
         if size != self.frame {
@@ -339,7 +380,9 @@ impl State {
         let boxes = layout.tiles();
         let crops: Vec<_> = boxes.iter().map(|b| b.crop(view)).collect();
         let start = Instant::now();
-        let tiles = match self.recognizer.recognize(&crops) {
+        let tiles = self.recognizer.recognize(&crops);
+        self.hand_crops = crops;
+        let tiles = match tiles {
             Ok(tiles) => tiles,
             Err(err) => {
                 tracing::warn!("recognizing the hand: {err}");
@@ -460,6 +503,7 @@ mod tests {
             confidence: 0.5,
             source: Source::Classifier,
             doubt,
+            alternatives: [None; 2],
         }
     }
 

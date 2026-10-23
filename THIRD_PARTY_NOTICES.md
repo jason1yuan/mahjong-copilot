@@ -54,3 +54,12 @@
 
 - 位置：`app/src-tauri/icons/`
 - 来源：Tauri 项目模板自带的默认图标（MIT / Apache-2.0），之后会换成自己的图标
+
+## 牌图 lietxia/mahjong_graphic
+
+- 位置：[app/src/assets/tiles/](app/src/assets/tiles/)
+- 来源：[lietxia/mahjong_graphic](https://github.com/lietxia/mahjong_graphic) 的 `Vectors 矢量图/SVG`，提交 `3e275804ff58325306710bef3a7406860444bc6a`（2023-05-14）
+- 许可：M+ 字体许可（可以使用、复制、修改和再分发，商用和非商用都可以，无担保），原文见同目录的 [LICENSE](app/src/assets/tiles/LICENSE)
+- 部分图形来自 [SyaoranHinata/I.Mahjong](https://github.com/SyaoranHinata/I.Mahjong)，它由 GL-MahjongTile 修改而来，同为 M+ 许可
+- 改动：只改了文件名，换成 mjai 记法（`0m` `0p` `0s` → `5mr` `5pr` `5sr`，`1z`–`7z` → `E S W N P F C`）；只用了 34 种牌和 3 张赤五，没有用花牌，也没有用「雀魂样式」文件夹里的任何文件
+- 牌背 `back.svg` 是我们自己画的，尺寸和牌框与上面的牌面一致

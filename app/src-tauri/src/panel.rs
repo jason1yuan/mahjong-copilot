@@ -60,6 +60,15 @@ pub fn before_exit(app: &AppHandle) {
     let _ = app;
 }
 
+/// Clicking the app's Dock icon: brings the panel back, from the Dock when it was
+/// minimized there.
+pub fn reopen(app: &AppHandle) {
+    #[cfg(target_os = "macos")]
+    macos::bring_back(app);
+    #[cfg(not(target_os = "macos"))]
+    let _ = app;
+}
+
 /// Shows the panel if hidden, hides it if shown.
 fn toggle(app: &AppHandle) {
     #[cfg(target_os = "macos")]
@@ -130,10 +139,34 @@ mod macos {
             .is_some()
     }
 
+    fn minimized(app: &AppHandle) -> bool {
+        app.get_webview_window("main")
+            .is_some_and(|w| w.is_minimized().unwrap_or(false))
+    }
+
+    /// Shows the panel, restoring it from the Dock first when it was minimized.
+    pub fn bring_back(app: &AppHandle) {
+        if minimized(app)
+            && let Some(window) = app.get_webview_window("main")
+            && let Err(err) = window.unminimize()
+        {
+            tracing::warn!("restoring the panel: {err}");
+        }
+        if let Ok(panel) = app.get_webview_panel("main") {
+            panel.show();
+        }
+    }
+
     pub fn toggle(app: &AppHandle) {
         let Ok(panel) = app.get_webview_panel("main") else {
             return;
         };
+        // A minimized panel is not visible, and showing it does not bring it back from
+        // the Dock: it is restored first.
+        if minimized(app) {
+            bring_back(app);
+            return;
+        }
         if panel.is_visible() {
             panel.hide();
         } else {

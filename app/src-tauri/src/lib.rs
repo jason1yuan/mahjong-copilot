@@ -159,10 +159,11 @@ pub fn run() -> tauri::Result<()> {
             set_recording
         ])
         .build(tauri::generate_context!())?
-        .run(|app, event| {
-            if let tauri::RunEvent::ExitRequested { .. } = event {
-                panel::before_exit(app);
-            }
+        .run(|app, event| match event {
+            tauri::RunEvent::ExitRequested { .. } => panel::before_exit(app),
+            #[cfg(target_os = "macos")]
+            tauri::RunEvent::Reopen { .. } => panel::reopen(app),
+            _ => {}
         });
     Ok(())
 }

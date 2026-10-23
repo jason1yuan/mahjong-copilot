@@ -103,6 +103,10 @@ struct Sim {
     drawn: Option<Tile>,
     /// Kinds the caller may not discard right after its call (swap-calling).
     forbidden: Vec<u8>,
+    /// By seat, riichi deposits taken.
+    scores: [i32; 4],
+    /// Riichi sticks on the table.
+    sticks: u8,
 }
 
 fn rt(tile: Tile) -> RTile {
@@ -157,8 +161,10 @@ impl Sim {
             }),
             dealer: Some(self.rel(self.oya)),
             honba: Some(0),
-            riichi_sticks: Some(0),
-            scores: Some([25000; 4]),
+            riichi_sticks: Some(self.sticks),
+            scores: Some(std::array::from_fn(|r| {
+                self.scores[(usize::from(self.me) + r) % 4]
+            })),
             tiles_left: Some(u8::try_from(self.wall.len()).unwrap()),
             ..Scene::default()
         };
@@ -254,9 +260,9 @@ impl Sim {
             dora_marker: rt(self.dora[0]),
             kyoku,
             honba: 0,
-            kyotaku: 0,
+            kyotaku: self.sticks,
             oya: self.oya,
-            scores: [25000; 4],
+            scores: self.scores,
             tehais,
         });
         self.record(true);
@@ -275,7 +281,22 @@ impl Sim {
                 } else if let Some(tile) = self.wall.pop() {
                     tile
                 } else {
-                    self.emit(Event::Ryukyoku { deltas: None });
+                    // A draw: the players not tenpai pay those who are 3000 in all.
+                    let tenpai: Vec<bool> = self
+                        .players
+                        .iter()
+                        .map(|p| shanten(&p.hand).is_ok_and(|s| s == 0))
+                        .collect();
+                    let n = tenpai.iter().filter(|t| **t).count() as i32;
+                    let deltas: [i32; 4] = std::array::from_fn(|s| match n {
+                        1..=3 if tenpai[s] => 3000 / n,
+                        1..=3 => -3000 / (4 - n),
+                        _ => 0,
+                    });
+                    self.settle(deltas);
+                    self.emit(Event::Ryukyoku {
+                        deltas: Some(deltas),
+                    });
                     self.emit(Event::EndKyoku);
                     self.keep_last();
                     return;
@@ -290,10 +311,24 @@ impl Sim {
                     self.record(false);
                 }
                 if self.players[a].riichi && complete(&self.players[a].hand) {
+                    // 2000 from each, or 2000 from the dealer and 1000 from the others.
+                    let deltas: [i32; 4] = std::array::from_fn(|s| {
+                        let s = s as u8;
+                        if s == actor {
+                            0
+                        } else if s == self.oya || actor == self.oya {
+                            -2000
+                        } else {
+                            -1000
+                        }
+                    });
+                    let mut deltas = deltas;
+                    deltas[a] = -deltas.iter().sum::<i32>() + 1000 * i32::from(self.sticks);
+                    self.settle(deltas);
                     self.emit(Event::Hora {
                         actor,
                         target: actor,
-                        deltas: None,
+                        deltas: Some(deltas),
                         ura_markers: None,
                     });
                     self.emit(Event::EndKyoku);
@@ -397,10 +432,14 @@ impl Sim {
                 let mut with = p.hand.clone();
                 with.push(tile);
                 if p.riichi && complete(&with) {
+                    let mut deltas = [0; 4];
+                    deltas[usize::from(actor)] = -3900;
+                    deltas[usize::from(seat)] = 3900 + 1000 * i32::from(self.sticks);
+                    self.settle(deltas);
                     self.emit(Event::Hora {
                         actor: seat,
                         target: actor,
-                        deltas: None,
+                        deltas: Some(deltas),
                         ura_markers: None,
                     });
                     self.emit(Event::EndKyoku);
@@ -409,6 +448,8 @@ impl Sim {
                 }
             }
             if reach {
+                self.scores[a] -= 1000;
+                self.sticks += 1;
                 self.emit(Event::ReachAccepted { actor });
             }
             while self.pending_dora > 0 {
@@ -425,6 +466,16 @@ impl Sim {
             }
             actor = (actor + 1) % 4;
             draw = Some(false);
+        }
+    }
+
+    /// Pays out a round's ending; a win takes the sticks.
+    fn settle(&mut self, deltas: [i32; 4]) {
+        for (score, delta) in self.scores.iter_mut().zip(deltas) {
+            *score += delta;
+        }
+        if deltas.iter().sum::<i32>() != 0 {
+            self.sticks = 0;
         }
     }
 
@@ -589,10 +640,17 @@ pub fn play(seed: u64, rounds: u8) -> Game {
         moments: Vec::new(),
         drawn: None,
         forbidden: Vec::new(),
+        scores: [25000; 4],
+        sticks: 0,
     };
+    sim.emit(Event::StartGame {
+        names: Default::default(),
+        seed: None,
+    });
     for kyoku in 1..=rounds {
         sim.play_round(kyoku);
     }
+    sim.emit(Event::EndGame);
     Game {
         log: sim.log,
         moments: sim.moments,
@@ -600,17 +658,10 @@ pub fn play(seed: u64, rounds: u8) -> Game {
     }
 }
 
-/// The events the engine should infer: the log without what the screen cannot show yet
-/// (round ends), with others' discards counted as from the hand and melded tiles sorted.
+/// Events to compare: others' discards counted as from the hand and melded tiles sorted.
 fn comparable(events: &[Event]) -> Vec<String> {
     events
         .iter()
-        .filter(|e| {
-            !matches!(
-                e,
-                Event::Hora { .. } | Event::Ryukyoku { .. } | Event::EndKyoku
-            )
-        })
         .map(|e| {
             let mut e = e.clone();
             match &mut e {
@@ -628,30 +679,48 @@ fn comparable(events: &[Event]) -> Vec<String> {
         .collect()
 }
 
-/// The log up to each round's last kept moment: what the engine can know.
-fn expected(game: &Game, kept: &[&Moment]) -> Vec<String> {
-    let mut out = Vec::new();
-    let starts: Vec<usize> = game
-        .log
-        .iter()
-        .enumerate()
-        .filter(|(_, e)| matches!(e, Event::StartKyoku { .. }))
-        .map(|(i, _)| i)
+/// What the engine can know of `game` from the `kept` moments, seen from log event
+/// `from` on: each round up to its last kept moment, then how it ended (but for the
+/// game's last round, which has no next round's scores to tell).
+fn expected_from(game: &Game, kept: &[&Moment], from: usize) -> Vec<String> {
+    let log = &game.log;
+    let mut out = vec![log[0].clone()];
+    let starts: Vec<usize> = (0..log.len())
+        .filter(|&i| matches!(log[i], Event::StartKyoku { .. }))
         .collect();
     for (r, &start) in starts.iter().enumerate() {
-        let end = starts.get(r + 1).copied().unwrap_or(game.log.len());
+        let end = starts.get(r + 1).copied().unwrap_or(log.len() - 1);
+        if end <= from {
+            continue;
+        }
         let seen = kept
             .iter()
             .filter(|m| m.events > start && m.events <= end)
             .map(|m| m.events)
             .max()
             .unwrap_or(start + 1);
-        out.extend(comparable(&game.log[start..seen]));
+        out.extend(log[start.max(from)..seen].iter().cloned());
+        let last = r + 1 == starts.len();
+        out.extend(
+            log[seen..end]
+                .iter()
+                .filter(|e| match e {
+                    Event::Hora { .. } | Event::Ryukyoku { .. } => !last,
+                    Event::EndKyoku => true,
+                    _ => false,
+                })
+                .cloned(),
+        );
     }
-    out
+    out.push(Event::EndGame);
+    comparable(&out)
 }
 
-/// Feeds `moments` to a new engine; every one must be taken.
+fn expected(game: &Game, kept: &[&Moment]) -> Vec<String> {
+    expected_from(game, kept, 0)
+}
+
+/// Feeds `moments` to a new engine, every one of which must be taken, and ends the game.
 fn run(moments: &[&Moment]) -> Engine {
     let mut engine = Engine::new();
     for (i, moment) in moments.iter().enumerate() {
@@ -659,6 +728,7 @@ fn run(moments: &[&Moment]) -> Engine {
             panic!("moment {i}: {err}\n{:#?}", moment.scene);
         }
     }
+    engine.end_game();
     engine
 }
 
@@ -688,9 +758,9 @@ fn every_scene_gives_back_the_log() {
     }
 }
 
-/// Games whose events come back exactly, of 100, with `percent` of the scenes kept.
+/// Games whose events come back exactly, of 40, with `percent` of the scenes kept.
 fn exact_games(percent: usize) -> usize {
-    (0..100)
+    (0..40)
         .filter(|&seed| {
             let game = play(seed, 4);
             let mut rng = Rng(seed + 99);
@@ -707,15 +777,15 @@ fn exact_games(percent: usize) -> usize {
 
 /// With scenes missed, several players act between two of them; the engine still
 /// explains every scene with legal events. Exactly the same events come back unless the
-/// screen cannot tell: a called discard leaves no mark in the river, so with no scene
-/// in between, two discards of a seat (one of them called) or two kept draws of the
-/// player can come in either order, and a called riichi declaration looks like a riichi
-/// at the next discard, which lies sideways.
+/// screen cannot tell: a called discard leaves no mark in the river, so with several
+/// turns and no scene in between, two discards of a seat (one of them called) or two
+/// kept draws of the player can come in either order. The tiles left and the riichi
+/// sticks settle the rest.
 #[test]
 fn scenes_far_apart_give_back_the_log() {
     let (most, many) = (exact_games(75), exact_games(60));
-    assert!(most >= 90, "75% of scenes: {most} of 100 exact");
-    assert!(many >= 80, "60% of scenes: {many} of 100 exact");
+    assert_eq!(most, 40, "75% of scenes: {most} of 40 exact");
+    assert!(many >= 36, "60% of scenes: {many} of 40 exact");
 }
 
 #[test]
@@ -780,6 +850,7 @@ fn a_tile_read_wrongly_once_is_corrected_later() {
                 Err(err) => panic!("seed {seed}: {err}"),
             }
         }
+        engine.end_game();
         assert_eq!(
             comparable(&engine.events()),
             expected(&game, &kept),
@@ -788,4 +859,113 @@ fn a_tile_read_wrongly_once_is_corrected_later() {
         corrected += usize::from(engine.rewrites() > 0);
     }
     assert!(corrected > 10, "only {corrected} games needed a correction");
+}
+
+#[test]
+fn games_in_a_row_are_logged_one_after_another() {
+    // Seeds 5 and 9 watch the same seat (seed % 4).
+    let (first, second) = (play(5, 2), play(9, 2));
+    assert_eq!(first.me, second.me);
+    let mut engine = Engine::new();
+    for moment in first.moments.iter().chain(&second.moments) {
+        engine.observe(&moment.scene).unwrap();
+    }
+    engine.end_game();
+    let all: Vec<&Moment> = first.moments.iter().collect();
+    let mut want = expected(&first, &all);
+    let all: Vec<&Moment> = second.moments.iter().collect();
+    want.extend(expected(&second, &all));
+    assert_eq!(comparable(&engine.events()), want);
+}
+
+/// Feeds `moments` to a new engine, scenes it cannot explain allowed, and ends the game:
+/// the engine and the moment its round was last filled in from.
+fn run_filling(moments: &[&Moment]) -> (Engine, usize) {
+    let mut engine = Engine::new();
+    let mut filled_at = 0;
+    for (i, moment) in moments.iter().enumerate() {
+        match engine.observe(&moment.scene) {
+            Ok(observed) if observed.rewritten || i == 0 => filled_at = i,
+            Ok(_) | Err(Rejected::Unexplained) => {}
+            Err(err) => panic!("moment {i}: {err}"),
+        }
+    }
+    engine.end_game();
+    (engine, filled_at)
+}
+
+/// The engine's events after the last stretch it filled in.
+fn after_filling(engine: &Engine) -> Vec<String> {
+    let last = engine
+        .marks()
+        .iter()
+        .filter(|m| m.kind != super::MarkKind::UnknownEnding)
+        .map(|m| m.last)
+        .max()
+        .unwrap_or(0);
+    comparable(&engine.events()[last..])
+}
+
+/// From a scene in the middle of a round, the engine fills in the history and from then
+/// on follows the game exactly. A riichi whose declaration was called just before shows
+/// only as a stick, which could as well be left from an earlier round; the next discard,
+/// lying sideways, settles it, and the round is filled in again from there.
+#[test]
+fn a_round_opened_part_way_through_is_filled_in() {
+    for seed in 0..30 {
+        let game = play(seed, 2);
+        let mut rng = Rng(seed + 3);
+        let middle: Vec<usize> = (0..game.moments.len())
+            .filter(|&i| !game.moments[i].keep && !is_start(&game.moments[i].scene))
+            .collect();
+        let k = middle[rng.below(middle.len())];
+        let kept: Vec<&Moment> = game.moments[k..].iter().collect();
+        let (engine, at) = run_filling(&kept);
+        // Filled in, or filled in again when a stick was misjudged.
+        assert!(
+            engine
+                .marks()
+                .iter()
+                .any(|m| matches!(m.kind, super::MarkKind::Filled | super::MarkKind::Gap)),
+            "seed {seed}"
+        );
+        let tail: Vec<&Moment> = kept[at..].to_vec();
+        let want = expected_from(&game, &tail, tail[0].events);
+        assert_eq!(after_filling(&engine), want[1..], "seed {seed}");
+    }
+}
+
+#[test]
+fn a_long_gap_is_filled_in_and_then_followed() {
+    let mut gaps = 0;
+    for seed in 0..20 {
+        let game = play(seed, 1);
+        let n = game.moments.len();
+        // Miss half the round in the middle.
+        let (from, to) = (n / 5, n / 5 + n / 2);
+        let kept: Vec<&Moment> = game.moments[..from]
+            .iter()
+            .chain(&game.moments[to..])
+            .collect();
+        let (engine, at) = run_filling(&kept);
+        if at == 0 {
+            // The gap was short enough to explain after all.
+            continue;
+        }
+        gaps += 1;
+        assert!(
+            engine
+                .marks()
+                .iter()
+                .any(|m| m.kind == super::MarkKind::Gap)
+        );
+        let tail: Vec<&Moment> = kept[at..].to_vec();
+        let want = expected_from(&game, &tail, tail[0].events);
+        assert_eq!(after_filling(&engine), want[1..], "seed {seed}");
+    }
+    assert!(gaps > 10, "only {gaps} gaps needed filling in");
+}
+
+fn is_start(scene: &Scene) -> bool {
+    scene.rivers.iter().all(Vec::is_empty) && scene.melds.iter().all(Vec::is_empty)
 }

@@ -1,36 +1,51 @@
 //! The state engine (#10): from settled scenes to mjai events.
 //!
 //! - The engine keeps the round's events and a model of the table they imply. A new scene
-//!   is explained by the shortest run of events, in turn order, that turns the model into
-//!   the scene: draws, discards (with riichi), calls of the last discard and kans. A turn
+//!   is explained by a run of events, in turn order, that turns the model into the scene
+//!   (searched depth first, most likely step first): draws, discards (with riichi), calls of the last discard and kans. A turn
 //!   order walk settles what happened between two scenes however many things did; a call
 //!   skips the players in between.
 //! - Other players' draws are `?` and their discards count as from the hand (`tsumogiri`
 //!   false): the screen does not tell. The player's own draws are worked out from the hand.
 //!   How many draws there were comes from the tiles left to draw: a called discard leaves
 //!   no mark in the river, so without it a call could be put a turn early, one draw short.
+//!   Riichi sticks likewise tell a called riichi declaration from a riichi later on.
 //! - Every event also goes into libriichi's `PlayerState`, which rejects what cannot be.
 //! - When no run of events explains a scene, a tile read wrongly earlier is the likely
 //!   cause: the engine tries the scene's tile in its place (a river tile, or a tile the
 //!   player drew), replays the round, and tries again. A scene that still cannot be
-//!   explained is left out; the next ones may settle it.
+//!   explained is left out; the next ones may settle it. After a few in a row the round's
+//!   history is filled in again from the latest scene, and the log marks it as a gap.
 //! - Kan dora: shown at once after a concealed kan, after the next discard for the other
 //!   kans.
-//! - Round ends (wins, draws) and opening mid-round come with the results screen (#10,
-//!   step 2): for now a round starts from a scene with nothing discarded.
+//! - A round's ending (who won from whom, or a draw) comes from the scores when the next
+//!   round starts (see [`super::ending`]); the game's last round ends without one.
+//! - A round first seen part way through (the app opened mid-round, or its start missed)
+//!   gets a history filled in: the player's starting hand from the tiles still held and
+//!   the earliest discards, the turns from there to the scene. The log marks it as filled.
+
+use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 
 use riichi::mjai::Event;
 use riichi::state::PlayerState;
 use riichi::tile::Tile as RTile;
 
+use super::ending::{Ending, ending};
 use super::scene::{MeldView, RiverTile, RoundLabel, Scene};
 use crate::tile::Tile;
 
 /// Most groups of events looked for between two scenes: four players' draw and discard,
 /// four or five times round the table.
 const MAX_STEPS: usize = 40;
+/// Most groups of events in a filled-in history: a whole round.
+const MAX_FILLED_STEPS: usize = 400;
 /// Tiles left to draw when a round starts: 136 less the dead wall's 14 and four hands.
 const TILES_LEFT: u8 = 70;
+/// Scenes in a row that cannot be explained before the round's history is filled in again.
+const RESYNC_AFTER: u8 = 3;
+/// Points each player starts a game with.
+const START_SCORE: i32 = 25000;
 
 /// Why a scene was not taken.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -48,9 +63,29 @@ pub enum Rejected {
 pub struct Observed {
     /// The new events, in order.
     pub events: Vec<Event>,
-    /// Earlier events of the round were corrected from this scene (a tile read wrongly
-    /// before): the round's log was rebuilt.
+    /// Earlier events of the round were corrected or filled in again from this scene: the
+    /// round's log was rebuilt.
     pub rewritten: bool,
+}
+
+/// A stretch of the log that was not seen happen.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MarkKind {
+    /// Filled in because the round was first seen part way through.
+    Filled,
+    /// Filled in again because the scenes stopped making sense (frames missed).
+    Gap,
+    /// The round's ending could not be told from the scores.
+    UnknownEnding,
+}
+
+/// Events `first..last` of the log (indices into [`Engine::events`]) are of `kind`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+pub struct Mark {
+    pub first: usize,
+    pub last: usize,
+    pub kind: MarkKind,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -82,6 +117,8 @@ struct Model {
     /// Kan dora still to be shown.
     pending_dora: u8,
     tiles_left: u8,
+    /// Riichi sticks on the table.
+    sticks: u8,
 }
 
 struct Round {
@@ -92,15 +129,25 @@ struct Round {
     events: Vec<Event>,
     model: Model,
     state: PlayerState,
+    /// Events `0..n` of the round were filled in, not seen: why.
+    filled: Option<(usize, MarkKind)>,
+    /// The last scores seen that add up, by seat, and the riichi sticks with them.
+    scores: Option<([i32; 4], u8)>,
+    /// Scenes in a row that could not be explained.
+    unexplained: u8,
 }
 
-/// The state engine for one game.
+/// The state engine for one game, or several in a row.
 #[derive(Default)]
 pub struct Engine {
-    /// Events of the rounds before the current one.
+    /// Events before the current round's.
     earlier: Vec<Event>,
+    /// Marks within `earlier`.
+    marks: Vec<Mark>,
     round: Option<Round>,
-    /// How many times earlier events were corrected.
+    /// A game has started and not ended.
+    in_game: bool,
+    /// How many times earlier events were corrected from a later scene.
     rewrites: u32,
 }
 
@@ -118,6 +165,30 @@ impl Engine {
         all
     }
 
+    /// The stretches of [`Self::events`] that were filled in, not seen.
+    pub fn marks(&self) -> Vec<Mark> {
+        let mut marks = self.marks.clone();
+        if let Some(round) = &self.round
+            && let Some((n, kind)) = round.filled
+        {
+            marks.push(Mark {
+                first: self.earlier.len(),
+                last: self.earlier.len() + n,
+                kind,
+            });
+        }
+        marks
+    }
+
+    /// The log as mjai JSON Lines, one event a line.
+    pub fn log_lines(&self) -> String {
+        self.events()
+            .iter()
+            .filter_map(|e| serde_json::to_string(e).ok())
+            .map(|line| line + "\n")
+            .collect()
+    }
+
     /// The game state the events lead to, from the player's seat.
     pub fn player_state(&self) -> Option<&PlayerState> {
         self.round.as_ref().map(|r| &r.state)
@@ -128,140 +199,381 @@ impl Engine {
         self.rewrites
     }
 
+    /// Whether the current round's start was not seen and its history is filled in.
+    pub fn filled(&self) -> bool {
+        self.round.as_ref().is_some_and(|r| r.filled.is_some())
+    }
+
+    /// Ends the game (the table is gone): closes the round, with no ending known, and
+    /// logs `end_game`.
+    pub fn end_game(&mut self) {
+        self.close_round(None);
+        if self.in_game {
+            self.earlier.push(Event::EndGame);
+            self.in_game = false;
+        }
+    }
+
     /// Takes a settled scene: the events it implies, or why it was not taken.
     pub fn observe(&mut self, scene: &Scene) -> Result<Observed, Rejected> {
         scene.check().map_err(Rejected::Impossible)?;
         if self.starts_round(scene) {
-            return self.start_round(scene);
+            return self.begin_round(scene);
         }
         let Some(round) = self.round.as_mut() else {
             return Err(Rejected::NoRound);
         };
-        if let Some(events) = explain(&round.model, scene, round.me) {
-            for event in &events {
-                round
-                    .model
-                    .apply(event, round.me)
-                    .map_err(|_| Rejected::Unexplained)?;
-                round
-                    .state
-                    .update(event)
-                    .map_err(|_| Rejected::Unexplained)?;
+        let observed = explain_scene(round, scene).or_else(|| correct(round, scene));
+        let Some(observed) = observed else {
+            round.unexplained += 1;
+            if round.unexplained < RESYNC_AFTER {
+                return Err(Rejected::Unexplained);
             }
-            round.events.extend(events.iter().cloned());
-            return Ok(Observed {
-                events,
-                rewritten: false,
-            });
-        }
-        // Perhaps a tile was read wrongly before: try the scene's in its place.
-        for patched in corrections(round, scene) {
-            let Some(rebuilt) = replay(&patched, round.me) else {
-                continue;
+            // The scenes stopped making sense: fill the round in again from this one.
+            let (label, honba) = (round.label, round.honba);
+            let (events, model, state, me) = fill(scene).ok_or(Rejected::Unexplained)?;
+            let n = events.len();
+            *round = Round {
+                label,
+                honba,
+                me,
+                events: events.clone(),
+                model,
+                state,
+                filled: Some((n, MarkKind::Gap)),
+                scores: None,
+                unexplained: 0,
             };
-            let Some(events) = explain(&rebuilt.0, scene, round.me) else {
-                continue;
-            };
-            let (mut model, mut state) = rebuilt;
-            let mut ok = true;
-            for event in &events {
-                ok &= model.apply(event, round.me).is_ok() && state.update(event).is_ok();
-            }
-            if !ok {
-                continue;
-            }
-            round.events = patched;
-            round.events.extend(events.iter().cloned());
-            round.model = model;
-            round.state = state;
-            self.rewrites += 1;
+            round.note_scores(scene);
             return Ok(Observed {
                 events,
                 rewritten: true,
             });
+        };
+        round.unexplained = 0;
+        round.note_scores(scene);
+        if observed.rewritten {
+            self.rewrites += 1;
         }
-        Err(Rejected::Unexplained)
+        Ok(observed)
     }
 
     /// A scene starts a new round when there is none, the round label or honba changed,
     /// or nothing is discarded while the current round has discards.
     fn starts_round(&self, scene: &Scene) -> bool {
-        let empty = scene.rivers.iter().all(Vec::is_empty) && scene.melds.iter().all(Vec::is_empty);
         match &self.round {
-            None => empty,
+            None => scene.round.is_some() && scene.dealer.is_some(),
             Some(round) => {
                 let label_changed = scene.round.is_some_and(|l| l != round.label)
                     || (scene.honba.is_some() && scene.honba != round.honba);
                 let discarded = round.model.rivers.iter().any(|r| !r.is_empty())
                     || round.model.melds.iter().any(|m| !m.is_empty());
-                empty && (label_changed || discarded)
+                label_changed || (is_empty(scene) && discarded)
             }
         }
     }
 
-    fn start_round(&mut self, scene: &Scene) -> Result<Observed, Rejected> {
-        let (Some(label), Some(dealer), Some(&dora)) =
-            (scene.round, scene.dealer, scene.dora.first())
-        else {
+    /// Closes the current round, with the ending its scores and `next`'s tell, and starts
+    /// the round `scene` shows: from its start if nothing is discarded yet, else with its
+    /// history filled in.
+    fn begin_round(&mut self, scene: &Scene) -> Result<Observed, Rejected> {
+        let new_game = self.round.is_some() && starts_game(scene);
+        self.close_round(if new_game { None } else { Some(scene) });
+        if new_game && self.in_game {
+            self.earlier.push(Event::EndGame);
+            self.in_game = false;
+        }
+        let (events, model, state, me, filled) = if is_empty(scene) {
+            let (events, model, state, me) = start(scene)?;
+            (events, model, state, me, None)
+        } else {
+            let (events, model, state, me) = fill(scene).ok_or(Rejected::Unexplained)?;
+            let n = events.len();
+            (events, model, state, me, Some((n, MarkKind::Filled)))
+        };
+        let mut out = Vec::new();
+        if !self.in_game {
+            self.earlier.push(Event::StartGame {
+                names: Default::default(),
+                seed: None,
+            });
+            out.push(Event::StartGame {
+                names: Default::default(),
+                seed: None,
+            });
+            self.in_game = true;
+        }
+        let (Some(label), honba) = (scene.round, scene.honba) else {
             return Err(Rejected::NoRound);
         };
-        let oya = label.number.saturating_sub(1) % 4;
-        let me = (oya + 4 - dealer % 4) % 4;
-        let mut tehai: Vec<Tile> = scene.hand.clone();
-        tehai.truncate(13);
-        if tehai.len() != 13 {
-            return Err(Rejected::Impossible("a round starts with 13 tiles in hand"));
-        }
-        let unknown = [unknown(); 13];
-        let mut tehais = [unknown; 4];
-        for (slot, tile) in tehais[usize::from(me)].iter_mut().zip(&tehai) {
-            *slot = rtile(*tile);
-        }
-        let mut scores = [25000; 4];
-        if let Some(seen) = scene.scores {
-            for (rel, score) in seen.iter().enumerate() {
-                scores[(usize::from(me) + rel) % 4] = *score;
-            }
-        }
-        let start = Event::StartKyoku {
-            bakaze: rtile(label.wind),
-            dora_marker: rtile(dora),
-            kyoku: label.number,
-            honba: scene.honba.unwrap_or(0),
-            kyotaku: scene.riichi_sticks.unwrap_or(0),
-            oya,
-            scores,
-            tehais,
-        };
-        let mut model = Model::default();
-        let mut state = PlayerState::new(me);
-        model.apply(&start, me).map_err(Rejected::Impossible)?;
-        state.update(&start).map_err(|_| Rejected::NoRound)?;
-        let mut events = vec![start];
-        // The dealer's first draw, if it shows already.
-        if let Some(more) = explain(&model, scene, me) {
-            for event in &more {
-                model.apply(event, me).map_err(Rejected::Impossible)?;
-                state.update(event).map_err(|_| Rejected::Unexplained)?;
-            }
-            events.extend(more);
-        }
-        if let Some(old) = self.round.take() {
-            self.earlier.extend(old.events);
-        }
-        self.round = Some(Round {
+        out.extend(events.iter().cloned());
+        let mut round = Round {
             label,
-            honba: scene.honba,
+            honba,
             me,
-            events: events.clone(),
+            events,
             model,
             state,
-        });
+            filled,
+            scores: None,
+            unexplained: 0,
+        };
+        round.note_scores(scene);
+        self.round = Some(round);
         Ok(Observed {
-            events,
+            events: out,
             rewritten: false,
         })
     }
+
+    /// Moves the current round's events to the log, ending them with how the round ended
+    /// (from its last scores and `next`'s, if given) and `end_kyoku`.
+    fn close_round(&mut self, next: Option<&Scene>) {
+        let Some(round) = self.round.take() else {
+            return;
+        };
+        let first = self.earlier.len();
+        if let Some((n, kind)) = round.filled {
+            self.marks.push(Mark {
+                first,
+                last: first + n,
+                kind,
+            });
+        }
+        self.earlier.extend(round.events);
+        let ended = round.scores.zip(next.and_then(scores_of)).and_then(
+            |((before, sticks), (after, sticks_after))| ending(before, sticks, after, sticks_after),
+        );
+        let at = self.earlier.len();
+        let abs = |seat: u8| (seat + round.me) % 4;
+        let in_turn_order = |deltas: [i32; 4]| -> [i32; 4] {
+            std::array::from_fn(|actor| deltas[(actor + 4 - usize::from(round.me)) % 4])
+        };
+        match ended {
+            Some(Ending::Win { winners, deltas }) => {
+                for (winner, from) in winners {
+                    self.earlier.push(Event::Hora {
+                        actor: abs(winner),
+                        target: abs(from),
+                        deltas: Some(in_turn_order(deltas)),
+                        ura_markers: None,
+                    });
+                }
+            }
+            Some(Ending::Draw { deltas }) => self.earlier.push(Event::Ryukyoku {
+                deltas: Some(in_turn_order(deltas)),
+            }),
+            None => self.marks.push(Mark {
+                first: at,
+                last: at + 1,
+                kind: MarkKind::UnknownEnding,
+            }),
+        }
+        self.earlier.push(Event::EndKyoku);
+    }
+}
+
+impl Round {
+    /// Keeps the scene's scores and sticks when they add up to the table's total.
+    fn note_scores(&mut self, scene: &Scene) {
+        if let Some(seen) = scores_of(scene) {
+            self.scores = Some(seen);
+        }
+    }
+}
+
+/// The scene's scores and riichi sticks, when both are read and they add up.
+fn scores_of(scene: &Scene) -> Option<([i32; 4], u8)> {
+    let scores = scene.scores?;
+    let sticks = scene.riichi_sticks?;
+    (scores.iter().sum::<i32>() + 1000 * i32::from(sticks) == 4 * START_SCORE)
+        .then_some((scores, sticks))
+}
+
+fn is_empty(scene: &Scene) -> bool {
+    scene.rivers.iter().all(Vec::is_empty) && scene.melds.iter().all(Vec::is_empty)
+}
+
+/// A game's first round: 東1局 0本場, everyone on the starting score.
+fn starts_game(scene: &Scene) -> bool {
+    scene
+        .round
+        .is_some_and(|l| l.number == 1 && l.wind.to_string() == "E")
+        && scene.honba.unwrap_or(0) == 0
+        && scene
+            .scores
+            .is_none_or(|s| s.iter().all(|&p| p == START_SCORE))
+}
+
+/// The scene's events, applied to the round; `None` if none explain it.
+fn explain_scene(round: &mut Round, scene: &Scene) -> Option<Observed> {
+    let events = explain(&round.model, scene, round.me)?;
+    let mut model = round.model.clone();
+    let mut state = round.state.clone();
+    for event in &events {
+        model.apply(event, round.me).ok()?;
+        state.update(event).ok()?;
+    }
+    round.model = model;
+    round.state = state;
+    round.events.extend(events.iter().cloned());
+    Some(Observed {
+        events,
+        rewritten: false,
+    })
+}
+
+/// Perhaps a tile was read wrongly before: the scene's in its place, the round replayed.
+fn correct(round: &mut Round, scene: &Scene) -> Option<Observed> {
+    for patched in corrections(round, scene) {
+        let Some((mut model, mut state)) = replay(&patched, round.me) else {
+            continue;
+        };
+        let Some(events) = explain(&model, scene, round.me) else {
+            continue;
+        };
+        if !events
+            .iter()
+            .all(|e| model.apply(e, round.me).is_ok() && state.update(e).is_ok())
+        {
+            continue;
+        }
+        round.events = patched;
+        round.events.extend(events.iter().cloned());
+        round.model = model;
+        round.state = state;
+        return Some(Observed {
+            events,
+            rewritten: true,
+        });
+    }
+    None
+}
+
+/// The player's seat in mjai's numbering and the `start_kyoku` of the scene's round with
+/// `tehai` as the player's starting hand.
+fn start_event(scene: &Scene, tehai: &[Tile], riichi_since: u8) -> Result<(Event, u8), Rejected> {
+    let (Some(label), Some(dealer), Some(&dora)) = (scene.round, scene.dealer, scene.dora.first())
+    else {
+        return Err(Rejected::NoRound);
+    };
+    if tehai.len() != 13 {
+        return Err(Rejected::Impossible("a round starts with 13 tiles in hand"));
+    }
+    let oya = label.number.saturating_sub(1) % 4;
+    let me = (oya + 4 - dealer % 4) % 4;
+    let mut tehais = [[unknown(); 13]; 4];
+    for (slot, tile) in tehais[usize::from(me)].iter_mut().zip(tehai) {
+        *slot = rtile(*tile);
+    }
+    let mut scores = [START_SCORE; 4];
+    if let Some(seen) = scene.scores {
+        for (rel, score) in seen.iter().enumerate() {
+            scores[(usize::from(me) + rel) % 4] = *score;
+        }
+    }
+    let start = Event::StartKyoku {
+        bakaze: rtile(label.wind),
+        dora_marker: rtile(dora),
+        kyoku: label.number,
+        honba: scene.honba.unwrap_or(0),
+        kyotaku: scene
+            .riichi_sticks
+            .unwrap_or(0)
+            .saturating_sub(riichi_since),
+        oya,
+        scores,
+        tehais,
+    };
+    Ok((start, me))
+}
+
+type Started = (Vec<Event>, Model, PlayerState, u8);
+
+/// A round seen from its start: `start_kyoku`, and the dealer's first draw if it shows.
+fn start(scene: &Scene) -> Result<Started, Rejected> {
+    let mut tehai = scene.hand.clone();
+    tehai.truncate(13);
+    let (start, me) = start_event(scene, &tehai, 0)?;
+    let mut model = Model::default();
+    let mut state = PlayerState::new(me);
+    model.apply(&start, me).map_err(Rejected::Impossible)?;
+    state.update(&start).map_err(|_| Rejected::NoRound)?;
+    let mut events = vec![start];
+    if let Some(more) = explain(&model, scene, me) {
+        for event in &more {
+            model.apply(event, me).map_err(Rejected::Impossible)?;
+            state.update(event).map_err(|_| Rejected::Unexplained)?;
+        }
+        events.extend(more);
+    }
+    Ok((events, model, state, me))
+}
+
+/// A history for a round first seen part way through: the player's starting hand is the
+/// tiles still held or melded from the hand, then the earliest discards; the turns from
+/// there are the first run of events found that leads to the scene.
+fn fill(scene: &Scene) -> Option<Started> {
+    let empty = Model::default();
+    let all = own_tiles_after(&empty, scene)?;
+    let mut kept: Vec<Tile> = scene.hand.clone();
+    for meld in &scene.melds[0] {
+        if meld.is_concealed_kan() {
+            let kind = meld.tiles.iter().flatten().next()?.kind();
+            let mut faces: Vec<Tile> = meld.tiles.iter().flatten().copied().collect();
+            faces.resize(4, Tile::from_kind(kind)?);
+            kept.extend(faces);
+        } else {
+            kept.extend(without_called(meld));
+            kept.extend(meld.added);
+        }
+    }
+    kept.truncate(13);
+    let mut later = minus(&all, &kept);
+    // The earliest discards make up the rest of the starting hand.
+    let river: Vec<Tile> = scene.rivers[0].iter().map(|t| t.tile).collect();
+    for tile in &river {
+        if kept.len() == 13 {
+            break;
+        }
+        if let Some(i) = later.iter().position(|t| t == tile) {
+            kept.push(later.remove(i));
+        }
+    }
+    while kept.len() < 13 && !later.is_empty() {
+        kept.push(later.remove(0));
+    }
+    // Each player in riichi has one sideways tile; their sticks came this round.
+    let riichi = scene
+        .rivers
+        .iter()
+        .filter(|r| r.iter().any(|t| t.sideways))
+        .count();
+    let (start, me) = start_event(scene, &kept, u8::try_from(riichi).ok()?).ok()?;
+    let mut model = Model::default();
+    let mut state = PlayerState::new(me);
+    model.apply(&start, me).ok()?;
+    state.update(&start).ok()?;
+    let draws = minus(&all, &model.hand);
+    let mut path = Vec::new();
+    if !search(
+        &model,
+        scene,
+        me,
+        &draws,
+        MAX_FILLED_STEPS,
+        &mut path,
+        &mut Seen::new(),
+    ) {
+        return None;
+    }
+    let mut events = vec![start];
+    for event in path.into_iter().flatten() {
+        model.apply(&event, me).ok()?;
+        state.update(&event).ok()?;
+        events.push(event);
+    }
+    Some((events, model, state, me))
 }
 
 /// The round's events with one tile replaced by what `scene` shows, for each tile the
@@ -389,15 +701,88 @@ fn explain(model: &Model, scene: &Scene, me: u8) -> Option<Vec<Event>> {
     if model.matches(scene) && draws.is_empty() {
         return Some(Vec::new());
     }
-    for limit in 1..=MAX_STEPS {
-        let mut path = Vec::new();
-        if search(model, scene, me, &draws, limit, &mut path) {
-            return Some(path.into_iter().flatten().collect());
-        }
+    // Every discard and every draw is a step at least: more than the search goes is
+    // known without searching.
+    let discards: usize = (0..4)
+        .map(|s| {
+            let calls = scene.melds[s]
+                .iter()
+                .skip(model.melds[s].len())
+                .filter(|m| m.sideways.is_some())
+                .count();
+            scene.rivers[s].len().saturating_sub(model.rivers[s].len()) + calls
+        })
+        .sum();
+    let all_draws = scene
+        .tiles_left
+        .map_or(0, |n| usize::from(model.tiles_left.saturating_sub(n)));
+    if discards + all_draws > MAX_STEPS {
+        return None;
     }
-    None
+    let mut path = Vec::new();
+    search(
+        model,
+        scene,
+        me,
+        &draws,
+        MAX_STEPS,
+        &mut path,
+        &mut Seen::new(),
+    )
+    .then(|| path.into_iter().flatten().collect())
 }
 
+/// Where a search stands, for telling a position reached twice: the rivers and melds
+/// only grow, so their lengths and the hand fix the rest.
+#[derive(PartialEq, Eq, Hash)]
+struct Position {
+    rivers: [usize; 4],
+    melds: [usize; 4],
+    added: usize,
+    hand: Vec<Tile>,
+    turn: u8,
+    discard: bool,
+    last_discard: Option<(u8, Tile)>,
+    flags: [(bool, bool, bool); 4],
+    dora: usize,
+    pending_dora: u8,
+    tiles_left: u8,
+    sticks: u8,
+}
+
+impl Model {
+    fn position(&self) -> Position {
+        let mut hand = self.hand.clone();
+        hand.sort();
+        Position {
+            rivers: std::array::from_fn(|s| self.rivers[s].len()),
+            melds: std::array::from_fn(|s| self.melds[s].len()),
+            added: self
+                .melds
+                .iter()
+                .flatten()
+                .filter(|m| m.added.is_some())
+                .count(),
+            hand,
+            turn: self.turn,
+            discard: self.phase == Phase::Discard,
+            last_discard: self.last_discard,
+            flags: std::array::from_fn(|s| {
+                (self.riichi[s], self.declared[s], self.sideways_next[s])
+            }),
+            dora: self.dora.len(),
+            pending_dora: self.pending_dora,
+            tiles_left: self.tiles_left,
+            sticks: self.sticks,
+        }
+    }
+}
+
+/// Positions already searched from, with the most steps that were left then: one
+/// reached again with no more steps left cannot lead anywhere new.
+type Seen = HashMap<Position, usize>;
+
+#[allow(clippy::too_many_arguments)]
 fn search(
     model: &Model,
     scene: &Scene,
@@ -405,12 +790,25 @@ fn search(
     draws: &[Tile],
     limit: usize,
     path: &mut Vec<Vec<Event>>,
+    seen: &mut Seen,
 ) -> bool {
     if model.matches(scene) && draws.is_empty() {
         return true;
     }
     if path.len() == limit || !model.prefix_of(scene) {
         return false;
+    }
+    let left_steps = limit - path.len();
+    match seen.entry(model.position()) {
+        Entry::Occupied(mut at) => {
+            if *at.get() >= left_steps {
+                return false;
+            }
+            at.insert(left_steps);
+        }
+        Entry::Vacant(at) => {
+            at.insert(left_steps);
+        }
     }
     for (events, used) in steps(model, scene, me, draws) {
         let mut next = model.clone();
@@ -429,7 +827,7 @@ fn search(
             None => draws.to_vec(),
         };
         path.push(events);
-        if search(&next, scene, me, &left, limit, path) {
+        if search(&next, scene, me, &left, limit, path, seen) {
             return true;
         }
         path.pop();
@@ -561,6 +959,11 @@ fn steps(model: &Model, scene: &Scene, me: u8, draws: &[Tile]) -> Vec<(Vec<Event
                         != Some(tile)
                 {
                     out.push((discard(model, scene, me, tile, false), None));
+                    // A riichi declaration that was called: the sticks tell.
+                    let s = usize::from(seat);
+                    if !model.riichi[s] && !model.sideways_next[s] {
+                        out.push((discard(model, scene, me, tile, true), None));
+                    }
                 }
             }
         }
@@ -727,6 +1130,7 @@ impl Model {
                 dora_marker,
                 oya,
                 tehais,
+                kyotaku,
                 ..
             } => {
                 *self = Self::default();
@@ -738,6 +1142,7 @@ impl Model {
                 self.turn = rel(oya, me);
                 self.phase = Phase::Draw;
                 self.tiles_left = TILES_LEFT;
+                self.sticks = kyotaku;
             }
             Event::Tsumo { actor, pai } => {
                 let seat = rel(actor, me);
@@ -779,6 +1184,7 @@ impl Model {
                 self.turn = (seat + 1) % 4;
                 self.phase = Phase::Draw;
             }
+            Event::ReachAccepted { .. } => self.sticks += 1,
             Event::Reach { actor } => {
                 if rel(actor, me) != self.turn || self.phase != Phase::Discard {
                     return Err("riichi out of turn");
@@ -905,6 +1311,7 @@ impl Model {
         held == shown
             && drawn_ok
             && scene.tiles_left.is_none_or(|n| n == self.tiles_left)
+            && scene.riichi_sticks.is_none_or(|n| n == self.sticks)
             && self.rivers == scene.rivers
             && self.dora == scene.dora
             && (0..4).all(|s| {
@@ -950,6 +1357,7 @@ impl Model {
             && melds
             && scene.dora.starts_with(&self.dora)
             && scene.tiles_left.is_none_or(|n| n <= self.tiles_left)
+            && scene.riichi_sticks.is_none_or(|n| n >= self.sticks)
     }
 }
 

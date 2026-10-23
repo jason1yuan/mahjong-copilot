@@ -25,10 +25,10 @@
     "columns": 6
   },
   "melds": {
-    "left": 0.0,
+    "left": -4.5,
     "right": 12.8,
     "near": 9.3,
-    "far": 12.7,
+    "far": 13.6,
     "start_after": 9.5
   },
   "dora": {

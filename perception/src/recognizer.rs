@@ -8,6 +8,9 @@
 //! the evaluation crops (see the PR for #4): on the multi-source simulations they mark 71 of
 //! the 76 classifier errors, and none of the 132 real hand tiles.
 //!
+//! A five from the cache is red or plain by its own strokes, since red and plain fives are
+//! too alike for the cache.
+//!
 //! Each zone of the table (the hand, each seat's river) keeps its own templates, since the
 //! same tile looks different in each (size, angle, light); they share the one classifier.
 //!
@@ -27,6 +30,7 @@ use mahjong_core::Tile;
 
 use crate::cache::TemplateCache;
 use crate::classifier::{ClassifierError, Prediction, TileClassifier};
+use crate::red_five;
 use crate::table::Seat;
 
 /// Crops narrower than this are in doubt.
@@ -122,7 +126,7 @@ impl<C: Classify> TileRecognizer<C> {
                 let small = crop.width() < MIN_TILE_WIDTH;
                 if let Some(hit) = (!small).then(|| cache.lookup(crop)).flatten() {
                     return Some(Recognition {
-                        tile: hit.tile,
+                        tile: redden(hit.tile, crop),
                         confidence: hit.confidence,
                         source: Source::Cache,
                         doubt: None,
@@ -171,6 +175,15 @@ impl<C: Classify> TileRecognizer<C> {
         // prediction per crop.
         Ok(results.into_iter().flatten().collect())
     }
+}
+
+/// A five matched in the cache is red or not by its own strokes, not the template's: red
+/// and plain fives differ in too few pixels for the cache to tell them apart.
+fn redden(tile: Tile, crop: &RgbImage) -> Tile {
+    if tile.to_red().is_none() {
+        return tile;
+    }
+    Tile::from_kind(tile.kind()).map_or(tile, |plain| red_five::refine(plain, crop))
 }
 
 #[cfg(test)]
@@ -249,6 +262,45 @@ mod tests {
         recognizer.clear_cache();
         recognizer.recognize(&hand).unwrap();
         assert_eq!(recognizer.classifier.asked, 6);
+    }
+
+    /// Says "5m", red when its strokes are, like the real classifier.
+    struct Fives;
+
+    impl Classify for Fives {
+        fn recognize(&mut self, crops: &[RgbImage]) -> Result<Vec<Prediction>, ClassifierError> {
+            let five: Tile = "5m".parse().unwrap();
+            Ok(crops
+                .iter()
+                .map(|c| Prediction {
+                    tile: red_five::refine(five, c),
+                    confidence: 0.95,
+                })
+                .collect())
+        }
+    }
+
+    /// A light tile with two strokes of `ink`.
+    fn five(ink: [u8; 3]) -> RgbImage {
+        RgbImage::from_fn(40, 56, |x, y| {
+            if (8..32).contains(&x) && ((16..20).contains(&y) || (34..38).contains(&y)) {
+                Rgb(ink)
+            } else {
+                Rgb([245, 245, 240])
+            }
+        })
+    }
+
+    #[test]
+    fn a_five_from_the_cache_is_red_by_its_own_strokes() {
+        let (red, black) = (five([200, 30, 30]), five([30, 30, 30]));
+        for (first, then, want) in [(&red, &black, "5m"), (&black, &red, "5mr")] {
+            let mut recognizer = TileRecognizer::new(Fives);
+            recognizer.recognize(std::slice::from_ref(first)).unwrap();
+            let hit = recognizer.recognize(std::slice::from_ref(then)).unwrap()[0];
+            assert_eq!(hit.source, Source::Cache);
+            assert_eq!(hit.tile.to_string(), want);
+        }
     }
 
     #[test]

@@ -5,7 +5,9 @@ pub mod calls;
 pub mod game;
 pub mod mortal;
 pub mod scoring;
+pub mod target;
 pub mod tile;
+pub mod yaku;
 
 pub use analysis::{
     AnalysisError, DiscardOption, Outlook, TileCounts, outlook, rank_discards, shanten, unseen,

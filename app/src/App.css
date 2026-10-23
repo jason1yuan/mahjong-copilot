@@ -376,6 +376,138 @@ body {
   padding: 4px 0;
 }
 
+.wait-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.wait-value {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.wait-yaku {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wait-points {
+  margin-left: auto;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.waits.grid .wait-value {
+  display: none;
+}
+
+/* Target hands (#13). */
+.target {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.target:last-child {
+  border-bottom: none;
+}
+
+.target-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.target-key {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 4px;
+  background: var(--chip);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+
+.target-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.target-value {
+  color: var(--muted);
+}
+
+.target-points {
+  margin-left: auto;
+}
+
+.chance {
+  width: 56px;
+  height: 4px;
+  flex: none;
+  border-radius: 2px;
+  background: var(--chip);
+  overflow: hidden;
+}
+
+.chance i {
+  display: block;
+  height: 100%;
+  background: var(--green);
+}
+
+.target-percent {
+  width: 52px;
+  flex: none;
+  text-align: right;
+  color: var(--muted);
+}
+
+.target-tiles {
+  display: flex;
+  gap: 2px;
+}
+
+.tile.missing .face {
+  outline: 1.5px dashed var(--muted);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+.tile.missing img {
+  opacity: 0.4;
+  filter: none;
+}
+
+.directions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 6px;
+}
+
+.directions span {
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: var(--chip);
+  font-size: 12px;
+  color: var(--text);
+}
+
 .wait-left {
   display: flex;
   align-items: center;

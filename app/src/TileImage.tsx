@@ -9,12 +9,16 @@ type Props = {
   mark?: "main" | 2 | 3 | null;
   dim?: boolean;
   doubt?: boolean;
+  // A tile still to draw: drawn faint in a dashed outline.
+  missing?: boolean;
 };
 
 // A tile picture with the panel's marks.
-export function Tile({ tile, width, mark = null, dim = false, doubt = false }: Props) {
-  const title = tile === null ? "扣着的牌" : name(tile) + (doubt ? "（拿不准）" : "");
-  const classes = ["tile", mark === "main" ? "main" : "", dim ? "dim" : ""].filter(Boolean).join(" ");
+export function Tile({ tile, width, mark = null, dim = false, doubt = false, missing = false }: Props) {
+  const title = tile === null ? "扣着的牌" : name(tile) + (doubt ? "（拿不准）" : missing ? "（还缺）" : "");
+  const classes = ["tile", mark === "main" ? "main" : "", dim ? "dim" : "", missing ? "missing" : ""]
+    .filter(Boolean)
+    .join(" ");
   return (
     <span className={classes} style={{ width }} title={title}>
       <span className="face">

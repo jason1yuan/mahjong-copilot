@@ -109,6 +109,34 @@ export type WinView = {
   othersPay: number;
   total: number;
 };
+// Target hands (#13), for the advice with the same `seq`: up to three ways to win with
+// the tiles still to draw, or broad directions when far from tenpai; and for a tenpai hand
+// waiting, what each wait is worth. Yaku are ids (camelCase), named in format.ts.
+export type TargetView = {
+  tiles: string[];
+  missing: string[];
+  yaku: string[];
+  han: number;
+  fu: number;
+  yakuman: number;
+  points: number;
+  probability: number;
+};
+export type Direction =
+  | { kind: "flush"; suit: number }
+  | { kind: "chiitoitsu" }
+  | { kind: "yakuhai"; tile: string }
+  | { kind: "tanyao" };
+export type WaitValue = { tile: string; yaku: string[]; han: number; fu: number; yakuman: number; points: number };
+export type TargetsView = {
+  seq: number;
+  targets: TargetView[];
+  directions: Direction[];
+  // Three or more steps from tenpai: the targets are only a rough guide.
+  rough: boolean;
+  waits: WaitValue[];
+  searchMs: number;
+};
 // Still screen to shown: all advice, and on frames with action buttons the advice and
 // Mortal's decision (null until there is one).
 export type Spread = { count: number; p50Ms: number; p95Ms: number };

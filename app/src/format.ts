@@ -1,7 +1,7 @@
 // Text for the panel. Rendering only: the advice itself comes from the pipeline.
 
 import { tileLabel } from "./tile";
-import type { GameView, WinView } from "./types";
+import type { Direction, GameView, WinView } from "./types";
 
 // 5萬 · 3筒（赤） · 北
 export function name(mjai: string): string {
@@ -52,4 +52,68 @@ export function paysText(w: WinView): string {
 // The same tile, red five or not.
 export function sameKind(a: string, b: string): boolean {
   return a.replace("r", "") === b.replace("r", "");
+}
+
+// Yaku of target hands and waits, by the ids mahjong_core::yaku sends.
+export const YAKU_NAMES: Record<string, string> = {
+  riichi: "立直",
+  pinfu: "平和",
+  tanyao: "断幺",
+  iipeikou: "一杯口",
+  white: "白",
+  green: "發",
+  red: "中",
+  roundWind: "场风",
+  seatWind: "自风",
+  sanshoku: "三色同顺",
+  ittsu: "一气通贯",
+  chanta: "混全带幺九",
+  junchan: "纯全带幺九",
+  toitoi: "对对和",
+  sanankou: "三暗刻",
+  sanshokuDoukou: "三色同刻",
+  sankantsu: "三杠子",
+  honroutou: "混老头",
+  shousangen: "小三元",
+  chiitoitsu: "七对子",
+  honitsu: "混一色",
+  chinitsu: "清一色",
+  ryanpeikou: "二杯口",
+  kokushi: "国士无双",
+  daisangen: "大三元",
+  suuankou: "四暗刻",
+  tsuuiisou: "字一色",
+  ryuuiisou: "绿一色",
+  chinroutou: "清老头",
+  shousuushii: "小四喜",
+  daisuushii: "大四喜",
+  chuuren: "九莲宝灯",
+  suukantsu: "四杠子",
+};
+
+// 立直 · 一气通贯, or 宝牌 when only dora would score.
+export function yakuText(yaku: string[]): string {
+  return yaku.map((y) => YAKU_NAMES[y] ?? y).join(" · ");
+}
+
+// 4 番 40 符 · 役满
+export function valueText(v: { han: number; fu: number; yakuman: number }): string {
+  if (v.yakuman > 0) return `${v.yakuman > 1 ? `${v.yakuman} 倍` : ""}役满`;
+  return `${v.han} 番${v.fu > 0 ? ` ${v.fu} 符` : ""}`;
+}
+
+const SUIT_NAMES = ["万子", "筒子", "索子"];
+
+// 染手（万子） · 七对子 · 役牌（中） · 断幺
+export function directionText(d: Direction): string {
+  switch (d.kind) {
+    case "flush":
+      return `染手（${SUIT_NAMES[d.suit] ?? "?"}）`;
+    case "chiitoitsu":
+      return "七对子";
+    case "yakuhai":
+      return `役牌（${name(d.tile)}）`;
+    case "tanyao":
+      return "断幺";
+  }
 }

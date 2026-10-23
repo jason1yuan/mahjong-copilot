@@ -70,6 +70,62 @@ function rememberCompact(on: boolean) {
   }
 }
 
+// The panel's look: following the system (the default), light or dark.
+type Theme = "system" | "light" | "dark";
+const THEMES: Theme[] = ["system", "light", "dark"];
+const THEME_NAMES: Record<Theme, string> = { system: "跟随系统", light: "浅色", dark: "深色" };
+const THEME_ICONS: Record<Theme, string> = { system: "◐", light: "☀", dark: "☾" };
+
+function rememberedTheme(): Theme {
+  try {
+    const t = localStorage.getItem("theme");
+    return t === "light" || t === "dark" ? t : "system";
+  } catch {
+    return "system";
+  }
+}
+
+// Keeps the chosen theme, and applies it (or the system's) as `data-theme` on the page.
+function useTheme(): [Theme, () => void] {
+  const [theme, setTheme] = useState<Theme>(rememberedTheme);
+  useEffect(() => {
+    const system = window.matchMedia("(prefers-color-scheme: light)");
+    const apply = () => {
+      const light = theme === "light" || (theme === "system" && system.matches);
+      document.documentElement.dataset.theme = light ? "light" : "dark";
+    };
+    apply();
+    system.addEventListener("change", apply);
+    return () => system.removeEventListener("change", apply);
+  }, [theme]);
+  const next = () =>
+    setTheme((t) => {
+      const n = THEMES[(THEMES.indexOf(t) + 1) % THEMES.length];
+      try {
+        localStorage.setItem("theme", n);
+      } catch {
+        // Storage is a convenience only.
+      }
+      return n;
+    });
+  return [theme, next];
+}
+
+function ThemeButton({ theme, onNext }: { theme: Theme; onNext: () => void }) {
+  const next = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+  return (
+    <button
+      type="button"
+      className="theme-button"
+      aria-label={`外观：${THEME_NAMES[theme]}`}
+      title={`外观：${THEME_NAMES[theme]}（点击切换到${THEME_NAMES[next]}）`}
+      onClick={onNext}
+    >
+      {THEME_ICONS[theme]}
+    </button>
+  );
+}
+
 // What the panel puts first: Mortal's decision for this hand when there is one, else the
 // rule layer's (docs/design.md, #22).
 type Plan = {
@@ -528,6 +584,7 @@ function App() {
   const [targets, setTargets] = useState<TargetsView | null>(null);
   const [defense, setDefense] = useState<DefenseView | null>(null);
   const [compact, setCompact] = useState(rememberedCompact);
+  const [theme, nextTheme] = useTheme();
   const panel = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -673,6 +730,7 @@ function App() {
     <main className="panel" ref={panel}>
       <header className="titlebar" data-tauri-drag-region>
         <WindowButtons compact={compact} onCompact={toggleCompact} />
+        <ThemeButton theme={theme} onNext={nextTheme} />
       </header>
       <div className="status-bar" data-tauri-drag-region>
         <span className="game" data-tauri-drag-region>

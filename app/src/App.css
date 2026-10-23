@@ -1,4 +1,4 @@
-/* The panel (#46), after the design 1a–1f and 2a: dark by default, light with the system. */
+/* The panel (#46), after the design 1a–1f and 2a: dark by default, light when chosen. */
 
 :root {
   --bg: rgba(20, 21, 24, 0.96);
@@ -24,24 +24,23 @@
   color: var(--text);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: rgba(251, 250, 247, 0.97);
-    --bg-sunk: #efece4;
-    --bg-dev: #f2f0ea;
-    --text: #1b1c1f;
-    --muted: #6b6d73;
-    --faint: #8a8c92;
-    --line: rgba(0, 0, 0, 0.07);
-    --line-soft: rgba(0, 0, 0, 0.06);
-    --chip: rgba(0, 0, 0, 0.05);
-    --red: #d23a3f;
-    --green: #2f9a6a;
-    --green-text: #2f7a56;
-    --card: #e8f3ec;
-    --card-edge: rgba(47, 154, 106, 0.5);
-    --shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
-  }
+/* Light: chosen in the panel, or following the system (App.tsx sets data-theme). */
+:root[data-theme="light"] {
+  --bg: rgba(251, 250, 247, 0.97);
+  --bg-sunk: #efece4;
+  --bg-dev: #f2f0ea;
+  --text: #1b1c1f;
+  --muted: #6b6d73;
+  --faint: #8a8c92;
+  --line: rgba(0, 0, 0, 0.07);
+  --line-soft: rgba(0, 0, 0, 0.06);
+  --chip: rgba(0, 0, 0, 0.05);
+  --red: #d23a3f;
+  --green: #2f9a6a;
+  --green-text: #2f7a56;
+  --card: #e8f3ec;
+  --card-edge: rgba(47, 154, 106, 0.5);
+  --shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 html,
@@ -77,6 +76,26 @@ body {
   align-items: center;
   height: 28px;
   padding: 0 12px;
+}
+
+/* The theme switch, at the title bar's right: follow the system, light or dark. */
+.theme-button {
+  margin-left: auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: var(--faint);
+  font-size: 13px;
+  line-height: 22px;
+  cursor: pointer;
+}
+
+.theme-button:hover {
+  background: var(--chip);
+  color: var(--text);
 }
 
 /* Status bar: game, round, seat wind, tiles left, dora indicators. */

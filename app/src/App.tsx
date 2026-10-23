@@ -53,6 +53,9 @@ const SMALL = 16;
 const WAIT = 34;
 const UKEIRE = 22;
 const TARGET = 19;
+// Meld tiles beside the hand, in the full panel and in compact mode.
+const MELD = 18;
+const MELD_COMPACT = 15;
 
 // Whether compact mode is on, kept per viewer; the panel works without it.
 function rememberedCompact(): boolean {
@@ -241,15 +244,17 @@ function CompactButton({ onToggle }: { onToggle: () => void }) {
 
 // The player's own melds, beside the hand: sideways tiles lie turned. They come in the order
 // they were made, the first at the right on the table, so they are drawn reversed.
-function OwnMelds({ melds }: { melds: TableTile[][] }) {
+function OwnMelds({ melds, width }: { melds: TableTile[][]; width: number }) {
+  // The sideways tiles' box and the added tile's place follow the tile width.
+  const size = { "--meld": `${width}px` } as React.CSSProperties;
   return (
-    <div className="melds">
+    <div className="melds" style={size}>
       {[...melds].reverse().map((meld, i) => (
         <div key={i} className="meld">
           {meld.map((t, j) => (
             <span key={j} className={`meld-tile${t.sideways ? " sideways" : ""}`}>
-              {t.added && <Tile tile={t.added} width={18} />}
-              <Tile tile={t.tile} width={18} />
+              {t.added && <Tile tile={t.added} width={width} />}
+              <Tile tile={t.tile} width={width} />
             </span>
           ))}
         </div>
@@ -330,7 +335,7 @@ function Hand({
           />
         </span>
       ))}
-      {melds.length > 0 && <OwnMelds melds={melds} />}
+      {melds.length > 0 && <OwnMelds melds={melds} width={width === COMPACT ? MELD_COMPACT : MELD} />}
     </div>
   );
 }

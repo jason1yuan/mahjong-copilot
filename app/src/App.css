@@ -443,6 +443,7 @@ body {
 }
 
 .melds {
+  --meld: 18px;
   display: inline-flex;
   align-items: flex-end;
   gap: 6px;
@@ -464,8 +465,8 @@ body {
 
 /* A called tile lies sideways; a tile added to it lies on top. */
 .meld-tile.sideways {
-  width: 24px;
-  height: 18px;
+  width: calc(var(--meld) * 4 / 3);
+  height: var(--meld);
   align-items: center;
   justify-content: center;
 }
@@ -476,7 +477,7 @@ body {
 
 .meld-tile.sideways .tile + .tile {
   position: absolute;
-  bottom: 18px;
+  bottom: var(--meld);
 }
 
 .headline-row {
@@ -963,7 +964,8 @@ body {
 }
 
 .panel.compact .melds {
-  display: none;
+  gap: 4px;
+  margin-left: 8px;
 }
 
 .compact-headline {

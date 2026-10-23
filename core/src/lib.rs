@@ -4,6 +4,7 @@ pub mod analysis;
 pub mod calls;
 pub mod game;
 pub mod mortal;
+pub mod scoring;
 pub mod tile;
 
 pub use analysis::{

@@ -2,11 +2,16 @@
 //! and table as the app does, works out the discard on offer, and prints every way to call
 //! it against not calling. Frames come in time order through one recognizer and hand
 //! tracker; only those the button labels mark are printed. Images stay local.
+//!
+//! Also times each advised frame from reading it to the call advice (finding the hand,
+//! recognizing it, reading the table, advising), which the app does once the screen has
+//! been still for two frames.
 //!     cargo run -p mahjong-perception --release --example eval_calls -- recordings/live --buttons recordings/live/buttons.json
 
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::path::{Path, PathBuf};
+use std::time::Instant;
 
 use mahjong_core::calls::{self, CallContext, CallKind};
 use mahjong_core::{Tile, parse_tiles};
@@ -45,6 +50,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut numbers = NumberReader::new(text::system());
     let dragons = parse_tiles("P F C")?;
     let (mut frames_seen, mut settled, mut advised, mut wins) = (0, 0, 0, 0);
+    let mut times = Vec::new();
 
     for path in frames(&paths)? {
         let name = name_of(&path);
@@ -52,6 +58,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let (w, h) = rgb.dimensions();
         let bgra: Vec<u8> = rgb.pixels().flat_map(|p| [p[2], p[1], p[0], 255]).collect();
         let frame = FrameView::new(w, h, w as usize * 4, &bgra, 2.0).ok_or("bad frame")?;
+        let start = Instant::now();
         let Some(layout) = tracker.find(&frame, profile.tile_face) else {
             continue;
         };
@@ -132,6 +139,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         };
         advised += 1;
+        times.push(start.elapsed().as_secs_f64() * 1e3);
         println!(
             "  {called}: stay shanten {} ukeire {}",
             advice.stay.shanten, advice.stay.ukeire_count
@@ -156,6 +164,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!(
         "\nframes with chi or pon: {frames_seen}; discard on offer settled in {settled}; advised in {advised}; with a win on offer {wins}"
     );
+    times.sort_by(f64::total_cmp);
+    if !times.is_empty() {
+        println!(
+            "frame to call advice: median {:.1} ms, p95 {:.1} ms, max {:.1} ms",
+            times[times.len() / 2],
+            times[times.len() * 95 / 100],
+            times[times.len() - 1]
+        );
+    }
     Ok(())
 }
 

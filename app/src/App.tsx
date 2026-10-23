@@ -1,290 +1,156 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { LogicalSize } from "@tauri-apps/api/dpi";
-import { ALL_TILES, tileLabel, tilePicture } from "./tile";
+import { DevArea } from "./DevArea";
+import { CALLS, hanText, name, paysText, roundText, sameKind, SEATS, shantenText, WINDS, YAKU } from "./format";
+import { Tile } from "./TileImage";
+import type {
+  Advice,
+  CallOptionView,
+  EngineView,
+  Latency,
+  MortalView,
+  OptionView,
+  Progress,
+  Recording,
+  Status,
+  Suggestion,
+  TableTile,
+  TileLeft,
+  WinView,
+} from "./types";
 import "./App.css";
 
-// Payloads sent by app/src-tauri/src/pipeline.rs; rendering only.
-type Status =
-  | { state: "noWindow" }
-  | { state: "watching"; app: string; title: string }
-  | { state: "error"; message: string };
+// Tile widths in px: the hand, the compact row, the status bar's dora, waits and the call card.
+const HAND = 26;
+const COMPACT = 22;
+const SMALL = 16;
+const WAIT = 34;
+const UKEIRE = 22;
 
-type TileView = { tile: string; doubt: "small" | "unsure" | null };
-// A tile on the table as read; `tile` is null for a tile face down.
-type TableTile = { tile: string | null; sideways: boolean; added: string | null; doubt: boolean };
-type TableView = { rivers: TableTile[][]; melds: TableTile[][][] };
-// The round, the player's wind and the numbers on the table, each null when not read, and
-// the action buttons shown, left to right.
-type GameView = {
-  round: string | null;
-  seatWind: string | null;
-  scores: number[] | null;
-  tilesLeft: number | null;
-  honba: number | null;
-  riichiSticks: number | null;
-  buttons: string[];
+// Whether compact mode is on, kept per viewer; the panel works without it.
+function rememberedCompact(): boolean {
+  try {
+    return localStorage.getItem("compact") === "1";
+  } catch {
+    return false;
+  }
+}
+
+function rememberCompact(on: boolean) {
+  try {
+    localStorage.setItem("compact", on ? "1" : "0");
+  } catch {
+    // Storage is a convenience only.
+  }
+}
+
+// What the panel puts first: Mortal's decision for this hand when there is one, else the
+// rule layer's (docs/design.md, #22).
+type Plan = {
+  // The tile to discard, its rule-layer numbers, and the second and third choices.
+  discard: string | null;
+  option: OptionView | null;
+  others: string[];
+  // The big line: 打 北 · 立直 · 打 5萬 · 杠 中 · 自摸.
+  headline: string | null;
+  // Grey when it is another player's discard to decide on.
+  waiting: boolean;
+  card: "call" | "win" | null;
+  mortal: boolean;
 };
-type OptionView = { discard: string; shanten: number; ukeireCount: number };
-// One way to call (#11): the two tiles from the hand, the discard after it and where the
-// hand then stands, and the yaku still within reach.
-type CallOptionView = {
-  kind: "chi" | "pon";
-  with: string[];
-  discard: string;
-  shanten: number;
-  ukeireCount: number;
-  yaku: string[];
-};
-// What the state engine (#10) made of the table: the current game's log so far.
-type EngineView = {
-  events: number;
-  round: string | null;
-  honba: number | null;
-  filled: boolean;
-  gaps: number;
-  last: "taken" | "covered" | "unexplained" | "impossible";
-};
-// Whether and how to call the discard on offer; `take` is null to let it go.
-type CallView = {
-  called: string;
-  stayShanten: number;
-  stayUkeireCount: number;
-  options: CallOptionView[];
-  take: number | null;
-};
-type Advice = {
-  seq: number;
-  tiles: TileView[];
-  drawn: boolean;
-  discard: number | null;
-  options: OptionView[];
-  shanten: number | null;
-  ukeire: string[];
-  ukeireCount: number | null;
-  dora: TileView[];
-  seen: number | null;
-  table: TableView | null;
-  game: GameView | null;
-  call: CallView | null;
-  times: {
-    settleMs: number;
-    findMs: number;
-    recognizeMs: number;
-    tableMs: number;
-    decideMs: number;
-    sentMs: number;
+
+function optionFor(advice: Advice, tile: string | null): OptionView | null {
+  if (tile === null) return null;
+  return (
+    advice.options.find((o) => o.discard === tile) ?? advice.options.find((o) => sameKind(o.discard, tile)) ?? null
+  );
+}
+
+function plan(advice: Advice, ai: MortalView | null, win: WinView | null): Plan {
+  const mustDiscard = advice.tiles.length % 3 === 2;
+  const ruleDiscard = advice.discard !== null ? advice.tiles[advice.discard].tile : null;
+  const ruleOthers = advice.options.slice(1, 3).map((o) => o.discard);
+  const callButtons = advice.game?.buttons.some((b) => b === "chi" || b === "pon" || b === "kan") ?? false;
+  const mortalCall = ai !== null && ["chi", "pon", "kan", "pass"].includes(ai.best.kind) && !mustDiscard;
+  const base: Plan = {
+    discard: null,
+    option: null,
+    others: [],
+    headline: null,
+    waiting: false,
+    card: null,
+    mortal: ai !== null,
   };
-};
-// One of Mortal's choices (#22): what to do, the tile discarded, called or made a kan of,
-// and for a call the tiles from the hand.
-type Suggestion = {
-  kind: "discard" | "riichi" | "chi" | "pon" | "kan" | "win" | "draw" | "pass";
-  tile: string | null;
-  consumed: string[];
-  q: number;
-};
-// Mortal's decision for the advice with the same `seq`.
-type MortalView = {
-  seq: number;
-  best: Suggestion;
-  riichiDiscard: Suggestion | null;
-  discards: Suggestion[];
-  decideMs: number;
-};
-// What the win on offer is worth (#11), for the advice with the same `seq`. `fu` is 0
-// from 5 han on, `han` and `fu` are 0 for a yakuman; ura dora are not counted.
-type WinView = {
-  seq: number;
-  ron: boolean;
-  han: number;
-  fu: number;
-  yakuman: number;
-  points: number;
-  dealerPays: number;
-  othersPay: number;
-  total: number;
-};
-// Still screen to shown: all advice, and on frames with action buttons the advice and
-// Mortal's decision (null until there is one).
-type Spread = { count: number; p50Ms: number; p95Ms: number };
-type Latency = {
-  count: number;
-  lastMs: number;
-  p50Ms: number;
-  p95Ms: number;
-  buttons: Spread | null;
-  buttonsMortal: Spread | null;
-};
-type Progress = { name: string; downloaded: number; total: number };
-// The dev build's debug recording (#8); null in a packaged app.
-type Recording = { on: boolean; saved: number; dir: string };
 
-function shantenText(shanten: number): string {
-  if (shanten < 0) return "和了";
-  if (shanten === 0) return "听牌";
-  return `${shanten} 向听`;
-}
-
-function name(mjai: string): string {
-  const label = tileLabel(mjai);
-  return `${label.rank}${label.suit}${mjai.endsWith("r") ? "（赤）" : ""}`;
-}
-
-// A tile in hand: the suggested discard raised in a red frame with an arrow, the second
-// and third choices with a bar under them.
-function Tile({ view, best, choice }: { view: TileView; best: boolean; choice: 2 | 3 | null }) {
-  const classes = ["tile", best ? "best" : ""].join(" ");
-  const title = name(view.tile) + (view.doubt ? "（拿不准）" : "");
-  return (
-    <div className={classes} title={title}>
-      {best && <span className="arrow">▼</span>}
-      <img src={tilePicture(view.tile)} alt={title} draggable={false} />
-      {view.doubt && <span className="doubt">?</span>}
-      {choice && <span className={`choice choice-${choice}`} />}
-    </div>
-  );
-}
-
-function statusText(status: Status | null, models: string | null): string {
-  if (models) return models;
-  if (!status) return "正在启动";
-  switch (status.state) {
-    case "noWindow":
-      return "未找到雀魂窗口：请在浏览器中打开雀魂";
-    case "watching":
-      return status.title;
-    case "error":
-      return status.message;
+  if (win) {
+    return {
+      ...base,
+      headline: win.ron ? "可以荣和" : "可以自摸",
+      card: "win",
+    };
   }
-}
-
-const WINDS: Record<string, string> = { E: "东", S: "南", W: "西", N: "北" };
-const BUTTONS: Record<string, string> = {
-  chi: "吃",
-  pon: "碰",
-  kan: "杠",
-  ron: "和",
-  riichi: "立直",
-  tsumo: "自摸",
-};
-
-// 东2局 · 自风 北 · 余 45 · 1 本场 · 供托 0 · 可以 碰 杠, leaving out what was not read.
-function gameText(game: GameView): string {
-  const parts = [];
-  if (game.round) parts.push(`${WINDS[game.round[0]] ?? "?"}${game.round.slice(1)}局`);
-  if (game.seatWind) parts.push(`自风 ${WINDS[game.seatWind] ?? "?"}`);
-  if (game.tilesLeft !== null) parts.push(`余 ${game.tilesLeft}`);
-  if (game.honba !== null) parts.push(`${game.honba} 本场`);
-  if (game.riichiSticks !== null) parts.push(`供托 ${game.riichiSticks}`);
-  if (game.buttons.length > 0) {
-    parts.push(`可以 ${game.buttons.map((b) => BUTTONS[b] ?? b).join(" ")}`);
+  if (mustDiscard) {
+    let discard = ruleDiscard;
+    let headline = ruleDiscard ? `打 ${name(ruleDiscard)}` : null;
+    let others = ruleOthers;
+    if (ai) {
+      const b = ai.best;
+      const mortalOthers = ai.discards.slice(1, 3).flatMap((d) => (d.tile ? [d.tile] : []));
+      if (b.kind === "discard" && b.tile) {
+        discard = b.tile;
+        headline = `打 ${name(b.tile)}`;
+        others = mortalOthers;
+      } else if (b.kind === "riichi") {
+        discard = ai.riichiDiscard?.tile ?? null;
+        headline = discard ? `立直 · 打 ${name(discard)}` : "立直";
+        others = [];
+      } else if (b.kind === "kan" && b.tile) {
+        discard = null;
+        headline = `杠 ${name(b.tile)}`;
+        others = [];
+      } else if (b.kind === "draw") {
+        discard = null;
+        headline = "九种九牌 · 流局";
+        others = [];
+      } else if (b.kind === "win") {
+        discard = null;
+        headline = "自摸";
+        others = [];
+      }
+    }
+    return { ...base, discard, option: optionFor(advice, discard), others, headline };
   }
-  return parts.join(" · ");
-}
-
-const CALLS: Record<string, string> = { chi: "吃", pon: "碰" };
-const YAKU: Record<string, string> = { yakuhai: "役牌", tanyao: "断幺", honitsu: "混一色", toitoi: "对对和" };
-
-// 吃 3p（4p5p）→ 打 F · 1 向听 11 张 · 断幺
-function callText(called: string, o: CallOptionView): string {
-  const yaku = o.yaku.length > 0 ? o.yaku.map((y) => YAKU[y] ?? y).join(" ") : "无役";
-  return `${CALLS[o.kind]} ${name(called)}（${o.with.map(name).join("")}）→ 打 ${name(o.discard)} · ${shantenText(o.shanten)} ${o.ukeireCount} 张 · ${yaku}`;
-}
-
-// 立直，打 5m · 吃 3p（4p5p） · 跳过
-function mortalText(m: MortalView): string {
-  const t = (s: Suggestion) => (s.tile ? name(s.tile) : "");
-  const b = m.best;
-  switch (b.kind) {
-    case "discard":
-      return `打 ${t(b)}`;
-    case "riichi":
-      return m.riichiDiscard ? `立直，打 ${t(m.riichiDiscard)}` : "立直";
-    case "chi":
-      return `吃 ${t(b)}（${b.consumed.map(name).join("")}）`;
-    case "pon":
-      return `碰 ${t(b)}`;
-    case "kan":
-      return `杠 ${t(b)}`;
-    case "win":
-      return "和了";
-    case "draw":
-      return "九种九牌，流局";
-    case "pass":
-      return "跳过";
+  const called = advice.call?.called ?? (mortalCall && ai?.best.kind !== "pass" ? ai?.best.tile : null) ?? null;
+  if (advice.call || (mortalCall && callButtons)) {
+    const seat = advice.call?.from ? SEATS[advice.call.from] : "";
+    return {
+      ...base,
+      headline: called ? `${seat}打 ${name(called)}` : "可以鸣牌",
+      waiting: true,
+      card: "call",
+    };
   }
+  return base;
 }
 
-// 荣和 3 番 40 符 5200 · 自摸 2 番 20 符 700/400 · 役满 32000, then the total with the honba
-// and riichi sticks when they add to it.
-function winText(w: WinView): string {
-  const kind = w.ron ? "荣和" : "自摸";
-  const value =
-    w.yakuman > 0 ? `${w.yakuman > 1 ? `${w.yakuman} 倍` : ""}役满` : `${w.han} 番${w.fu > 0 ? ` ${w.fu} 符` : ""}`;
-  const pays = w.ron ? `${w.points}` : w.dealerPays > 0 ? `${w.dealerPays}/${w.othersPay}` : `各 ${w.othersPay}`;
-  const total = w.total !== w.points ? ` · 共得 ${w.total}` : "";
-  return `${kind} ${value} ${pays}${total}`;
-}
-
-// The call to take, or to let the discard go, then the other ways to call it.
-function CallAdvice({ call }: { call: CallView }) {
-  const take = call.take === null ? null : call.options[call.take];
-  const stay = `不鸣 ${name(call.called)} · ${shantenText(call.stayShanten)} ${call.stayUkeireCount} 张`;
-  const others = call.options.filter((_, i) => i !== call.take);
+function WindowButtons({ compact, onCompact }: { compact: boolean; onCompact: () => void }) {
+  const window = getCurrentWindow();
   return (
-    <>
-      <p className={take ? "call take" : "call"}>{take ? `✓ ${callText(call.called, take)}` : `✗ ${stay}`}</p>
-      {(others.length > 0 || take) && (
-        <p className="options">
-          {take && <span>{stay}</span>}
-          {others.map((o) => (
-            <span key={`${o.kind}${o.with.join("")}`}>{callText(call.called, o)}</span>
-          ))}
-        </p>
-      )}
-    </>
+    <span className="window-buttons">
+      <button type="button" className="close" aria-label="关闭" title="关闭" onClick={() => window.close()} />
+      <button type="button" className="minimize" aria-label="最小化" title="最小化" onClick={() => window.minimize()} />
+      <button
+        type="button"
+        className="compact"
+        aria-label={compact ? "完整模式" : "紧凑模式"}
+        title={compact ? "完整模式" : "紧凑模式"}
+        onClick={onCompact}
+      />
+    </span>
   );
-}
-
-const SCENES: Record<EngineView["last"], string> = {
-  taken: "跟上了",
-  covered: "画面被挡住",
-  unexplained: "这一帧对不上",
-  impossible: "这一帧读错了",
-};
-
-// 牌谱 东2局 1本场 · 312 个事件, and what the log is missing; the dev build also shows how
-// the last scene went.
-function EngineLine({ engine, dev }: { engine: EngineView; dev: boolean }) {
-  const round = engine.round ? `${WINDS[engine.round[0]] ?? "?"}${engine.round.slice(1)}局` : "";
-  const honba = engine.honba ? ` ${engine.honba}本场` : "";
-  return (
-    <p className="engine">
-      牌谱 {round}
-      {honba} · {engine.events} 个事件
-      {engine.filled && " · 这一局是中途开始看的，前面是补出的，建议在对局开始前打开"}
-      {engine.gaps > 0 && ` · ${engine.gaps} 段没看清，已按画面补上`}
-      {dev && ` · ${SCENES[engine.last]}`}
-    </p>
-  );
-}
-
-// Seats in turn order from the player, as the table view lists them.
-const SEATS = ["自家", "下家", "对家", "上家"];
-// The dev build opens taller, to fit the table view.
-const DEV_HEIGHT = 430;
-
-function short(mjai: string): string {
-  const label = tileLabel(mjai);
-  return `${label.rank}${label.suit}${mjai.endsWith("r") ? "赤" : ""}`;
-}
-
-function tableText(t: TableTile): string {
-  const face = t.tile === null ? "▮" : short(t.tile);
-  return `${face}${t.sideways ? "↻" : ""}${t.added ? `+${short(t.added)}` : ""}${t.doubt ? "?" : ""}`;
 }
 
 // The player's own melds, beside the hand: sideways tiles lie turned. They come in the order
@@ -295,9 +161,9 @@ function OwnMelds({ melds }: { melds: TableTile[][] }) {
       {[...melds].reverse().map((meld, i) => (
         <div key={i} className="meld">
           {meld.map((t, j) => (
-            <span key={j} className={`meld-tile${t.sideways ? " sideways" : ""}`} title={tableText(t)}>
-              {t.added && <img className="added" src={tilePicture(t.added)} alt="" draggable={false} />}
-              <img src={tilePicture(t.tile)} alt={tableText(t)} draggable={false} />
+            <span key={j} className={`meld-tile${t.sideways ? " sideways" : ""}`}>
+              {t.added && <Tile tile={t.added} width={18} />}
+              <Tile tile={t.tile} width={18} />
             </span>
           ))}
         </div>
@@ -306,99 +172,246 @@ function OwnMelds({ melds }: { melds: TableTile[][] }) {
   );
 }
 
-// Every seat's river and melds as read; dev build only, for debugging the table reading.
-function TableDebug({ table, scores }: { table: TableView; scores: number[] | null }) {
+// The hand: the drawn tile apart, the first choice raised and framed, the second and third
+// with bars; while a call is on offer, the tiles it does not use are dimmed.
+function Hand({
+  advice,
+  p,
+  keep,
+  width,
+}: {
+  advice: Advice;
+  p: Plan;
+  keep: string[] | null;
+  width: number;
+}) {
+  const marks = new Map<number, "main" | 2 | 3>();
+  const lastIndex = (tile: string, taken: Set<number>) => {
+    for (let i = advice.tiles.length - 1; i >= 0; i--) {
+      if (!taken.has(i) && advice.tiles[i].tile === tile) return i;
+    }
+    for (let i = advice.tiles.length - 1; i >= 0; i--) {
+      if (!taken.has(i) && sameKind(advice.tiles[i].tile, tile)) return i;
+    }
+    return null;
+  };
+  const taken = new Set<number>();
+  if (p.discard) {
+    const i = lastIndex(p.discard, taken);
+    if (i !== null) {
+      marks.set(i, "main");
+      taken.add(i);
+    }
+  }
+  p.others.forEach((tile, k) => {
+    const i = lastIndex(tile, taken);
+    if (i !== null) {
+      marks.set(i, k === 0 ? 2 : 3);
+      taken.add(i);
+    }
+  });
+  const bright = new Set<number>();
+  if (keep) {
+    for (const tile of keep) {
+      const i = lastIndex(tile, bright);
+      if (i !== null) bright.add(i);
+    }
+  }
+  const concealed = advice.tiles.length - (advice.drawn ? 1 : 0);
+  const melds = advice.table?.melds[0] ?? [];
   return (
-    <div className="table-debug">
-      <p className="legend">↻ 横放（被鸣的牌、立直宣言牌） · +X 加杠 · ▮ 扣着的牌 · ? 拿不准</p>
-      {SEATS.map((seat, i) => (
-        <p key={seat}>
-          <span className="seat">{seat}</span>
-          {scores && <span className="score">{scores[i]}</span>}
-          <span>河 {table.rivers[i].map(tableText).join(" ") || "—"}</span>
-          {table.melds[i].length > 0 && (
-            <span> ｜ 副露 {table.melds[i].map((m) => `[${m.map(tableText).join(" ")}]`).join(" ")}</span>
-          )}
-        </p>
+    <div className="hand">
+      {advice.tiles.map((view, i) => (
+        <span key={i} className={i === concealed ? "drawn" : undefined}>
+          <Tile
+            tile={view.tile}
+            width={width}
+            mark={marks.get(i) ?? null}
+            dim={keep !== null && !bright.has(i)}
+            doubt={view.doubt !== null}
+          />
+        </span>
       ))}
+      {melds.length > 0 && <OwnMelds melds={melds} />}
     </div>
   );
 }
 
-function WindowButtons() {
-  const window = getCurrentWindow();
-  return (
-    <span className="window-buttons">
-      <button type="button" className="close" aria-label="关闭" title="关闭" onClick={() => window.close()} />
-      <button type="button" className="minimize" aria-label="最小化" title="最小化" onClick={() => window.minimize()} />
-      <button
-        type="button"
-        className="maximize"
-        aria-label="最大化"
-        title="最大化"
-        onClick={() => window.toggleMaximize()}
-      />
-    </span>
-  );
-}
-
-// Screenshot button and recording switch for the table evaluation set; dev build only.
-// Every tile picture with its mjai name, to check them in both themes; dev build only.
-function TileSheet() {
-  return (
-    <div className="tile-sheet">
-      {[...ALL_TILES, null].map((mjai) => (
-        <figure key={mjai ?? "back"}>
-          <img src={tilePicture(mjai)} alt={mjai ?? "back"} />
-          <figcaption>{mjai ?? "背"}</figcaption>
-        </figure>
-      ))}
-    </div>
-  );
-}
-
-function DebugRecording({ initial }: { initial: Recording }) {
-  const [recording, setRecording] = useState(initial);
-  const [error, setError] = useState<string | null>(null);
-  const [sheet, setSheet] = useState(false);
-
-  useEffect(() => {
-    const unlisten = listen<number>("frame-saved", (e) =>
-      setRecording((r) => ({ ...r, saved: e.payload })),
+// The tiles that improve the hand, or the waits once it is tenpai, with how many are left.
+function Ukeire({ shanten, tiles }: { shanten: number; tiles: TileLeft[] }) {
+  const total = tiles.reduce((n, t) => n + t.left, 0);
+  if (shanten === 0) {
+    return (
+      <>
+        <h2>
+          待牌 · {tiles.length} 种 {total} 张
+        </h2>
+        <div className={tiles.length > 3 ? "waits grid" : "waits"}>
+          {tiles.map((t) => (
+            <div key={t.tile} className="wait">
+              <Tile tile={t.tile} width={tiles.length > 3 ? UKEIRE : WAIT} />
+              <div className="wait-left">
+                剩 <b className="num">{t.left}</b> 张
+                <span className="pips">
+                  {[0, 1, 2, 3].map((k) => (
+                    <i key={k} className={k < t.left ? "on" : ""} />
+                  ))}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
     );
-    return () => {
-      unlisten.then((stop) => stop());
-    };
-  }, []);
-
-  const report = (err: unknown) => setError(String(err));
-  const shoot = () => {
-    setError(null);
-    invoke("save_frame").catch(report);
-  };
-  const toggle = (on: boolean) => {
-    setError(null);
-    invoke<Recording>("set_recording", { on }).then(setRecording).catch(report);
-  };
-
+  }
   return (
-    <div className="dev">
-      <button type="button" onClick={shoot}>
-        截图
-      </button>
-      <label>
-        <input type="checkbox" checked={recording.on} onChange={(e) => toggle(e.target.checked)} />
-        连续录制
-      </label>
-      <span title={recording.dir}>已存 {recording.saved} 张</span>
-      <label>
-        <input type="checkbox" checked={sheet} onChange={(e) => setSheet(e.target.checked)} />
-        牌图
-      </label>
-      {error && <span className="dev-error">{error}</span>}
-      {sheet && <TileSheet />}
+    <>
+      <h2>
+        {shantenText(shanten)} · 进张 {tiles.length} 种 {total} 张
+      </h2>
+      <div className="ukeire">
+        {tiles.map((t) => (
+          <div key={t.tile} className={t.left === 0 ? "gone" : undefined}>
+            <Tile tile={t.tile} width={UKEIRE} />
+            <span className="num">{t.left}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function callLine(o: CallOptionView): string {
+  const yaku = o.yaku.length > 0 ? o.yaku.map((y) => YAKU[y] ?? y).join(" ") : "无役";
+  return `→ 打 ${name(o.discard)} · ${shantenText(o.shanten)} ${o.ukeireCount} 张 · ${yaku}`;
+}
+
+// The call on offer: who discarded what, the call to make (or to let it go), and the
+// other choice under it.
+function CallCard({ advice, ai }: { advice: Advice; ai: MortalView | null }) {
+  const call = advice.call;
+  const m: Suggestion | null =
+    ai && ["chi", "pon", "kan", "pass"].includes(ai.best.kind) ? ai.best : null;
+  let take: { kind: string; tiles: string[]; option: CallOptionView | null } | null = null;
+  if (m) {
+    if (m.kind !== "pass") {
+      const option =
+        call?.options.find(
+          (o) =>
+            o.kind === m.kind &&
+            o.with.every((w) => m.consumed.some((c) => sameKind(c, w))),
+        ) ?? null;
+      take = { kind: m.kind, tiles: m.consumed, option };
+    }
+  } else if (call && call.take !== null) {
+    const o = call.options[call.take];
+    take = { kind: o.kind, tiles: o.with, option: o };
+  }
+  const called = call?.called ?? m?.tile ?? null;
+  const stay = call
+    ? `不鸣 · ${shantenText(call.stayShanten)} · ${call.stayUkeireCount} 张`
+    : "不鸣";
+  const alternative = !take && call && call.options.length > 0 ? call.options[0] : null;
+  return (
+    <div className="card call-card">
+      <div className="card-main">
+        {called && (
+          <div className="from">
+            {call?.from ? SEATS[call.from] : ""}
+            <Tile tile={called} width={WAIT} />
+          </div>
+        )}
+        <span className="to">→</span>
+        {take ? (
+          <div className="decision">
+            <div className="decision-top">
+              <span className="yes">✓</span>
+              <span className="verb">{CALLS[take.kind] ?? take.kind}</span>
+              <span className="call-tiles">
+                {[...take.tiles, ...(called ? [called] : [])].map((t, i) => (
+                  <Tile key={i} tile={t} width={UKEIRE} />
+                ))}
+              </span>
+            </div>
+            <span className="decision-sub">{take.option ? callLine(take.option) : take.kind === "kan" ? "→ 杠后摸岭上牌" : ""}</span>
+          </div>
+        ) : (
+          <div className="decision">
+            <div className="decision-top">
+              <span className="no">✗</span>
+              <span className="verb">不鸣</span>
+            </div>
+            <span className="decision-sub">{call ? `${shantenText(call.stayShanten)} · ${call.stayUkeireCount} 张` : ""}</span>
+          </div>
+        )}
+      </div>
+      {(take || alternative) && (
+        <div className="card-alt">
+          {take ? (
+            <>
+              <span className="no small">✗</span>
+              {stay}
+            </>
+          ) : (
+            alternative && (
+              <>
+                <span className="small">{CALLS[alternative.kind]}</span>
+                {alternative.with.map(name).join("")} {callLine(alternative)}
+              </>
+            )
+          )}
+        </div>
+      )}
+      {m && <span className="source">Mortal</span>}
     </div>
   );
+}
+
+// The win on offer and what it is worth.
+function WinCard({ win, ai }: { win: WinView; ai: MortalView | null }) {
+  const declines = ai !== null && ai.best.kind !== "win";
+  return (
+    <div className="card win-card">
+      <div className="card-main">
+        <div className="decision">
+          <div className="decision-top">
+            <span className={declines ? "no" : "yes"}>{declines ? "✗" : "✓"}</span>
+            <span className="verb">{win.ron ? "荣和" : "自摸"}</span>
+            <span className="points num">{paysText(win)}</span>
+          </div>
+          <span className="decision-sub">
+            {hanText(win)}
+            {win.total !== win.points && ` · 加本场和供托共得 ${win.total}`} · 不含里宝牌
+          </span>
+        </div>
+      </div>
+      {declines && <div className="card-alt">Mortal 建议先不和</div>}
+      {ai && <span className="source">Mortal</span>}
+    </div>
+  );
+}
+
+function Notices({ notes }: { notes: string[] }) {
+  return (
+    <div className="notices">
+      {notes.map((n) => (
+        <span key={n}>{n}</span>
+      ))}
+    </div>
+  );
+}
+
+function statusNote(status: Status | null, models: string | null): string | null {
+  if (models) return models;
+  if (!status) return "正在启动";
+  switch (status.state) {
+    case "noWindow":
+      return "未找到雀魂窗口：请在浏览器中打开雀魂";
+    case "error":
+      return status.message;
+    case "watching":
+      return null;
+  }
 }
 
 function App() {
@@ -410,15 +423,12 @@ function App() {
   const [engine, setEngine] = useState<EngineView | null>(null);
   const [mortal, setMortal] = useState<MortalView | null>(null);
   const [win, setWin] = useState<WinView | null>(null);
+  const [compact, setCompact] = useState(rememberedCompact);
+  const panel = useRef<HTMLElement>(null);
 
   useEffect(() => {
     invoke<Status | null>("pipeline_status").then(setStatus).catch(() => undefined);
-    invoke<Recording | null>("debug_recording")
-      .then((r) => {
-        setRecording(r);
-        if (r) getCurrentWindow().setSize(new LogicalSize(560, DEV_HEIGHT)).catch(() => undefined);
-      })
-      .catch(() => undefined);
+    invoke<Recording | null>("debug_recording").then(setRecording).catch(() => undefined);
     const unlisten = [
       listen<Status>("pipeline-status", (e) => setStatus(e.payload)),
       listen<Advice | null>("advice", (e) => setAdvice(e.payload)),
@@ -436,6 +446,25 @@ function App() {
     return () => {
       unlisten.forEach((p) => p.then((stop) => stop()));
     };
+  }, []);
+
+  // The window takes the panel's height, so it never shows empty space or cuts it off.
+  useLayoutEffect(() => {
+    const el = panel.current;
+    if (!el) return;
+    let last = 0;
+    const fit = () => {
+      const height = Math.ceil(el.getBoundingClientRect().height);
+      if (height === last || height === 0) return;
+      last = height;
+      getCurrentWindow()
+        .setSize(new LogicalSize(window.innerWidth, height))
+        .catch(() => undefined);
+    };
+    const observer = new ResizeObserver(fit);
+    observer.observe(el);
+    fit();
+    return () => observer.disconnect();
   }, []);
 
   // Report when Mortal's decision is on screen too, for the latency of call decisions.
@@ -460,110 +489,151 @@ function App() {
     );
   }, [advice]);
 
-  const watching = status?.state === "watching";
-  const concealed = advice ? advice.tiles.length - (advice.drawn ? 1 : 0) : 0;
-  // Mortal's decision for this hand comes first; the rule-based advice is the fallback.
+  const toggleCompact = () =>
+    setCompact((c) => {
+      rememberCompact(!c);
+      return !c;
+    });
+
   const ai = advice && mortal?.seq === advice.seq ? mortal : null;
   const winNow = advice && win?.seq === advice.seq ? win : null;
-  const lastIndex = (tile: string | null, skip: number | null) => {
-    if (!advice || tile === null) return null;
-    for (let i = advice.tiles.length - 1; i >= 0; i--) {
-      if (advice.tiles[i].tile === tile && i !== skip) return i;
+  const p = advice ? plan(advice, ai, winNow) : null;
+  const game = advice?.game ?? null;
+  const gameName = status?.state === "watching" ? status.game : "麻将 Copilot";
+
+  // The tiles a call uses and the discard after it stay bright in the hand.
+  let keep: string[] | null = null;
+  if (advice && p?.card === "call") {
+    const m = ai && ["chi", "pon", "kan"].includes(ai.best.kind) ? ai.best : null;
+    const option = advice.call && advice.call.take !== null ? advice.call.options[advice.call.take] : null;
+    if (m) {
+      const after = advice.call?.options.find((o) => o.kind === m.kind && o.with.every((w) => m.consumed.some((c) => sameKind(c, w))));
+      keep = [...m.consumed, ...(after ? [after.discard] : [])];
+    } else if (option && !ai) {
+      keep = [...option.with, option.discard];
+    } else {
+      keep = [];
     }
-    return null;
-  };
-  const aiDiscard = ai?.best.kind === "discard" ? ai.best : (ai?.riichiDiscard ?? null);
-  const best = (aiDiscard && lastIndex(aiDiscard.tile, null)) ?? advice?.discard ?? null;
-  // The second and third choices of discard, by their place in the hand.
-  const choices = new Map<number, 2 | 3>();
-  const others =
-    ai && ai.discards.length > 0
-      ? ai.discards.slice(1, 3).map((d) => d.tile)
-      : (advice?.options.slice(1, 3).map((o) => o.discard) ?? []);
-  others.forEach((tile, k) => {
-    const i = lastIndex(tile, best);
-    if (i !== null) choices.set(i, k === 0 ? 2 : 3);
-  });
+  }
+
+  const notes: string[] = [];
+  const statusLine = statusNote(status, models);
+  if (statusLine && advice) notes.push(statusLine);
+  if (engine?.filled) notes.push("这一局是中途开始看的，前面是补出的，Mortal 的建议可能偏弱");
+  if (engine && engine.gaps > 0) notes.push(`${engine.gaps} 段没看清，已按画面补上`);
+  const doubts = advice?.tiles.filter((v) => v.doubt).length ?? 0;
+  if (doubts > 0) notes.push(`${doubts} 张牌拿不准（标 ?）`);
+
+  if (compact) {
+    return (
+      <main className="panel compact" ref={panel}>
+        <div className="compact-row" data-tauri-drag-region>
+          <WindowButtons compact={compact} onCompact={toggleCompact} />
+          <div className="compact-round" data-tauri-drag-region>
+            <b className="num">{game?.round ? `${WINDS[game.round[0]] ?? "?"}${game.round.slice(1)}` : "—"}</b>
+            <span>余 {game?.tilesLeft ?? "—"}</span>
+          </div>
+          {advice && p ? (
+            <>
+              <Hand advice={advice} p={p} keep={keep} width={COMPACT} />
+              <span className={`compact-headline${p.waiting ? " waiting" : ""}`}>
+                {p.card === "win" && winNow ? (winNow.ron ? "荣和" : "自摸") : (p.headline ?? "")}
+              </span>
+            </>
+          ) : (
+            <span className="placeholder">{statusLine ?? "等待手牌出现"}</span>
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  const ukeire =
+    advice && p
+      ? p.option
+        ? { shanten: p.option.shanten, tiles: p.option.ukeire }
+        : advice.tiles.length % 3 === 1 && advice.shanten !== null
+          ? { shanten: advice.shanten, tiles: advice.ukeire }
+          : null
+      : null;
 
   return (
-    <main className="panel">
+    <main className="panel" ref={panel}>
       <header className="titlebar" data-tauri-drag-region>
-        <WindowButtons />
-        <span data-tauri-drag-region>麻将 Copilot</span>
-        <span className="muted" data-tauri-drag-region>
-          {statusText(status, models)}
-        </span>
+        <WindowButtons compact={compact} onCompact={toggleCompact} />
       </header>
-      {advice ? (
-        <>
-          <div className="hand">
-            {advice.tiles.map((view, i) => (
-              <div key={i} className={i === concealed ? "drawn" : undefined}>
-                <Tile view={view} best={i === best} choice={choices.get(i) ?? null} />
-              </div>
+      <div className="status-bar" data-tauri-drag-region>
+        <span className="game" data-tauri-drag-region>
+          {gameName}
+        </span>
+        {game && roundText(game) && (
+          <span className="strong num" data-tauri-drag-region>
+            {roundText(game)}
+          </span>
+        )}
+        {game?.seatWind && <span data-tauri-drag-region>自风 {WINDS[game.seatWind] ?? "?"}</span>}
+        {game?.tilesLeft !== null && game?.tilesLeft !== undefined && (
+          <span data-tauri-drag-region>
+            余 <b className="strong num">{game.tilesLeft}</b>
+          </span>
+        )}
+        {advice && advice.dora.length > 0 && (
+          <span className="dora" data-tauri-drag-region>
+            宝牌指示
+            {advice.dora.map((d, i) => (
+              <Tile key={i} tile={d.tile} width={SMALL} doubt={d.doubt !== null} />
             ))}
-            {advice.table && advice.table.melds[0].length > 0 && <OwnMelds melds={advice.table.melds[0]} />}
-          </div>
-          {ai && <p className="mortal">Mortal：{mortalText(ai)}</p>}
-          {winNow && <p className="call take">可以和：{winText(winNow)}</p>}
-          <p className="info">
-            {advice.discard !== null &&
-              (ai ? (
-                <span>牌效 打 {name(advice.tiles[advice.discard].tile)}</span>
-              ) : (
-                <strong>打 {name(advice.tiles[advice.discard].tile)}</strong>
-              ))}
-            {advice.shanten !== null && <span>{shantenText(advice.shanten)}</span>}
-            {advice.ukeireCount !== null && (
-              <span>
-                进张 {advice.ukeireCount} 张
-                {advice.discard === null && advice.ukeire.length > 0 && `（${advice.ukeire.map(name).join(" ")}）`}
-              </span>
-            )}
-            {advice.dora.length > 0 && (
-              <span className="dora">
-                宝牌指示
-                {advice.dora.map((d, i) => (
-                  <img
-                    key={i}
-                    src={tilePicture(d.tile)}
-                    alt={name(d.tile)}
-                    title={name(d.tile) + (d.doubt ? "（拿不准）" : "")}
-                    draggable={false}
-                  />
-                ))}
-              </span>
-            )}
-            {advice.seen !== null && <span className="muted-inline">已见 {advice.seen} 张</span>}
-          </p>
-          {advice.call && <CallAdvice call={advice.call} />}
-          {advice.game && gameText(advice.game) && <p className="game">{gameText(advice.game)}</p>}
-          {engine && <EngineLine engine={engine} dev={recording !== null} />}
-          {advice.options.length > 1 && (
-            <p className="options">
-              {advice.options.map((o) => (
-                <span key={o.discard}>
-                  {name(o.discard)}：{shantenText(o.shanten)} · {o.ukeireCount} 张
+          </span>
+        )}
+      </div>
+
+      {advice && p ? (
+        <>
+          <section className="hand-area">
+            <Hand advice={advice} p={p} keep={keep} width={HAND} />
+            {p.headline && (
+              <div className="headline-row">
+                <span className={`headline${p.waiting ? " waiting" : ""}`}>{p.headline}</span>
+                <span className="headline-sub">
+                  {p.waiting
+                    ? "等待你的决定"
+                    : p.option && (
+                        <>
+                          {shantenText(p.option.shanten)} · 进张 <b className="strong">{p.option.ukeireCount}</b>
+                        </>
+                      )}
                 </span>
-              ))}
-            </p>
+                {p.discard && p.others.length > 0 && (
+                  <span className="legend">
+                    <span className="second">▬ 候选2</span>
+                    {p.others.length > 1 && <span className="third">▬ 候选3</span>}
+                  </span>
+                )}
+              </div>
+            )}
+          </section>
+          {(ukeire || p.card) && (
+            <section className={`lower${p.card ? " covered" : ""}`}>
+              {ukeire && ukeire.tiles.length > 0 && (
+                <div className="lower-content">
+                  <Ukeire shanten={ukeire.shanten} tiles={ukeire.tiles} />
+                </div>
+              )}
+              {p.card === "call" && <CallCard advice={advice} ai={ai} />}
+              {p.card === "win" && winNow && <WinCard win={winNow} ai={ai} />}
+            </section>
           )}
-          <p className="debug">
-            稳定 {advice.times.settleMs.toFixed(0)} · 找牌 {advice.times.findMs.toFixed(1)} · 认牌{" "}
-            {advice.times.recognizeMs.toFixed(1)} · 牌桌 {advice.times.tableMs.toFixed(1)} · 计算 {advice.times.decideMs.toFixed(1)}
-            {ai && ` · Mortal ${ai.decideMs.toFixed(1)}`} ms
-            {latency && ` · 显示 ${latency.lastMs.toFixed(0)} ms · P95 ${latency.p95Ms.toFixed(0)} ms（${latency.count} 次）`}
-            {latency?.buttons &&
-              ` · 有按钮时 P95 ${latency.buttons.p95Ms.toFixed(0)} ms（${latency.buttons.count} 次）`}
-            {latency?.buttonsMortal &&
-              ` · Mortal ${latency.buttonsMortal.p95Ms.toFixed(0)} ms（${latency.buttonsMortal.count} 次）`}
-          </p>
         </>
       ) : (
-        <p className="placeholder">{watching ? "等待手牌出现" : statusText(status, models)}</p>
+        <p className="placeholder">{statusLine ?? "等待手牌出现"}</p>
       )}
-      {recording && advice?.table && <TableDebug table={advice.table} scores={advice.game?.scores ?? null} />}
-      {recording && <DebugRecording initial={recording} />}
+
+      <footer className="footer">
+        <Notices notes={notes} />
+        <span className="num hint">⌥ Space 隐藏</span>
+      </footer>
+
+      {recording && <DevArea initial={recording} advice={advice} engine={engine} latency={latency} ai={ai} />}
     </main>
   );
 }

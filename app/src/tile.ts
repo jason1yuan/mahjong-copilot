@@ -18,3 +18,22 @@ export function tileLabel(mjai: string): TileLabel {
   if (honor) return { rank: honor, suit: "", red: mjai === "C" };
   return { rank: mjai[0], suit: SUITS[mjai[1]] ?? "?", red: mjai.endsWith("r") };
 }
+
+// Tile pictures by mjai name, bundled with the app (lietxia/mahjong_graphic, M+ licence;
+// the back is ours). Each is its own image, so their inner styles do not mix.
+const PICTURES = import.meta.glob<string>("./assets/tiles/*.svg", {
+  eager: true,
+  query: "?url",
+  import: "default",
+});
+
+// The picture of an mjai tile, or of a tile face down for `null`.
+export function tilePicture(mjai: string | null): string {
+  return PICTURES[`./assets/tiles/${mjai ?? "back"}.svg`] ?? PICTURES["./assets/tiles/back.svg"];
+}
+
+// Every tile kind, red fives after their suit, for the check page.
+export const ALL_TILES: string[] = [
+  ..."mps".split("").flatMap((s) => [...Array.from({ length: 9 }, (_, i) => `${i + 1}${s}`), `5${s}r`]),
+  ..."ESWNPFC".split(""),
+];

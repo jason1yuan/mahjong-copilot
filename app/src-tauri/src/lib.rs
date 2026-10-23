@@ -1,6 +1,7 @@
 //! Tauri shell: creates the windows and wires perception and core together.
 //! Business logic belongs in `mahjong-core` / `mahjong-perception`, not here.
 
+mod panel;
 mod pipeline;
 
 use std::path::PathBuf;
@@ -123,9 +124,15 @@ pub fn run() -> tauri::Result<()> {
                 .unwrap_or_else(|_| EnvFilter::new("info,ort=warn")),
         )
         .init();
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(target_os = "macos")]
+    let builder = builder.plugin(tauri_nspanel::init());
+    builder
         .manage(Arc::new(Pipeline::default()))
         .setup(|app| {
+            if let Err(err) = panel::set_up(app.handle()) {
+                tracing::warn!("setting up the panel: {err:#}");
+            }
             download_models(app.handle().clone());
             Ok(())
         })

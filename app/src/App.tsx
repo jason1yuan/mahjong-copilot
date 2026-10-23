@@ -94,7 +94,30 @@ type MortalView = {
   discards: Suggestion[];
   decideMs: number;
 };
-type Latency = { count: number; lastMs: number; p50Ms: number; p95Ms: number };
+// What the win on offer is worth (#11), for the advice with the same `seq`. `fu` is 0
+// from 5 han on, `han` and `fu` are 0 for a yakuman; ura dora are not counted.
+type WinView = {
+  seq: number;
+  ron: boolean;
+  han: number;
+  fu: number;
+  yakuman: number;
+  points: number;
+  dealerPays: number;
+  othersPay: number;
+  total: number;
+};
+// Still screen to shown: all advice, and on frames with action buttons the advice and
+// Mortal's decision (null until there is one).
+type Spread = { count: number; p50Ms: number; p95Ms: number };
+type Latency = {
+  count: number;
+  lastMs: number;
+  p50Ms: number;
+  p95Ms: number;
+  buttons: Spread | null;
+  buttonsMortal: Spread | null;
+};
 type Progress = { name: string; downloaded: number; total: number };
 // The dev build's debug recording (#8); null in a packaged app.
 type Recording = { on: boolean; saved: number; dir: string };
@@ -193,6 +216,17 @@ function mortalText(m: MortalView): string {
     case "pass":
       return "跳过";
   }
+}
+
+// 荣和 3 番 40 符 5200 · 自摸 2 番 20 符 700/400 · 役满 32000, then the total with the honba
+// and riichi sticks when they add to it.
+function winText(w: WinView): string {
+  const kind = w.ron ? "荣和" : "自摸";
+  const value =
+    w.yakuman > 0 ? `${w.yakuman > 1 ? `${w.yakuman} 倍` : ""}役满` : `${w.han} 番${w.fu > 0 ? ` ${w.fu} 符` : ""}`;
+  const pays = w.ron ? `${w.points}` : w.dealerPays > 0 ? `${w.dealerPays}/${w.othersPay}` : `各 ${w.othersPay}`;
+  const total = w.total !== w.points ? ` · 共得 ${w.total}` : "";
+  return `${kind} ${value} ${pays}${total}`;
 }
 
 // The call to take, or to let the discard go, then the other ways to call it.
@@ -375,6 +409,7 @@ function App() {
   const [recording, setRecording] = useState<Recording | null>(null);
   const [engine, setEngine] = useState<EngineView | null>(null);
   const [mortal, setMortal] = useState<MortalView | null>(null);
+  const [win, setWin] = useState<WinView | null>(null);
 
   useEffect(() => {
     invoke<Status | null>("pipeline_status").then(setStatus).catch(() => undefined);
@@ -389,6 +424,7 @@ function App() {
       listen<Advice | null>("advice", (e) => setAdvice(e.payload)),
       listen<EngineView>("engine", (e) => setEngine(e.payload)),
       listen<MortalView>("mortal", (e) => setMortal(e.payload)),
+      listen<WinView>("win", (e) => setWin(e.payload)),
       listen<Latency>("latency", (e) => setLatency(e.payload)),
       listen<Progress>("model-progress", (e) => {
         const percent = Math.floor((100 * e.payload.downloaded) / e.payload.total);
@@ -402,13 +438,24 @@ function App() {
     };
   }, []);
 
+  // Report when Mortal's decision is on screen too, for the latency of call decisions.
+  useEffect(() => {
+    if (!mortal) return;
+    const seq = mortal.seq;
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        invoke("advice_shown", { seq, mortal: true }).catch(() => undefined);
+      }),
+    );
+  }, [mortal]);
+
   // Report when the advice is on screen, for the latency measurement.
   useEffect(() => {
     if (!advice) return;
     const seq = advice.seq;
     requestAnimationFrame(() =>
       requestAnimationFrame(() => {
-        invoke("advice_shown", { seq }).catch(() => undefined);
+        invoke("advice_shown", { seq, mortal: false }).catch(() => undefined);
       }),
     );
   }, [advice]);
@@ -417,6 +464,7 @@ function App() {
   const concealed = advice ? advice.tiles.length - (advice.drawn ? 1 : 0) : 0;
   // Mortal's decision for this hand comes first; the rule-based advice is the fallback.
   const ai = advice && mortal?.seq === advice.seq ? mortal : null;
+  const winNow = advice && win?.seq === advice.seq ? win : null;
   const lastIndex = (tile: string | null, skip: number | null) => {
     if (!advice || tile === null) return null;
     for (let i = advice.tiles.length - 1; i >= 0; i--) {
@@ -457,6 +505,7 @@ function App() {
             {advice.table && advice.table.melds[0].length > 0 && <OwnMelds melds={advice.table.melds[0]} />}
           </div>
           {ai && <p className="mortal">Mortal：{mortalText(ai)}</p>}
+          {winNow && <p className="call take">可以和：{winText(winNow)}</p>}
           <p className="info">
             {advice.discard !== null &&
               (ai ? (
@@ -504,6 +553,10 @@ function App() {
             {advice.times.recognizeMs.toFixed(1)} · 牌桌 {advice.times.tableMs.toFixed(1)} · 计算 {advice.times.decideMs.toFixed(1)}
             {ai && ` · Mortal ${ai.decideMs.toFixed(1)}`} ms
             {latency && ` · 显示 ${latency.lastMs.toFixed(0)} ms · P95 ${latency.p95Ms.toFixed(0)} ms（${latency.count} 次）`}
+            {latency?.buttons &&
+              ` · 有按钮时 P95 ${latency.buttons.p95Ms.toFixed(0)} ms（${latency.buttons.count} 次）`}
+            {latency?.buttonsMortal &&
+              ` · Mortal ${latency.buttonsMortal.p95Ms.toFixed(0)} ms（${latency.buttonsMortal.count} 次）`}
           </p>
         </>
       ) : (

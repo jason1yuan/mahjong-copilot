@@ -7,7 +7,7 @@
 - 位置：[third_party/libriichi/](third_party/libriichi/)
 - 来源：[Equim-chan/Mortal](https://github.com/Equim-chan/Mortal) 的 `libriichi/`，提交 `0cff2b52982be5b1163aa9a62fb01f03ce91e0d2`
 - 版权与许可：Copyright (C) 2021-2022 Equim，AGPL-3.0-or-later
-- 改动：只保留向听、和牌判定与番符、点数表、单人期望值计算、牌和手牌，mjai 事件和牌局状态（`PlayerState`），以及 Mortal 的输入编码（`obs_repr`、`consts`、`array`）这几部分；去掉 Python 绑定（`Cargo.toml`、`src/lib.rs`、`consts.rs` 和几个 `state/` 文件里的属性和包装函数）。详见该目录的 README
+- 改动：只保留向听、和牌判定与番符、点数表、单人期望值计算、牌和手牌，mjai 事件和牌局状态（`PlayerState`），以及 Mortal 的输入编码（`obs_repr`、`consts`、`array`）这几部分；去掉 Python 绑定（`Cargo.toml`、`src/lib.rs`、`consts.rs` 和几个 `state/` 文件里的属性和包装函数）；把 `state/agent_helper.rs` 的 `agari_points` 拆出返回番符的 `agari_value`。详见该目录的 README
 - 它所引用的更早实现：
   - 向听计算和数据表：[tomohxx/shanten-number-calculator](https://github.com/tomohxx/shanten-number-calculator)，LGPL-3.0
   - 和牌判定：[EndlessCheng/mahjong-helper](https://github.com/EndlessCheng/mahjong-helper)，MIT；算法出自山岡忠夫

@@ -21,6 +21,7 @@ use std::time::{Duration, Instant};
 use mahjong_core::calls::{self, CallAdvice, CallContext, CallKind, Yaku};
 use mahjong_core::game::{Engine, Event, MarkKind, PlayerState, Rejected};
 use mahjong_core::mortal::{Kind, Mortal, Suggestion};
+use mahjong_core::scoring::{self, Value};
 use mahjong_core::{Tile, TileCounts, outlook, parse_tiles, rank_discards};
 use mahjong_perception::buttons::Button;
 use mahjong_perception::capture::{self, WindowInfo};
@@ -265,6 +266,42 @@ pub struct Latency {
     pub last_ms: f64,
     pub p50_ms: f64,
     pub p95_ms: f64,
+    /// On frames with action buttons: the advice, and Mortal's decision (#11).
+    pub buttons: Option<Spread>,
+    pub buttons_mortal: Option<Spread>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Spread {
+    pub count: usize,
+    pub p50_ms: f64,
+    pub p95_ms: f64,
+}
+
+/// Keeps the latest [`KEEP`] latencies.
+fn record(kept: &Mutex<VecDeque<f64>>, ms: f64) {
+    let mut kept = lock(kept);
+    kept.push_back(ms);
+    if kept.len() > KEEP {
+        kept.pop_front();
+    }
+}
+
+fn spread(kept: &Mutex<VecDeque<f64>>) -> Spread {
+    let mut sorted: Vec<f64> = lock(kept).iter().copied().collect();
+    sorted.sort_by(f64::total_cmp);
+    let at = |q: f64| {
+        sorted
+            .get((sorted.len().saturating_sub(1) as f64 * q).round() as usize)
+            .copied()
+            .unwrap_or(0.0)
+    };
+    Spread {
+        count: sorted.len(),
+        p50_ms: at(0.5),
+        p95_ms: at(0.95),
+    }
 }
 
 /// The dev build's debug recording, for the window's debug row.
@@ -284,9 +321,14 @@ pub struct Pipeline {
     started: AtomicBool,
     seq: AtomicU64,
     status: Mutex<Option<Status>>,
-    /// Advice sent and not yet shown: when its screen went still.
-    pending: Mutex<HashMap<u64, Instant>>,
+    /// Advice sent and not yet shown: when its screen went still, and whether it showed
+    /// action buttons.
+    pending: Mutex<HashMap<u64, Pending>>,
     shown: Mutex<VecDeque<f64>>,
+    /// Still screen to shown on frames with action buttons (#11): the advice, and
+    /// Mortal's decision.
+    shown_buttons: Mutex<VecDeque<f64>>,
+    shown_buttons_mortal: Mutex<VecDeque<f64>>,
     /// The running watcher's frames, for the debug recording.
     tap: Mutex<Option<FrameTap>>,
     /// Started on first use, in the dev build only.
@@ -297,6 +339,15 @@ pub struct Pipeline {
     game: Mutex<GameRecord>,
     /// The decision model (#22), when it is in the models folder.
     mortal: Mutex<Option<Mortal>>,
+}
+
+/// What the win on offer is worth (#11), for advice `seq`, sent as `win`.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WinView {
+    pub seq: u64,
+    #[serde(flatten)]
+    pub value: Value,
 }
 
 /// Mortal's decision (#22) for advice `seq`, sent as `mortal`.
@@ -311,6 +362,18 @@ pub struct MortalView {
     pub discards: Vec<Suggestion>,
     pub decide_ms: f64,
 }
+
+#[derive(Clone, Copy)]
+struct Pending {
+    still_since: Instant,
+    buttons: bool,
+    /// Whether the advice and Mortal's decision were shown.
+    advice: bool,
+    mortal: bool,
+}
+
+/// Advice kept waiting to be shown; older is dropped (a decision that never came).
+const PENDING: u64 = 64;
 
 #[derive(Default)]
 struct GameRecord {
@@ -516,6 +579,12 @@ impl Pipeline {
                 let seq = advice.seq;
                 let sent = app.emit("advice", advice);
                 if let Some(state) = self.follow(app, &reading) {
+                    if let Some(value) = scoring::value(&state) {
+                        let sent = app.emit("win", WinView { seq, value });
+                        if let Err(err) = sent {
+                            tracing::warn!("sending the win's value: {err}");
+                        }
+                    }
                     self.consult(app, seq, &state);
                 }
                 sent
@@ -688,47 +757,84 @@ impl Pipeline {
         }
         advice.times.decide_ms = ms(start.elapsed());
         advice.times.sent_ms = ms(reading.timings.still_since.elapsed());
-        lock(&self.pending).insert(advice.seq, reading.timings.still_since);
+        let buttons = reading
+            .table
+            .as_ref()
+            .is_some_and(|t| !t.buttons.is_empty());
+        let mut pending = lock(&self.pending);
+        pending.retain(|&seq, _| seq + PENDING > advice.seq);
+        pending.insert(
+            advice.seq,
+            Pending {
+                still_since: reading.timings.still_since,
+                buttons,
+                advice: false,
+                mortal: false,
+            },
+        );
         advice
     }
 
-    /// The window drew advice `seq`: record still screen → shown.
-    pub fn shown(&self, app: &AppHandle, seq: u64) {
-        let Some(still_since) = lock(&self.pending).remove(&seq) else {
-            return;
+    /// The window drew advice `seq`, or Mortal's decision for it: record still screen →
+    /// shown, and for frames with action buttons apart (#11).
+    pub fn shown(&self, app: &AppHandle, seq: u64, mortal: bool) {
+        let (total, buttons) = {
+            let mut pending = lock(&self.pending);
+            let Some(entry) = pending.get_mut(&seq) else {
+                return;
+            };
+            let done = if mortal {
+                &mut entry.mortal
+            } else {
+                &mut entry.advice
+            };
+            if *done {
+                return;
+            }
+            *done = true;
+            let found = (ms(entry.still_since.elapsed()), entry.buttons);
+            // Without buttons only the advice is measured; with them, Mortal's decision
+            // too (or the entry ages out when none comes).
+            if entry.advice && (entry.mortal || !entry.buttons) {
+                pending.remove(&seq);
+            }
+            found
         };
-        let total = ms(still_since.elapsed());
-        let latency = {
-            let mut shown = lock(&self.shown);
-            shown.push_back(total);
-            if shown.len() > KEEP {
-                shown.pop_front();
+        match (mortal, buttons) {
+            (false, _) => {
+                record(&self.shown, total);
+                if buttons {
+                    record(&self.shown_buttons, total);
+                }
             }
-            let mut sorted: Vec<f64> = shown.iter().copied().collect();
-            sorted.sort_by(f64::total_cmp);
-            let at = |q: f64| sorted[((sorted.len() - 1) as f64 * q).round() as usize];
-            Latency {
-                count: sorted.len(),
-                last_ms: total,
-                p50_ms: at(0.5),
-                p95_ms: at(0.95),
-            }
+            (true, true) => record(&self.shown_buttons_mortal, total),
+            (true, false) => return,
+        }
+        let all = spread(&self.shown);
+        let latency = Latency {
+            count: all.count,
+            last_ms: total,
+            p50_ms: all.p50_ms,
+            p95_ms: all.p95_ms,
+            buttons: Some(spread(&self.shown_buttons)).filter(|s| s.count > 0),
+            buttons_mortal: Some(spread(&self.shown_buttons_mortal)).filter(|s| s.count > 0),
         };
         tracing::info!(
-            total_ms = latency.last_ms,
+            total_ms = total,
+            mortal,
+            buttons,
             p50_ms = latency.p50_ms,
             p95_ms = latency.p95_ms,
             count = latency.count,
-            "still screen to advice shown"
+            buttons_p95_ms = latency.buttons.as_ref().map(|s| s.p95_ms),
+            buttons_mortal_p95_ms = latency.buttons_mortal.as_ref().map(|s| s.p95_ms),
+            "still screen to shown"
         );
         if let Err(err) = app.emit("latency", latency) {
             tracing::warn!("sending latency: {err}");
         }
     }
-}
 
-impl Pipeline {
-    /// The debug recording's state; `None` outside the dev build.
     pub fn recording(&self) -> Option<Recording> {
         tauri::is_dev().then(|| Recording {
             on: self.recording.load(Ordering::Relaxed),

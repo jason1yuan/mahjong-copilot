@@ -99,10 +99,11 @@ fn pipeline_status(pipeline: State<'_, Arc<Pipeline>>) -> Option<Status> {
     pipeline.status()
 }
 
-/// The window drew advice `seq`; closes its latency measurement.
+/// The window drew advice `seq`, or Mortal's decision for it; closes that latency
+/// measurement.
 #[tauri::command]
-fn advice_shown(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>, seq: u64) {
-    pipeline.shown(&app, seq);
+fn advice_shown(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>, seq: u64, mortal: bool) {
+    pipeline.shown(&app, seq, mortal);
 }
 
 /// The dev build's debug recording (#8); `None` in a packaged app, which has none.

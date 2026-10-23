@@ -147,11 +147,13 @@ body {
   background: #febc2e;
 }
 
-.window-buttons .compact {
-  background: #28c840;
+.window-buttons .zoom {
+  background: var(--chip);
+  box-shadow: inset 0 0 0 1px var(--line);
+  cursor: default;
 }
 
-.window-buttons button:hover {
+.window-buttons button:not(:disabled):hover {
   filter: brightness(0.85);
 }
 
@@ -264,9 +266,8 @@ body {
   color: #e5484d;
 }
 
-/* Pause switch (#16), in the title bar. */
-.pause-button {
-  margin-left: auto;
+/* Buttons in the title bar: the pause switch (#16) and compact mode (#59). */
+.title-button {
   padding: 2px 9px;
   border: 1px solid var(--line);
   border-radius: 5px;
@@ -277,8 +278,17 @@ body {
   cursor: pointer;
 }
 
-.pause-button:hover {
+.title-button:hover {
   color: var(--text);
+}
+
+.pause-button {
+  margin-left: auto;
+}
+
+.compact-button {
+  margin-left: 6px;
+  flex: none;
 }
 
 .pause-button.paused {
@@ -286,7 +296,7 @@ body {
   color: var(--green);
 }
 
-.pause-button + .theme-button {
+.compact-button + .theme-button {
   margin-left: 6px;
 }
 
@@ -433,6 +443,7 @@ body {
 }
 
 .melds {
+  --meld: 18px;
   display: inline-flex;
   align-items: flex-end;
   gap: 6px;
@@ -454,8 +465,8 @@ body {
 
 /* A called tile lies sideways; a tile added to it lies on top. */
 .meld-tile.sideways {
-  width: 24px;
-  height: 18px;
+  width: calc(var(--meld) * 4 / 3);
+  height: var(--meld);
   align-items: center;
   justify-content: center;
 }
@@ -466,7 +477,7 @@ body {
 
 .meld-tile.sideways .tile + .tile {
   position: absolute;
-  bottom: 18px;
+  bottom: var(--meld);
 }
 
 .headline-row {
@@ -901,12 +912,32 @@ body {
   color: var(--muted);
 }
 
-/* Compact mode (1e): one row. */
+/* Compact mode (1e): the window buttons, then one row. */
 .panel.compact .compact-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 14px 10px;
+  padding: 2px 14px 12px;
+}
+
+/* An icon-only button at the title bar's right: expanding compact mode (#59). */
+.icon-button {
+  margin-left: auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: var(--faint);
+  font-size: 14px;
+  line-height: 22px;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: var(--chip);
+  color: var(--text);
 }
 
 .compact-round {
@@ -933,7 +964,8 @@ body {
 }
 
 .panel.compact .melds {
-  display: none;
+  gap: 4px;
+  margin-left: 8px;
 }
 
 .compact-headline {

@@ -53,6 +53,9 @@ const SMALL = 16;
 const WAIT = 34;
 const UKEIRE = 22;
 const TARGET = 19;
+// Meld tiles beside the hand, in the full panel and in compact mode.
+const MELD = 18;
+const MELD_COMPACT = 15;
 
 // Whether compact mode is on, kept per viewer; the panel works without it.
 function rememberedCompact(): boolean {
@@ -216,34 +219,42 @@ function plan(advice: Advice, ai: MortalView | null, win: WinView | null): Plan 
   return base;
 }
 
-function WindowButtons({ compact, onCompact }: { compact: boolean; onCompact: () => void }) {
+// Close and minimize as in any app; a floating panel has nothing to zoom, so the green
+// button is greyed out (#59).
+function WindowButtons() {
   const window = getCurrentWindow();
   return (
     <span className="window-buttons">
       <button type="button" className="close" aria-label="关闭" title="关闭" onClick={() => window.close()} />
       <button type="button" className="minimize" aria-label="最小化" title="最小化" onClick={() => window.minimize()} />
-      <button
-        type="button"
-        className="compact"
-        aria-label={compact ? "完整模式" : "紧凑模式"}
-        title={compact ? "完整模式" : "紧凑模式"}
-        onClick={onCompact}
-      />
+      <button type="button" className="zoom" aria-label="不可放大" title="面板不能放大" disabled />
     </span>
+  );
+}
+
+// Switches the full panel to the one-row compact mode (design 1e, #59); in compact mode an
+// icon at the title bar's right switches back.
+function CompactButton({ onToggle }: { onToggle: () => void }) {
+  return (
+    <button type="button" className="title-button compact-button" title="紧凑模式：只留一行" onClick={onToggle}>
+      ▭ 紧凑
+    </button>
   );
 }
 
 // The player's own melds, beside the hand: sideways tiles lie turned. They come in the order
 // they were made, the first at the right on the table, so they are drawn reversed.
-function OwnMelds({ melds }: { melds: TableTile[][] }) {
+function OwnMelds({ melds, width }: { melds: TableTile[][]; width: number }) {
+  // The sideways tiles' box and the added tile's place follow the tile width.
+  const size = { "--meld": `${width}px` } as React.CSSProperties;
   return (
-    <div className="melds">
+    <div className="melds" style={size}>
       {[...melds].reverse().map((meld, i) => (
         <div key={i} className="meld">
           {meld.map((t, j) => (
             <span key={j} className={`meld-tile${t.sideways ? " sideways" : ""}`}>
-              {t.added && <Tile tile={t.added} width={18} />}
-              <Tile tile={t.tile} width={18} />
+              {t.added && <Tile tile={t.added} width={width} />}
+              <Tile tile={t.tile} width={width} />
             </span>
           ))}
         </div>
@@ -324,7 +335,7 @@ function Hand({
           />
         </span>
       ))}
-      {melds.length > 0 && <OwnMelds melds={melds} />}
+      {melds.length > 0 && <OwnMelds melds={melds} width={width === COMPACT ? MELD_COMPACT : MELD} />}
     </div>
   );
 }
@@ -611,7 +622,7 @@ function PauseButton({ paused, onToggle }: { paused: boolean; onToggle: () => vo
   return (
     <button
       type="button"
-      className={`pause-button${paused ? " paused" : ""}`}
+      className={`title-button pause-button${paused ? " paused" : ""}`}
       title={paused ? "开始识别（牌局开始时）" : "暂停识别（牌局结束后）：不截画面、不录制、不记牌谱"}
       onClick={onToggle}
     >
@@ -805,8 +816,19 @@ function App() {
   if (compact) {
     return (
       <main className="panel compact" ref={panel}>
+        <header className="titlebar" data-tauri-drag-region>
+          <WindowButtons />
+          <button
+            type="button"
+            className="icon-button expand-button"
+            aria-label="展开为完整面板"
+            title="展开为完整面板"
+            onClick={toggleCompact}
+          >
+            ⤢
+          </button>
+        </header>
         <div className="compact-row" data-tauri-drag-region>
-          <WindowButtons compact={compact} onCompact={toggleCompact} />
           <div className="compact-round" data-tauri-drag-region>
             <b className="num">{game?.round ? `${WINDS[game.round[0]] ?? "?"}${game.round.slice(1)}` : "—"}</b>
             <span>余 {game?.tilesLeft ?? "—"}</span>
@@ -838,8 +860,9 @@ function App() {
   return (
     <main className="panel" ref={panel}>
       <header className="titlebar" data-tauri-drag-region>
-        <WindowButtons compact={compact} onCompact={toggleCompact} />
+        <WindowButtons />
         <PauseButton paused={paused} onToggle={togglePause} />
+        <CompactButton onToggle={toggleCompact} />
         <ThemeButton theme={theme} onNext={nextTheme} />
       </header>
       <div className="status-bar" data-tauri-drag-region>

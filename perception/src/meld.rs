@@ -29,6 +29,8 @@ use crate::table::{Seat, Table};
 const MAX_GAP: f64 = 0.45;
 /// Share of a place that must be tile-coloured, not table, for a face-down tile.
 const MIN_BACK: f64 = 0.6;
+/// Least share of a face's height within the strip's row for it to continue the strip.
+const MIN_ROW_SHARE: f64 = 0.5;
 /// Most space, in tile widths, between a tile added to a kan and the sideways tile under it.
 const MAX_STACK_GAP: f64 = 0.3;
 /// Longest side a face may have, in tile widths, to be a tile: the perspective stretches
@@ -159,9 +161,26 @@ pub fn find_strip(view: &MeldView, layout: &MeldLayout, face: TileFace) -> Vec<M
     let mut rest: Vec<MeldSlot> = slots[first + 1..].to_vec();
     loop {
         let edge = f64::from(strip[strip.len() - 1].face.left);
+        // The next tile adjoins the last one and lies in the same row: a face of something
+        // else in the band (a name plate, a river tile) can end at the same place.
+        let in_row = |slot: &MeldSlot| {
+            let shared = slot
+                .face
+                .bottom
+                .min(bottom)
+                .saturating_sub(slot.face.top.max(top));
+            let shorter = slot.face.height().min(bottom - top).max(1);
+            f64::from(shared) / f64::from(shorter)
+        };
         if let Some(i) = rest
             .iter()
-            .position(|slot| (f64::from(slot.face.right) - edge).abs() <= MAX_GAP * s)
+            .enumerate()
+            .filter(|(_, slot)| {
+                (f64::from(slot.face.right) - edge).abs() <= MAX_GAP * s
+                    && in_row(slot) >= MIN_ROW_SHARE
+            })
+            .max_by(|(_, a), (_, b)| in_row(a).total_cmp(&in_row(b)))
+            .map(|(i, _)| i)
         {
             strip.push(rest.remove(i));
             continue;
@@ -481,6 +500,21 @@ mod tests {
         let strip = find_strip(&view, &layout(), face());
         let sideways: Vec<bool> = strip.iter().map(|t| t.sideways).collect();
         assert_eq!(sideways, [false, true, false]);
+    }
+
+    #[test]
+    fn a_face_above_the_row_does_not_continue_the_strip() {
+        let mut image = band();
+        // A pon called from across...
+        fill(&mut image, 232, 20, 18, 26, FACE);
+        fill(&mut image, 205, 27, 26, 19, FACE);
+        fill(&mut image, 186, 20, 18, 26, FACE);
+        // ...and something light above the row ending where its last tile does.
+        fill(&mut image, 180, 0, 25, 12, FACE);
+        let view = MeldView { image, scale: S };
+        let strip = find_strip(&view, &layout(), face());
+        let tops: Vec<u32> = strip.iter().map(|t| t.face.top).collect();
+        assert_eq!(tops, [20, 27, 20]);
     }
 
     #[test]

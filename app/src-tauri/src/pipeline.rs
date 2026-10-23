@@ -15,6 +15,7 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
 use mahjong_core::calls::{self, CallAdvice, CallContext, CallKind, Yaku};
+use mahjong_core::game::{Engine, Event, MarkKind, Rejected};
 use mahjong_core::{Tile, TileCounts, outlook, parse_tiles, rank_discards};
 use mahjong_perception::buttons::Button;
 use mahjong_perception::capture::{self, WindowInfo};
@@ -25,7 +26,7 @@ use mahjong_perception::{
     Doubt, FrameTap, HandReading, Recognition, Recorder, WatchEvent, Watcher,
 };
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 
 /// How long to wait before looking for the game window again.
 const RETRY: Duration = Duration::from_secs(2);
@@ -287,6 +288,32 @@ pub struct Pipeline {
     recorder: Mutex<Option<Arc<Recorder>>>,
     recording: AtomicBool,
     saved: Arc<AtomicU64>,
+    /// The state engine (#10) and the file each game's log goes to.
+    game: Mutex<GameRecord>,
+}
+
+#[derive(Default)]
+struct GameRecord {
+    engine: Engine,
+    /// One a game, in the order they started.
+    files: Vec<PathBuf>,
+}
+
+/// What the state engine (#10) made of the table, for the window.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EngineView {
+    /// Events in the current game's log.
+    pub events: usize,
+    /// The current round, mjai-style (`E2`), and its honba.
+    pub round: Option<String>,
+    pub honba: Option<u8>,
+    /// The round's start was not seen: its history so far is filled in.
+    pub filled: bool,
+    /// Stretches of the game filled in again after the engine lost track.
+    pub gaps: usize,
+    /// How the last scene went: `taken`, `covered`, `unexplained` or `impossible`.
+    pub last: &'static str,
 }
 
 /// `recordings/live/` in the repository, which git ignores. The dev build runs from the
@@ -298,6 +325,41 @@ fn recordings_dir() -> PathBuf {
         .nth(2)
         .unwrap_or(crate_dir)
         .join("recordings/live")
+}
+
+/// Writes the current game's log, and the one before when a new game has just begun
+/// (`all`: every game's), as mjai JSON Lines with the marks beside them. Off the watcher
+/// thread: the files are small but disk writes can stall.
+fn save_games(game: &GameRecord, all: bool) {
+    let games = game.engine.games();
+    let from = if all {
+        0
+    } else {
+        games.len().saturating_sub(1)
+    };
+    let writes: Vec<(PathBuf, String, String)> = games
+        .iter()
+        .enumerate()
+        .skip(from)
+        .filter_map(|(i, log)| {
+            let file = game.files.get(i)?.clone();
+            let marks = serde_json::to_string(&log.marks).ok()?;
+            Some((file, log.lines(), marks))
+        })
+        .collect();
+    std::thread::spawn(move || {
+        for (file, lines, marks) in writes {
+            let marks_file = file.with_extension("marks.json");
+            let written = file
+                .parent()
+                .map_or(Ok(()), std::fs::create_dir_all)
+                .and_then(|()| std::fs::write(&file, lines))
+                .and_then(|()| std::fs::write(&marks_file, marks));
+            if let Err(err) = written {
+                tracing::warn!("saving the game log {}: {err}", file.display());
+            }
+        }
+    });
 }
 
 fn ms(d: Duration) -> f64 {
@@ -420,13 +482,76 @@ impl Pipeline {
                     sent_ms = advice.times.sent_ms,
                     "advice"
                 );
-                app.emit("advice", advice)
+                let sent = app.emit("advice", advice);
+                self.follow(app, &reading);
+                sent
             }
             WatchEvent::NoHand => app.emit("advice", None::<Advice>),
-            WatchEvent::Stopped => Ok(()),
+            WatchEvent::Stopped => {
+                let mut game = lock(&self.game);
+                game.engine.end_game();
+                save_games(&game, true);
+                Ok(())
+            }
         };
         if let Err(err) = sent {
             tracing::warn!("sending advice: {err}");
+        }
+    }
+
+    /// Feeds the table to the state engine, after the advice so that it adds nothing to
+    /// its latency, and saves the log when a round or game starts.
+    fn follow(&self, app: &AppHandle, reading: &HandReading) {
+        let Some(table) = &reading.table else {
+            return;
+        };
+        let scene = table.scene(&reading.tiles, reading.drawn);
+        let mut game = lock(&self.game);
+        let (last, new_round, new_game) = match game.engine.observe(&scene) {
+            Ok(observed) => {
+                let starts = |f: fn(&Event) -> bool| observed.events.iter().any(f);
+                (
+                    "taken",
+                    starts(|e| matches!(e, Event::StartKyoku { .. })) || observed.rewritten,
+                    starts(|e| matches!(e, Event::StartGame { .. })),
+                )
+            }
+            Err(Rejected::Covered | Rejected::NoRound) => ("covered", false, false),
+            Err(Rejected::Unexplained) => ("unexplained", false, false),
+            Err(Rejected::Impossible(why)) => {
+                tracing::debug!("a scene that cannot be: {why}");
+                ("impossible", false, false)
+            }
+        };
+        if new_game {
+            let stamp = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_millis());
+            if let Ok(dir) = app.path().app_data_dir() {
+                game.files
+                    .push(dir.join("game-logs").join(format!("{stamp}.mjson")));
+            }
+        }
+        if new_round {
+            save_games(&game, new_game);
+        }
+        let games = game.engine.games();
+        let current = games.last();
+        let view = EngineView {
+            events: current.map_or(0, |g| g.events.len()),
+            round: game
+                .engine
+                .round()
+                .map(|(l, _)| format!("{}{}", l.wind, l.number)),
+            honba: game.engine.round().and_then(|(_, h)| h),
+            filled: game.engine.filled(),
+            gaps: current.map_or(0, |g| {
+                g.marks.iter().filter(|m| m.kind == MarkKind::Gap).count()
+            }),
+            last,
+        };
+        if let Err(err) = app.emit("engine", view) {
+            tracing::warn!("sending the engine state: {err}");
         }
     }
 

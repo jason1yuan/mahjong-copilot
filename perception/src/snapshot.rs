@@ -3,6 +3,7 @@
 //! one frame, and a check that they and the hand can all be true at once.
 
 use mahjong_core::Tile;
+use mahjong_core::game::{MeldView, RiverTile as SceneTile, RoundLabel, Scene};
 
 use crate::buttons::{self, Button};
 use crate::capture::FrameView;
@@ -67,6 +68,53 @@ impl Snapshot {
                     .map_or("-".to_owned(), |w| w.to_string()),
                 self.buttons,
             )
+    }
+}
+
+impl Snapshot {
+    /// The scene for the state engine (#10): the hand (`drawn` when its last tile is the
+    /// one just drawn) and this table, best guesses kept for tiles in doubt.
+    pub fn scene(&self, hand: &[Recognition], drawn: bool) -> Scene {
+        let mut tiles: Vec<Tile> = hand.iter().map(|r| r.tile).collect();
+        let drawn = if drawn { tiles.pop() } else { None };
+        Scene {
+            hand: tiles,
+            drawn,
+            rivers: std::array::from_fn(|s| {
+                self.rivers[s]
+                    .iter()
+                    .map(|t| SceneTile {
+                        tile: t.tile.tile,
+                        sideways: t.sideways,
+                    })
+                    .collect()
+            }),
+            melds: std::array::from_fn(|s| {
+                self.melds[s]
+                    .iter()
+                    .map(|meld| MeldView {
+                        tiles: meld.iter().map(|t| t.tile.map(|r| r.tile)).collect(),
+                        sideways: meld.iter().position(|t| t.sideways),
+                        added: meld.iter().find_map(|t| t.added.map(|r| r.tile)),
+                    })
+                    .collect()
+            }),
+            dora: self.dora.iter().map(|r| r.tile).collect(),
+            round: self.round.and_then(|r| {
+                Some(RoundLabel {
+                    wind: r.wind.to_string().parse().ok()?,
+                    number: r.number,
+                })
+            }),
+            dealer: self.dealer.map(|d| d.index() as u8),
+            honba: self.numbers.honba,
+            riichi_sticks: self.numbers.riichi_sticks,
+            tiles_left: self.numbers.tiles_left,
+            scores: self
+                .numbers
+                .scores
+                .map(|s| s.map(|p| i32::try_from(p).unwrap_or(i32::MAX))),
+        }
     }
 }
 

@@ -1,9 +1,13 @@
 // Modified by mahjong-copilot on 2026-10-21: reduced to the algorithm, tile and
 // hand modules; removed the Python bindings, mimalloc and every other module.
+// Modified by mahjong-copilot on 2026-10-22: added back the chi_type, mjai, rankings
+// and state modules (#10), and allowed dead code: without the Python bindings a few
+// helpers they called go unused.
 // The original file is libriichi/src/lib.rs in Equim-chan/Mortal at commit
 // 0cff2b52982be5b1163aa9a62fb01f03ce91e0d2.
 
 #![allow(clippy::manual_range_patterns)] // because of matches_tu8
+#![allow(dead_code)] // the Python-only helpers
 #![deny(
     rust_2018_idioms,
     let_underscore_drop,
@@ -98,8 +102,12 @@
 )]
 
 mod macros;
+mod rankings;
 mod vec_ops;
 
 pub mod algo;
+pub mod chi_type;
 pub mod hand;
+pub mod mjai;
+pub mod state;
 pub mod tile;

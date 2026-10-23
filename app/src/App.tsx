@@ -38,6 +38,15 @@ type CallOptionView = {
   ukeireCount: number;
   yaku: string[];
 };
+// What the state engine (#10) made of the table: the current game's log so far.
+type EngineView = {
+  events: number;
+  round: string | null;
+  honba: number | null;
+  filled: boolean;
+  gaps: number;
+  last: "taken" | "covered" | "unexplained" | "impossible";
+};
 // Whether and how to call the discard on offer; `take` is null to let it go.
 type CallView = {
   called: string;
@@ -164,6 +173,29 @@ function CallAdvice({ call }: { call: CallView }) {
   );
 }
 
+const SCENES: Record<EngineView["last"], string> = {
+  taken: "跟上了",
+  covered: "画面被挡住",
+  unexplained: "这一帧对不上",
+  impossible: "这一帧读错了",
+};
+
+// 牌谱 东2局 1本场 · 312 个事件, and what the log is missing; the dev build also shows how
+// the last scene went.
+function EngineLine({ engine, dev }: { engine: EngineView; dev: boolean }) {
+  const round = engine.round ? `${WINDS[engine.round[0]] ?? "?"}${engine.round.slice(1)}局` : "";
+  const honba = engine.honba ? ` ${engine.honba}本场` : "";
+  return (
+    <p className="engine">
+      牌谱 {round}
+      {honba} · {engine.events} 个事件
+      {engine.filled && " · 这一局是中途开始看的，前面是补出的，建议在对局开始前打开"}
+      {engine.gaps > 0 && ` · ${engine.gaps} 段没看清，已按画面补上`}
+      {dev && ` · ${SCENES[engine.last]}`}
+    </p>
+  );
+}
+
 // Seats in turn order from the player, as the table view lists them.
 const SEATS = ["自家", "下家", "对家", "上家"];
 // The dev build opens taller, to fit the table view.
@@ -279,6 +311,7 @@ function App() {
   const [latency, setLatency] = useState<Latency | null>(null);
   const [models, setModels] = useState<string | null>(null);
   const [recording, setRecording] = useState<Recording | null>(null);
+  const [engine, setEngine] = useState<EngineView | null>(null);
 
   useEffect(() => {
     invoke<Status | null>("pipeline_status").then(setStatus).catch(() => undefined);
@@ -291,6 +324,7 @@ function App() {
     const unlisten = [
       listen<Status>("pipeline-status", (e) => setStatus(e.payload)),
       listen<Advice | null>("advice", (e) => setAdvice(e.payload)),
+      listen<EngineView>("engine", (e) => setEngine(e.payload)),
       listen<Latency>("latency", (e) => setLatency(e.payload)),
       listen<Progress>("model-progress", (e) => {
         const percent = Math.floor((100 * e.payload.downloaded) / e.payload.total);
@@ -355,6 +389,7 @@ function App() {
           </p>
           {advice.call && <CallAdvice call={advice.call} />}
           {advice.game && gameText(advice.game) && <p className="game">{gameText(advice.game)}</p>}
+          {engine && <EngineLine engine={engine} dev={recording !== null} />}
           {advice.options.length > 1 && (
             <p className="options">
               {advice.options.map((o) => (

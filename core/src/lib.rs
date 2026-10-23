@@ -2,6 +2,7 @@
 
 pub mod analysis;
 pub mod calls;
+pub mod game;
 pub mod tile;
 
 pub use analysis::{

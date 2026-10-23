@@ -22,6 +22,7 @@ use mahjong_core::calls::{self, CallAdvice, CallContext, CallKind, Yaku};
 use mahjong_core::game::{Engine, Event, MarkKind, PlayerState, Rejected};
 use mahjong_core::mortal::{Kind, Mortal, Suggestion};
 use mahjong_core::scoring::{self, Value};
+use mahjong_core::target::{self, Outlook};
 use mahjong_core::{Tile, TileCounts, outlook, parse_tiles, rank_discards, unseen};
 use mahjong_perception::buttons::Button;
 use mahjong_perception::capture::{self, WindowInfo};
@@ -382,6 +383,16 @@ pub struct WinView {
     pub value: Value,
 }
 
+/// Target hands or the waits' values (#13) for advice `seq`, sent as `targets`.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TargetsView {
+    pub seq: u64,
+    #[serde(flatten)]
+    pub outlook: Outlook,
+    pub search_ms: f64,
+}
+
 /// Mortal's decision (#22) for advice `seq`, sent as `mortal`.
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -633,6 +644,7 @@ impl Pipeline {
                 );
                 let seq = advice.seq;
                 let sent = app.emit("advice", advice);
+                self.aim(app, seq, &reading);
                 if let Some(state) = self.follow(app, &reading) {
                     if let Some(value) = scoring::value(&state) {
                         let sent = app.emit("win", WinView { seq, value });
@@ -727,6 +739,24 @@ impl Pipeline {
             .player_state()
             .filter(|s| last == "taken" && s.last_cans().can_act())
             .cloned()
+    }
+
+    /// Searches the target hands, or values the waits, for advice `seq` and sends them,
+    /// after the advice so that it adds nothing to its latency.
+    fn aim(&self, app: &AppHandle, seq: u64, reading: &HandReading) {
+        let Some(table) = &reading.table else {
+            return;
+        };
+        let start = Instant::now();
+        let outlook = target::from_scene(&table.scene(&reading.tiles, reading.drawn));
+        let view = TargetsView {
+            seq,
+            outlook,
+            search_ms: ms(start.elapsed()),
+        };
+        if let Err(err) = app.emit("targets", view) {
+            tracing::warn!("sending the target hands: {err}");
+        }
     }
 
     /// Asks Mortal what to do in `state`, the table of advice `seq`, and sends it.

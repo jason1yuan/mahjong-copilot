@@ -4,7 +4,21 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { DevArea } from "./DevArea";
-import { CALLS, hanText, name, paysText, roundText, sameKind, SEATS, shantenText, WINDS, YAKU } from "./format";
+import {
+  CALLS,
+  directionText,
+  hanText,
+  name,
+  paysText,
+  roundText,
+  sameKind,
+  SEATS,
+  shantenText,
+  valueText,
+  WINDS,
+  YAKU,
+  yakuText,
+} from "./format";
 import { Tile } from "./TileImage";
 import type {
   Advice,
@@ -18,7 +32,10 @@ import type {
   Status,
   Suggestion,
   TableTile,
+  TargetsView,
+  TargetView,
   TileLeft,
+  WaitValue,
   WinView,
 } from "./types";
 import "./App.css";
@@ -29,6 +46,7 @@ const COMPACT = 22;
 const SMALL = 16;
 const WAIT = 34;
 const UKEIRE = 22;
+const TARGET = 19;
 
 // Whether compact mode is on, kept per viewer; the panel works without it.
 function rememberedCompact(): boolean {
@@ -238,8 +256,9 @@ function Hand({
 }
 
 // The tiles that improve the hand, or the waits once it is tenpai, with how many are left.
-function Ukeire({ shanten, tiles }: { shanten: number; tiles: TileLeft[] }) {
+function Ukeire({ shanten, tiles, values }: { shanten: number; tiles: TileLeft[]; values: WaitValue[] }) {
   const total = tiles.reduce((n, t) => n + t.left, 0);
+  const valueOf = (tile: string) => values.find((v) => sameKind(v.tile, tile)) ?? null;
   if (shanten === 0) {
     return (
       <>
@@ -250,13 +269,21 @@ function Ukeire({ shanten, tiles }: { shanten: number; tiles: TileLeft[] }) {
           {tiles.map((t) => (
             <div key={t.tile} className="wait">
               <Tile tile={t.tile} width={tiles.length > 3 ? UKEIRE : WAIT} />
-              <div className="wait-left">
-                剩 <b className="num">{t.left}</b> 张
-                <span className="pips">
-                  {[0, 1, 2, 3].map((k) => (
-                    <i key={k} className={k < t.left ? "on" : ""} />
-                  ))}
-                </span>
+              <div className="wait-body">
+                {valueOf(t.tile) && (
+                  <div className="wait-value">
+                    <span className="wait-yaku">{yakuText(valueOf(t.tile)?.yaku ?? []) || "无役"}</span>
+                    <span className="num wait-points">{valueOf(t.tile)?.points}</span>
+                  </div>
+                )}
+                <div className="wait-left">
+                  剩 <b className="num">{t.left}</b> 张
+                  <span className="pips">
+                    {[0, 1, 2, 3].map((k) => (
+                      <i key={k} className={k < t.left ? "on" : ""} />
+                    ))}
+                  </span>
+                </div>
               </div>
             </div>
           ))}
@@ -277,6 +304,67 @@ function Ukeire({ shanten, tiles }: { shanten: number; tiles: TileLeft[] }) {
           </div>
         ))}
       </div>
+    </>
+  );
+}
+
+// A target hand's tiles, the ones still to draw drawn faint in a dashed outline.
+function TargetTiles({ t }: { t: TargetView }) {
+  const missing = [...t.missing];
+  // The tiles still to draw are the last copies of their kind in the finished hand.
+  const marks = t.tiles.map(() => false);
+  for (let i = t.tiles.length - 1; i >= 0; i--) {
+    const at = missing.findIndex((m) => sameKind(m, t.tiles[i]));
+    if (at >= 0) {
+      marks[i] = true;
+      missing.splice(at, 1);
+    }
+  }
+  return (
+    <div className="target-tiles">
+      {t.tiles.map((tile, i) => (
+        <Tile key={i} tile={tile} width={TARGET} missing={marks[i]} />
+      ))}
+    </div>
+  );
+}
+
+// Up to three target hands (#13): yaku, points, a rough chance and the finished hand;
+// or broad directions when the hand is far from tenpai.
+function Targets({ view }: { view: TargetsView }) {
+  if (view.targets.length === 0) {
+    return (
+      <>
+        <h2>目标方向 · 离听牌还远</h2>
+        <div className="directions">
+          {view.directions.map((d) => (
+            <span key={directionText(d)}>{directionText(d)}</span>
+          ))}
+        </div>
+      </>
+    );
+  }
+  return (
+    <>
+      <h2>目标牌型{view.rough && " · 离听牌还远，仅供参考"}</h2>
+      {view.targets.map((t, i) => {
+        const percent = Math.round(100 * t.probability);
+        return (
+          <div key={i} className="target">
+            <div className="target-head">
+              <span className="target-key num">{"ABC"[i]}</span>
+              <span className="target-name">{yakuText(t.yaku) || "宝牌"}</span>
+              <span className="target-value">{valueText(t)}</span>
+              <span className="num target-points">{t.points}</span>
+              <span className="chance" title="按剩余牌数和摸牌次数粗略估算">
+                <i style={{ width: `${Math.max(2, percent)}%` }} />
+              </span>
+              <span className="num target-percent">约 {percent}%</span>
+            </div>
+            <TargetTiles t={t} />
+          </div>
+        );
+      })}
     </>
   );
 }
@@ -423,6 +511,7 @@ function App() {
   const [engine, setEngine] = useState<EngineView | null>(null);
   const [mortal, setMortal] = useState<MortalView | null>(null);
   const [win, setWin] = useState<WinView | null>(null);
+  const [targets, setTargets] = useState<TargetsView | null>(null);
   const [compact, setCompact] = useState(rememberedCompact);
   const panel = useRef<HTMLElement>(null);
 
@@ -435,6 +524,7 @@ function App() {
       listen<EngineView>("engine", (e) => setEngine(e.payload)),
       listen<MortalView>("mortal", (e) => setMortal(e.payload)),
       listen<WinView>("win", (e) => setWin(e.payload)),
+      listen<TargetsView>("targets", (e) => setTargets(e.payload)),
       listen<Latency>("latency", (e) => setLatency(e.payload)),
       listen<Progress>("model-progress", (e) => {
         const percent = Math.floor((100 * e.payload.downloaded) / e.payload.total);
@@ -497,6 +587,10 @@ function App() {
 
   const ai = advice && mortal?.seq === advice.seq ? mortal : null;
   const winNow = advice && win?.seq === advice.seq ? win : null;
+  const aims = advice && targets?.seq === advice.seq ? targets : null;
+  // The target hands take the lower area when there are any; a tenpai hand waiting gets
+  // its waits instead.
+  const showTargets = aims !== null && (aims.targets.length > 0 || aims.directions.length > 0);
   const p = advice ? plan(advice, ai, winNow) : null;
   const game = advice?.game ?? null;
   const gameName = status?.state === "watching" ? status.game : "麻将 Copilot";
@@ -613,12 +707,19 @@ function App() {
               </div>
             )}
           </section>
-          {(ukeire || p.card) && (
+          {(ukeire || showTargets || p.card) && (
             <section className={`lower${p.card ? " covered" : ""}`}>
-              {ukeire && ukeire.tiles.length > 0 && (
+              {showTargets && aims ? (
                 <div className="lower-content">
-                  <Ukeire shanten={ukeire.shanten} tiles={ukeire.tiles} />
+                  <Targets view={aims} />
                 </div>
+              ) : (
+                ukeire &&
+                ukeire.tiles.length > 0 && (
+                  <div className="lower-content">
+                    <Ukeire shanten={ukeire.shanten} tiles={ukeire.tiles} values={aims?.waits ?? []} />
+                  </div>
+                )
               )}
               {p.card === "call" && <CallCard advice={advice} ai={ai} />}
               {p.card === "win" && winNow && <WinCard win={winNow} ai={ai} />}

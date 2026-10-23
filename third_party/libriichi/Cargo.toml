@@ -1,6 +1,8 @@
 # Modified by mahjong-copilot on 2026-10-21: trimmed from libriichi/Cargo.toml in
 # Equim-chan/Mortal at commit 0cff2b52982be5b1163aa9a62fb01f03ce91e0d2. Keeps only
 # the dependencies of the algo, tile and hand modules; no pyo3, no Python build.
+# Modified by mahjong-copilot on 2026-10-22: added the dependencies of the mjai and
+# state modules (derivative, serde_json, serde_with), same versions as upstream.
 [package]
 name = "libriichi-algo"
 version = "0.1.0"
@@ -17,8 +19,11 @@ ahash = "0.8"
 anyhow = "1"
 boomphf = "0.6"
 byteorder = "1"
+derivative = "2"
 flate2 = "1"
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_with = "3"
 tinyvec = { version = "1", features = ["alloc", "serde", "rustc_1_57"] }
 
 [features]

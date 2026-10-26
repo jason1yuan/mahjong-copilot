@@ -95,7 +95,7 @@ revision = "ea01ca0bcb9be0fc10a5fa09ee8356770c25adc5"
 license = "Apache-2.0"
 
 # The decision model (#22): Mortal v4 with the Mortal-S42 weights, converted to ONNX by
-# ml/convert/export_mortal.py. Kept local until distribution is settled.
+# ml/convert/export_mortal.py and hosted at xzhe121/Mortal-S42-onnx (prepare_upload.py).
 [mortal]
 repo = "haor/Mortal-S42"
 revision = "524981f21a929e3c3b269f65af79b84163bd02ca"

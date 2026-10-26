@@ -104,9 +104,9 @@ function ModelStep({ download }: { download: Download }) {
   const retry = () => invoke("download_models").catch(() => undefined);
   return (
     <section className="onboard-step">
-      <h2>下载认牌模型</h2>
+      <h2>下载模型</h2>
       <p>
-        认牌模型约 345 MB，只下载这一次，之后完全离线运行。下载完会校验文件，确保没有损坏或被改动；中途断了下次会接着下载。
+        认牌模型和决策模型（Mortal）共约 390 MB，只下载这一次，之后完全离线运行。下载完会校验文件，确保没有损坏或被改动；中途断了下次会接着下载。
       </p>
       {download.state === "checking" && <p className="onboard-note">正在检查……</p>}
       {download.state === "downloading" && (
@@ -133,7 +133,6 @@ function ModelStep({ download }: { download: Download }) {
           </div>
         </>
       )}
-      <p className="onboard-note">决策模型（Mortal）以后提供，现在先按牌效给建议。</p>
     </section>
   );
 }

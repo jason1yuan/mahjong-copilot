@@ -27,11 +27,6 @@ fn models_dir(app: &AppHandle) -> tauri::Result<PathBuf> {
     Ok(app.path().app_data_dir()?.join("models"))
 }
 
-/// The decision model (#22), put in the models folder by `ml/convert/export_mortal.py
-/// --install`. It is not downloaded until its distribution is settled; without it the
-/// panel shows the rule-based advice only.
-const LOCAL_MORTAL: &str = "mortal-s42.onnx";
-
 /// Whether every model is downloaded and verified.
 #[tauri::command]
 fn models_ready(app: AppHandle) -> Result<bool, String> {
@@ -70,25 +65,27 @@ fn download_models(app: AppHandle) {
     });
 }
 
-/// Fetches every model; returns the tile classifier's path and the decision model's, if
-/// it is there.
-fn fetch_all(app: &AppHandle) -> anyhow::Result<(PathBuf, Option<PathBuf>)> {
+/// Fetches every model; returns the tile classifier's path and the decision model's.
+/// Progress counts all the models together, so the window shows one bar.
+fn fetch_all(app: &AppHandle) -> anyhow::Result<(PathBuf, PathBuf)> {
     let dir = models_dir(app)?;
+    let total = mahjong_models::ALL.iter().map(|m| m.size).sum();
+    let mut before = 0;
     for model in &mahjong_models::ALL {
         mahjong_models::fetch(&dir, model, &mut |p| {
             let progress = ModelProgress {
                 name: model.name.to_owned(),
-                downloaded: p.downloaded,
-                total: p.total,
+                downloaded: before + p.downloaded,
+                total,
             };
             // Progress is best effort; a closed window must not stop the download.
             let _ = app.emit("model-progress", progress);
         })?;
+        before += model.size;
     }
-    let mortal = Some(dir.join(LOCAL_MORTAL)).filter(|p| p.is_file());
     Ok((
         mahjong_models::path(&dir, &mahjong_models::TILE_CLASSIFIER),
-        mortal,
+        mahjong_models::path(&dir, &mahjong_models::DECISION_MODEL),
     ))
 }
 

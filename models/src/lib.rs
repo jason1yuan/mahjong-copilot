@@ -34,8 +34,17 @@ pub const TILE_CLASSIFIER: ModelFile<'static> = ModelFile {
     sha256: "07fd9d39409ff453d6ad06bc83be3f74aa359b24365f5cd70c839237c0fab239",
 };
 
+/// The decision model (#22): haor/Mortal-S42 converted to ONNX by
+/// `ml/convert/export_mortal.py`, hosted by us for the same reason.
+pub const DECISION_MODEL: ModelFile<'static> = ModelFile {
+    name: "mortal-s42-2f7ad48b.onnx",
+    url: "https://huggingface.co/xzhe121/Mortal-S42-onnx/resolve/2f7ad48bc29dadd9805b1897f3c5b97b76c0d41a/model.onnx",
+    size: 43_673_425,
+    sha256: "30381bf21389e2d25d3edf48fed11bf772336ef3daeee67d1bdae7fb9dd30cb4",
+};
+
 /// Every model the app needs.
-pub const ALL: [ModelFile<'static>; 1] = [TILE_CLASSIFIER];
+pub const ALL: [ModelFile<'static>; 2] = [TILE_CLASSIFIER, DECISION_MODEL];
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModelError {
@@ -386,24 +395,35 @@ mod tests {
     }
 
     #[test]
-    fn the_tile_classifier_is_pinned_to_a_revision() {
+    fn the_models_are_pinned_to_a_revision() {
         assert!(
             TILE_CLASSIFIER
                 .url
                 .contains("/resolve/d1da028b53b97e309e67ddfed6e4b61e85603f65/")
         );
-        assert_eq!(TILE_CLASSIFIER.sha256.len(), 64);
-        assert!(ALL.contains(&TILE_CLASSIFIER));
+        assert!(
+            DECISION_MODEL
+                .url
+                .contains("/resolve/2f7ad48bc29dadd9805b1897f3c5b97b76c0d41a/")
+        );
+        for model in ALL {
+            assert_eq!(model.sha256.len(), 64);
+            assert!(model.url.starts_with("https://huggingface.co/"));
+        }
+        assert!(ALL.contains(&TILE_CLASSIFIER) && ALL.contains(&DECISION_MODEL));
+        assert_ne!(TILE_CLASSIFIER.name, DECISION_MODEL.name);
     }
 
-    /// Downloads the real model (345 MB):
+    /// Downloads the real models (about 390 MB):
     ///     cargo test -p mahjong-models --release -- --ignored
     #[test]
-    #[ignore = "downloads 345 MB from Hugging Face"]
-    fn downloads_the_real_tile_classifier() {
+    #[ignore = "downloads about 390 MB from Hugging Face"]
+    fn downloads_the_real_models() {
         let dir = temp_dir("real");
-        let file = fetch(&dir, &TILE_CLASSIFIER, &mut |_| {}).unwrap();
-        verify(&file, &TILE_CLASSIFIER).unwrap();
+        for model in ALL {
+            let file = fetch(&dir, &model, &mut |_| {}).unwrap();
+            verify(&file, &model).unwrap();
+        }
         fs::remove_dir_all(dir).unwrap();
     }
 }

@@ -148,7 +148,21 @@ fn main() -> Result<(), Box<dyn Error>> {
                 println!("{name}: impossible: {why}");
             }
             Err(Rejected::NoRound) => *counts.entry("no round").or_default() += 1,
-            Err(Rejected::Covered) => *counts.entry("covered").or_default() += 1,
+            Err(Rejected::Covered) => {
+                let why = match (scene.round.is_some(), scene.dealer.is_some()) {
+                    (false, false) => "covered: no round, no dealer",
+                    (false, true) => "covered: no round",
+                    (true, false) => "covered: no dealer",
+                    (true, true) => "covered: read short",
+                };
+                *counts.entry(why).or_default() += 1;
+                // Covered frames are many; each is printed only when debugging.
+                if std::env::var_os("EVAL_DEBUG").is_some() {
+                    println!("{name}: {why}");
+                    println!("    last taken {}", last_taken.as_deref().unwrap_or("-"));
+                    println!("    this       {}", describe(&scene));
+                }
+            }
             Err(Rejected::Unexplained) => {
                 *counts.entry("unexplained").or_default() += 1;
                 println!("{name}: unexplained");

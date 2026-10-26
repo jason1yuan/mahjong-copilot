@@ -24,6 +24,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Name
         id: name
@@ -32,27 +34,42 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           sha=${GITHUB_SHA::7}
           echo "artifact=Mahjong-Copilot-Dev_${version}_${sha}" >> "$GITHUB_OUTPUT"
+          # On a push, build only when the version changed, not for other edits of the
+          # same file; a run started by hand always builds.
+          before=$(git show HEAD~1:app/src-tauri/tauri.conf.json 2>/dev/null | jq -r .version || true)
+          if [ "$GITHUB_EVENT_NAME" = push ] && [ "$before" = "$version" ]; then
+            echo "the version did not change"
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: actions/setup-node@v4
+        if: steps.name.outputs.build == 'true'
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: app/package-lock.json
 
       - uses: dtolnay/rust-toolchain@stable
+        if: steps.name.outputs.build == 'true'
 
       - uses: Swatinem/rust-cache@v2
+        if: steps.name.outputs.build == 'true'
 
       - uses: ./.github/actions/signing
+        if: steps.name.outputs.build == 'true'
         with:
           p12-base64: ${{ secrets.SIGNING_CERTIFICATE_P12_BASE64 }}
           password: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
 
       - name: Install the front end
+        if: steps.name.outputs.build == 'true'
         working-directory: app
         run: npm ci
 
       - name: Build
+        if: steps.name.outputs.build == 'true'
         working-directory: app
         run: |
           npm run tauri build -- --config src-tauri/tauri.dev.conf.json --features dev-tools
@@ -61,11 +78,13 @@ jobs:
             "$RUNNER_TEMP/out/${{ steps.name.outputs.artifact }}_aarch64.dmg"
 
       - name: Check the signature
+        if: steps.name.outputs.build == 'true'
         run: |
           codesign --verify --deep --strict "target/release/bundle/macos/Mahjong Copilot Dev.app"
           codesign -dr - "target/release/bundle/macos/Mahjong Copilot Dev.app"
 
       - uses: actions/upload-artifact@v4
+        if: steps.name.outputs.build == 'true'
         with:
           name: ${{ steps.name.outputs.artifact }}
           path: ${{ runner.temp }}/out/*.dmg

@@ -347,7 +347,9 @@ impl HandFinder {
             (band / 3).max(4),
             (band / 12).max(2),
         );
-        // Plain light strips (window borders) have no symbols.
+        // Plain light strips (window borders) have no symbols. Neither has a white dragon,
+        // which stands alone when it is the drawn tile: it is looked for among all of them.
+        let all_groups = groups.clone();
         groups.retain(|&(g0, g1)| self.contrast(g0, g1, y0 + band / 10, y1 - band / 10) > 12.0);
         // The concealed hand is the leftmost row of tiles: the melds to its right can be
         // longer once there are a few of them.
@@ -424,11 +426,16 @@ impl HandFinder {
         };
         let concealed: Vec<TileBox> = (0..n).map(slot).collect();
         let end = (start + n as f32 * pitch).round() as usize;
-        let drawn = groups
+        // The drawn tile: one tile wide, less than a tile right of the hand, and with
+        // symbols or, blank, a tile's face from its top down.
+        let drawn = all_groups
             .iter()
             .find(|g| g.0 >= end)
             .filter(|g| {
                 ((g.0 - end) as f32) < pitch && (((g.1 - g.0) as f32 / pitch).round() as usize) == 1
+            })
+            .filter(|&&(a, b)| {
+                groups.contains(&(a, b)) || self.tileness(a, b, y0, band) >= MIN_TILENESS
             })
             .map(|&(a, b)| self.tile_box(a, b, y0, band));
         Some(HandLayout {
@@ -693,6 +700,28 @@ mod tests {
         assert_eq!(layout.concealed.len(), 13);
         assert!(layout.drawn.is_some());
         assert!((layout.pitch - 40.0).abs() < 1.0, "pitch {}", layout.pitch);
+        assert_near(&layout.tiles(), &tiles, h);
+    }
+
+    #[test]
+    fn a_drawn_white_dragon_is_found() {
+        // The white dragon's face is blank: no symbol to tell it from a plain strip.
+        let (w, h) = (40, 60);
+        let mut tiles = row(100, 13, w, 500);
+        let left = 100 + 13 * w + 14;
+        tiles.push((left, 500));
+        let mut data = table(800, 580, 0, &tiles, w, h);
+        let [r, g, b] = TILE;
+        let [ir, ig, ib] = INK;
+        for (i, px) in data.as_chunks_mut::<4>().0.iter_mut().enumerate() {
+            let x = i as u32 % 800;
+            if (left..left + w).contains(&x) && px[..3] == [ib, ig, ir] {
+                px[..3].copy_from_slice(&[b, g, r]);
+            }
+        }
+        let layout = find(&data, 800, 580).unwrap();
+        assert_eq!(layout.concealed.len(), 13);
+        assert!(layout.drawn.is_some(), "the blank drawn tile is missed");
         assert_near(&layout.tiles(), &tiles, h);
     }
 

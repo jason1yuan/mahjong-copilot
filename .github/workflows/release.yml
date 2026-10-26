@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   release:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +40,15 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ github.token }}
+
+      - name: Use the newest Xcode
+        if: steps.version.outputs.new == 'true'
+        run: |
+          # The screen capture crate's Swift bridge needs the macOS 26 SDK or newer.
+          xcode=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version
+          xcrun --show-sdk-version
 
       - uses: actions/setup-node@v4
         if: steps.version.outputs.new == 'true'

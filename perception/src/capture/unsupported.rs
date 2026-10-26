@@ -12,6 +12,15 @@ impl Session {
     }
 }
 
+/// No permission to ask for where there is no capture yet.
+pub(super) fn has_screen_access() -> bool {
+    true
+}
+
+pub(super) fn request_screen_access() -> bool {
+    true
+}
+
 pub(super) fn list_windows() -> Result<Vec<WindowInfo>, CaptureError> {
     Err(CaptureError::Unsupported)
 }

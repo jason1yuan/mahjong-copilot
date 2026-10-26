@@ -140,6 +140,15 @@ export function DevArea({ initial, advice, engine, latency, ai }: Props) {
     };
   }, []);
 
+  // Shows the first-start guide again (#17), to check it on a machine already set up.
+  const replayOnboarding = () => {
+    try {
+      localStorage.removeItem("onboarded");
+    } catch {
+      // Without storage the guide's last step shows every time anyway.
+    }
+    window.location.reload();
+  };
   const report = (err: unknown) => setError(String(err));
   const shoot = () => {
     setError(null);
@@ -271,6 +280,9 @@ export function DevArea({ initial, advice, engine, latency, ai }: Props) {
             </button>
             <button type="button" className={sheet ? "on" : ""} onClick={() => setSheet((s) => !s)}>
               牌图
+            </button>
+            <button type="button" onClick={replayOnboarding}>
+              重看引导
             </button>
             <span className="dev-saved" title={recording.dir}>
               已存 {recording.saved} 张

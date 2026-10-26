@@ -38,6 +38,23 @@ fn init_core_graphics() {
     unsafe { screencapturekit::ffi::sc_initialize_core_graphics() }
 }
 
+#[link(name = "CoreGraphics", kind = "framework")]
+unsafe extern "C" {
+    fn CGPreflightScreenCaptureAccess() -> bool;
+    fn CGRequestScreenCaptureAccess() -> bool;
+}
+
+pub(super) fn has_screen_access() -> bool {
+    // SAFETY: takes no arguments and only reads the process's permission; no prompt.
+    unsafe { CGPreflightScreenCaptureAccess() }
+}
+
+pub(super) fn request_screen_access() -> bool {
+    // SAFETY: takes no arguments; shows the system's prompt the first time and adds the
+    // app to the Screen Recording list in System Settings.
+    unsafe { CGRequestScreenCaptureAccess() }
+}
+
 pub(super) fn list_windows() -> Result<Vec<WindowInfo>, CaptureError> {
     init_core_graphics();
     let content = SCShareableContent::get().map_err(platform)?;

@@ -1,9 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { LogicalSize } from "@tauri-apps/api/dpi";
 import { DevArea } from "./DevArea";
+import { Onboarding } from "./Onboarding";
 import {
   CALLS,
   directionText,
@@ -683,6 +684,10 @@ function App() {
   const [defense, setDefense] = useState<DefenseView | null>(null);
   const [compact, setCompact] = useState(rememberedCompact);
   const [theme, nextTheme] = useTheme();
+  // First start (#17): the guide until screen recording, the models and the game window
+  // are in place.
+  const [onboarded, setOnboarded] = useState(false);
+  const finishOnboarding = useCallback(() => setOnboarded(true), []);
   // The hand tile being corrected, by its place (#16).
   const [picking, setPicking] = useState<number | null>(null);
   const [pausing, setPausing] = useState<boolean | null>(null);
@@ -715,7 +720,9 @@ function App() {
     };
   }, []);
 
-  // The window takes the panel's height, so it never shows empty space or cuts it off.
+  // The window takes the panel's height, so it never shows empty space or cuts it off. The
+  // panel is a different element in compact mode and during the first-start guide, so the
+  // observer follows whichever is on screen.
   useLayoutEffect(() => {
     const el = panel.current;
     if (!el) return;
@@ -732,7 +739,7 @@ function App() {
     observer.observe(el);
     fit();
     return () => observer.disconnect();
-  }, []);
+  }, [compact, onboarded]);
 
   // Report when Mortal's decision is on screen too, for the latency of call decisions.
   useEffect(() => {
@@ -813,7 +820,7 @@ function App() {
   const doubts = advice?.tiles.filter((v) => v.doubt).length ?? 0;
   if (doubts > 0) notes.push(`${doubts} 张牌拿不准（标 ?）`);
 
-  if (compact) {
+  if (compact && onboarded) {
     return (
       <main className="panel compact" ref={panel}>
         <header className="titlebar" data-tauri-drag-region>
@@ -865,6 +872,8 @@ function App() {
         <CompactButton onToggle={toggleCompact} />
         <ThemeButton theme={theme} onNext={nextTheme} />
       </header>
+      {!onboarded && <Onboarding onDone={finishOnboarding} />}
+      {onboarded && (
       <div className="status-bar" data-tauri-drag-region>
         <StatusLight l={lamp} />
         <span className="game" data-tauri-drag-region>
@@ -890,8 +899,9 @@ function App() {
           </span>
         )}
       </div>
+      )}
 
-      {advice && p ? (
+      {!onboarded ? null : advice && p ? (
         <>
           <section className="hand-area">
             <Hand advice={advice} p={p} keep={keep} width={HAND} defense={guard} onPick={setPicking} />

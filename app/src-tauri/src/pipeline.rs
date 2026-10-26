@@ -377,6 +377,8 @@ pub struct Pipeline {
     saved: Arc<AtomicU64>,
     /// The player paused recognition (#16).
     paused: AtomicBool,
+    /// The window the player picked when none was found by its title (#17).
+    chosen: Mutex<Option<u32>>,
     /// The running watcher's way to learn the player's corrections (#16).
     corrector: Mutex<Option<Corrector>>,
     /// The last hand read, to correct and advise on again (#16).
@@ -615,7 +617,8 @@ impl Pipeline {
                 std::thread::sleep(PAUSE_POLL);
                 continue;
             }
-            let Some((window, profile)) = find_window(&profiles) else {
+            let chosen = *lock(&self.chosen);
+            let Some((window, profile)) = find_window(&profiles, chosen) else {
                 self.set_status(app, Status::NoWindow);
                 std::thread::sleep(RETRY);
                 continue;
@@ -682,6 +685,22 @@ impl Pipeline {
                 }
             }
         }
+    }
+
+    /// The game window as it would be found now, even while paused (#17).
+    pub fn game_window(&self) -> Option<WindowChoice> {
+        let profiles = profile::builtin().ok()?;
+        let chosen = *lock(&self.chosen);
+        find_window(&profiles, chosen).map(|(w, _)| WindowChoice {
+            id: w.id,
+            app: w.app,
+            title: w.title,
+        })
+    }
+
+    /// The player picked the game window (#17); the supervisor looks for it next.
+    pub fn choose_window(&self, id: u32) {
+        *lock(&self.chosen) = Some(id);
     }
 
     /// Pauses or resumes recognition (#16); the supervisor stops or restarts the watcher.
@@ -1223,7 +1242,9 @@ fn seen_counts(hand: &[Tile], table: Option<&Snapshot>) -> TileCounts {
 }
 
 /// The first window a built-in profile recognises, with that profile.
-fn find_window(profiles: &[Profile]) -> Option<(WindowInfo, Profile)> {
+/// The game window: the one the player picked if it is still there, read with the first
+/// profile; otherwise the first window a profile recognises by its app and title.
+fn find_window(profiles: &[Profile], chosen: Option<u32>) -> Option<(WindowInfo, Profile)> {
     let windows = match capture::list_windows() {
         Ok(windows) => windows,
         Err(err) => {
@@ -1231,9 +1252,38 @@ fn find_window(profiles: &[Profile]) -> Option<(WindowInfo, Profile)> {
             return None;
         }
     };
+    if let Some(id) = chosen
+        && let Some(window) = windows.iter().find(|w| w.id == id)
+        && let Some(profile) = profiles.first()
+    {
+        return Some((window.clone(), profile.clone()));
+    }
     windows
         .into_iter()
         .find_map(|w| profile::for_window(profiles, &w).cloned().map(|p| (w, p)))
+}
+
+/// A window the player can pick as the game (#17): its app and title only, no picture.
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WindowChoice {
+    pub id: u32,
+    pub app: String,
+    pub title: String,
+}
+
+/// The windows on screen, for the player to pick the game from.
+pub fn window_choices() -> Vec<WindowChoice> {
+    capture::list_windows()
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|w| w.on_screen && !w.title.is_empty())
+        .map(|w| WindowChoice {
+            id: w.id,
+            app: w.app,
+            title: w.title,
+        })
+        .collect()
 }
 
 #[cfg(test)]

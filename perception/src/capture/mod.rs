@@ -113,6 +113,18 @@ impl CaptureSession {
     }
 }
 
+/// Whether the app may capture the screen (macOS: Screen Recording in System Settings).
+/// Checking shows no prompt (#17).
+pub fn has_screen_access() -> bool {
+    platform::has_screen_access()
+}
+
+/// Asks for screen capture: the first time, the system's prompt, and the app joins the
+/// Screen Recording list. A grant takes effect after the app restarts (macOS).
+pub fn request_screen_access() -> bool {
+    platform::request_screen_access()
+}
+
 /// The windows on screen that can be captured, largest first.
 pub fn list_windows() -> Result<Vec<WindowInfo>, CaptureError> {
     let mut windows = platform::list_windows()?;

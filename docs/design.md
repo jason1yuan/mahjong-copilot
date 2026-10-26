@@ -223,7 +223,7 @@ flowchart LR
 评测集：
 
 - 用游戏里的牌谱回放录屏。牌谱本身就是标准答案，能自动得到大量带答案的画面，用来测识别准确率和事件推断是否正确，不用于训练。
-- 整桌评测（#8）：开发版 app 的调试行有"截图"按钮和"连续录制"开关，正式版里没有。开发版有两种：`npm run tauri dev` 跑起来的，和随每个版本发布的打包开发版「Mahjong Copilot Dev」（`dev-tools` 功能，bundle id `io.github.jason1yuan.mahjongcopilot.dev`，能和正式版同时安装，单独授权屏幕录制、单独下载模型）。
+- 整桌评测（#8）：开发版 app 的调试行有"截图"按钮和"连续录制"开关，正式版里没有。开发版有两种：`npm run tauri dev` 跑起来的，和 CI 打包的开发版「Mahjong Copilot Dev」（`dev-tools` 功能；发版时和正式版一起打包，也可以在 Actions 页面手动打包，作为构建产物保存 30 天，不放进 Release；bundle id `io.github.jason1yuan.mahjongcopilot.dev`，能和正式版同时安装，单独授权屏幕录制、单独下载模型）。
   - 截图存下当前这一帧；连续录制在每次手牌变化时存一帧，也就是每巡摸牌、打牌各一次；
   - 都存成 PNG，不进 git：`tauri dev` 存在仓库的 `recordings/live/`；打包开发版没有仓库，存在它自己的 app 数据目录的 `recordings/live/`。这是 CLAUDE.md 允许的"明确开启的调试录制"：只有用户手动操作才会存；
   - 存图在单独的线程上做，不占识别和建议的时间。
@@ -551,7 +551,7 @@ flowchart LR
     - 运行时 app 和辅助进程都没有网络连接。
   - DMG 窗口背景图（`app/src-tauri/dmg/background.png`）印着首次打开的三步。但 macOS 26 以后的 Finder 可能不显示 DMG 背景（这台 macOS 27 上就没显示，图和布置文件其实都在 DMG 里），所以三步同时写在 README 和发布说明模板 [release-notes.md](release-notes.md) 里。
   - 还没做：在另一台干净的 Mac 上从浏览器下载验证。
-  - 自动发布（2026-10-26 定）：`tauri.conf.json` 的版本号改动合并到 `main` 后，GitHub Actions 自动测试、打包签名正式版和开发版两个 DMG、发布 Release，不再手动建 Release。签名证书由用户放进仓库的 Secrets，CI 导入临时钥匙串，签完删除；说明见 [release.md](release.md)。
+  - 自动发布（2026-10-26 定）：`tauri.conf.json` 的版本号改动合并到 `main` 后，GitHub Actions 自动测试、打包签名正式版 DMG、发布 Release，不再手动建 Release。开发版不发布：发版时一起打包，或在 Actions 页面手动打包，存成构建产物，只有对仓库有权限的人能下载。普通的合并不触发构建。签名证书由用户放进仓库的 Secrets，CI 导入临时钥匙串，签完删除；说明见 [release.md](release.md)。
 - 以后想去掉首次打开这一步，再加入 Apple Developer Program（个人即可，每年 99 美元），换成开发者证书签名并公证。代价是所有用户需要重新授权一次屏幕录制。
 - Windows（P2）：安装包没签名时 SmartScreen 会拦一次，用户点"更多信息 → 仍要运行"即可，下载页写明这一步。
 - app 启动后的引导四步（#17，`app/src/Onboarding.tsx`）。哪一步没完成就显示哪一步，前三步都满足、第四步看过以后直接进主面板：

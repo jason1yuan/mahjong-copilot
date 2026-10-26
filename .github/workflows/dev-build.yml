@@ -1,0 +1,73 @@
+# Builds the dev app ("Mahjong Copilot Dev": the dev tools, its own bundle id) and keeps
+# its DMG as this run's artifact for 30 days. Only people with access to the repository
+# can download it; it is never part of a release. Runs when a new version reaches main,
+# beside release.yml, and when started by hand from the Actions page ("Run workflow").
+# Signs with the same certificate as release.yml (docs/release.md).
+name: Dev build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - app/src-tauri/tauri.conf.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dev-build
+  cancel-in-progress: true
+
+jobs:
+  dev-build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Name
+        id: name
+        run: |
+          version=$(jq -r .version app/src-tauri/tauri.conf.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          sha=${GITHUB_SHA::7}
+          echo "artifact=Mahjong-Copilot-Dev_${version}_${sha}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: ./.github/actions/signing
+        with:
+          p12-base64: ${{ secrets.SIGNING_CERTIFICATE_P12_BASE64 }}
+          password: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
+
+      - name: Install the front end
+        working-directory: app
+        run: npm ci
+
+      - name: Build
+        working-directory: app
+        run: |
+          npm run tauri build -- --config src-tauri/tauri.dev.conf.json --features dev-tools
+          mkdir -p "$RUNNER_TEMP/out"
+          cp "../target/release/bundle/dmg/Mahjong Copilot Dev_${{ steps.name.outputs.version }}_aarch64.dmg" \
+            "$RUNNER_TEMP/out/${{ steps.name.outputs.artifact }}_aarch64.dmg"
+
+      - name: Check the signature
+        run: |
+          codesign --verify --deep --strict "target/release/bundle/macos/Mahjong Copilot Dev.app"
+          codesign -dr - "target/release/bundle/macos/Mahjong Copilot Dev.app"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.name.outputs.artifact }}
+          path: ${{ runner.temp }}/out/*.dmg
+          retention-days: 30
+          if-no-files-found: error

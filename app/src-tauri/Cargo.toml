@@ -32,7 +32,8 @@ tauri-nspanel = "=2.1.1"
 
 [features]
 # The dev tools (#8) in a packaged app: the debug row, screenshots and continuous
-# recording. Built as its own app, "Mahjong Copilot Dev" (see tauri.dev.conf.json).
+# recording. Built as its own app, "Mahjong Copilot Dev" (see tauri.dev.conf.json), by
+# .github/workflows/dev-build.yml with each release or by hand; never released.
 dev-tools = []
 
 [lints]

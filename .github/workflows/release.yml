@@ -1,0 +1,161 @@
+# Publishes a release when a new version reaches main (#19): changing "version" in
+# app/src-tauri/tauri.conf.json and merging it is the whole release step. Builds and signs
+# two DMGs with the project's self-signed certificate (docs/signing.md):
+#
+# - Mahjong Copilot: the app players install;
+# - Mahjong Copilot Dev: the same app with the dev tools (debug row, screenshots,
+#   continuous recording), its own bundle id, so it installs beside the other.
+#
+# Needs these repository secrets, added by the certificate's owner (docs/release.md):
+#   SIGNING_CERTIFICATE_P12_BASE64  the exported .p12, base64-encoded
+#   SIGNING_CERTIFICATE_PASSWORD    its export password
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - app/src-tauri/tauri.conf.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version
+        id: version
+        run: |
+          version=$(jq -r .version app/src-tauri/tauri.conf.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if gh release view "v$version" >/dev/null 2>&1; then
+            echo "v$version is already released"
+            echo "new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - uses: actions/setup-node@v4
+        if: steps.version.outputs.new == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.version.outputs.new == 'true'
+
+      - uses: Swatinem/rust-cache@v2
+        if: steps.version.outputs.new == 'true'
+
+      - name: Import the signing certificate
+        if: steps.version.outputs.new == 'true'
+        env:
+          P12_BASE64: ${{ secrets.SIGNING_CERTIFICATE_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
+        run: |
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          keychain_password=$(openssl rand -hex 24)
+          echo "$P12_BASE64" | base64 --decode > "$RUNNER_TEMP/signing.p12"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$RUNNER_TEMP/signing.p12" -k "$keychain" -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain"
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          # The certificate is self-signed: trust it for code signing on this runner, as
+          # docs/signing.md does on the packaging Mac.
+          openssl pkcs12 -in "$RUNNER_TEMP/signing.p12" -passin env:P12_PASSWORD -nokeys -legacy \
+            | openssl x509 -outform der -out "$RUNNER_TEMP/signing.cer" \
+            || openssl pkcs12 -in "$RUNNER_TEMP/signing.p12" -passin env:P12_PASSWORD -nokeys \
+            | openssl x509 -outform der -out "$RUNNER_TEMP/signing.cer"
+          sudo security add-trusted-cert -d -r trustRoot -p codeSign \
+            -k /Library/Keychains/System.keychain "$RUNNER_TEMP/signing.cer"
+          rm "$RUNNER_TEMP/signing.p12"
+          security find-identity -v -p codesigning "$keychain" | grep "Mahjong Copilot Self-Signed"
+
+      - name: Install the front end
+        if: steps.version.outputs.new == 'true'
+        working-directory: app
+        run: npm ci
+
+      - name: Test
+        if: steps.version.outputs.new == 'true'
+        run: cargo test --workspace
+
+      - name: Build the app
+        if: steps.version.outputs.new == 'true'
+        working-directory: app
+        run: |
+          npm run tauri build
+          mkdir -p "$RUNNER_TEMP/out"
+          cp "../target/release/bundle/dmg/Mahjong Copilot_${{ steps.version.outputs.version }}_aarch64.dmg" \
+            "$RUNNER_TEMP/out/Mahjong-Copilot_${{ steps.version.outputs.version }}_aarch64.dmg"
+
+      - name: Build the dev app
+        if: steps.version.outputs.new == 'true'
+        working-directory: app
+        run: |
+          npm run tauri build -- --config src-tauri/tauri.dev.conf.json --features dev-tools
+          cp "../target/release/bundle/dmg/Mahjong Copilot Dev_${{ steps.version.outputs.version }}_aarch64.dmg" \
+            "$RUNNER_TEMP/out/Mahjong-Copilot-Dev_${{ steps.version.outputs.version }}_aarch64.dmg"
+
+      - name: Check the signatures
+        if: steps.version.outputs.new == 'true'
+        run: |
+          for app in "target/release/bundle/macos/Mahjong Copilot.app" "target/release/bundle/macos/Mahjong Copilot Dev.app"; do
+            codesign --verify --deep --strict "$app"
+            codesign -dr - "$app"
+          done
+
+      - name: Release notes
+        if: steps.version.outputs.new == 'true'
+        run: |
+          version=${{ steps.version.outputs.version }}
+          {
+            # The template's install section, then the checksums; GitHub adds the merged
+            # pull requests after them.
+            sed -n '/^## 安装/,/^## 这个版本的改动/p' docs/release-notes.md \
+              | sed '$d' \
+              | sed "s/Mahjong Copilot_<版本>_aarch64.dmg/Mahjong-Copilot_${version}_aarch64.dmg/"
+            echo "## 开发版"
+            echo
+            echo "\`Mahjong-Copilot-Dev_${version}_aarch64.dmg\` 是带「开发」区域（调试信息、截图、连续录制）的同一个 app，可以和正式版同时安装，需要单独授权屏幕录制、单独下载模型。录下的画面只存在本机的 app 数据目录里。普通玩家装正式版就行。"
+            echo
+            echo "## 校验（SHA-256）"
+            echo
+            echo '```'
+            (cd "$RUNNER_TEMP/out" && shasum -a 256 *.dmg)
+            echo '```'
+            echo
+            echo "## 许可"
+            echo
+            echo "AGPL-3.0-or-later。第三方代码和模型的来源与许可见仓库里的 \`THIRD_PARTY_NOTICES.md\`；决策模型的权重为 Apache-2.0，来自 Hugging Face 上的 haor/Mortal-S42。"
+            echo
+          } > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+
+      - name: Publish
+        if: steps.version.outputs.new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=${{ steps.version.outputs.version }}
+          gh release create "v$version" "$RUNNER_TEMP"/out/*.dmg \
+            --target "$GITHUB_SHA" \
+            --title "Mahjong Copilot $version" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            --generate-notes
+
+      - name: Remove the signing keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true

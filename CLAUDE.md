@@ -85,3 +85,4 @@
 - 小步提交，一个 PR 只做一件事。
 - 改了架构或接口，同步更新 `docs/design.md`。
 - 先问再做：加重量级依赖，改动设计文档里定下的方案，以及任何涉及上面硬性约束的事。
+- Dependabot（`.github/dependabot.yml`）每周提依赖升级 PR。合并前确认新版本的许可仍和 AGPL-3.0 兼容（有变化的同步 `THIRD_PARTY_NOTICES.md`），拉到本地跑过上面的提交前检查；PR 上没有 CI，不要直接合并。

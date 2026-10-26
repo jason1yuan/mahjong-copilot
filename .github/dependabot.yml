@@ -1,0 +1,43 @@
+# Dependabot (free; runs on GitHub, not on our Actions minutes) opens pull requests that
+# upgrade dependencies once a week. Minor and patch upgrades come grouped, one pull
+# request per ecosystem; major ones each on their own. Before merging one, check the new
+# versions' licences stay AGPL-compatible (CLAUDE.md) and run the checks locally: no CI
+# runs on pull requests.
+#
+# Left out: third_party/libriichi, vendored as it is and not upgraded this way (its own
+# Cargo.lock is outside the workspace), and ml/requirements.txt, whose ">=" floors already
+# take the newest versions.
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "Upgrade Rust dependencies:"
+    groups:
+      rust:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /app
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "Upgrade front-end dependencies:"
+    groups:
+      front-end:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "Upgrade GitHub Actions:"
+    groups:
+      actions:
+        update-types: [minor, patch]

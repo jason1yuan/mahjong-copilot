@@ -417,6 +417,11 @@ function TargetTiles({ t }: { t: TargetView }) {
 
 // Up to three target hands (#13): yaku, points, a rough chance and the finished hand;
 // or broad directions when the hand is far from tenpai.
+// The hand an advice is for, to tell a new hand from the same one read again.
+function handKey(advice: Advice): string {
+  return advice.tiles.map((t) => t.tile).join(" ");
+}
+
 function Targets({ view }: { view: TargetsView }) {
   if (view.targets.length === 0) {
     return (
@@ -680,7 +685,7 @@ function App() {
   const [engine, setEngine] = useState<EngineView | null>(null);
   const [mortal, setMortal] = useState<MortalView | null>(null);
   const [win, setWin] = useState<WinView | null>(null);
-  const [targets, setTargets] = useState<TargetsView | null>(null);
+  const [targets, setTargets] = useState<{ view: TargetsView; hand: string } | null>(null);
   const [defense, setDefense] = useState<DefenseView | null>(null);
   const [compact, setCompact] = useState(rememberedCompact);
   const [theme, nextTheme] = useTheme();
@@ -692,6 +697,8 @@ function App() {
   const [picking, setPicking] = useState<number | null>(null);
   const [pausing, setPausing] = useState<boolean | null>(null);
   const panel = useRef<HTMLElement>(null);
+  // The advice the target hands answer: they come right after it.
+  const latest = useRef<Advice | null>(null);
 
   useEffect(() => {
     invoke<Status | null>("pipeline_status").then(setStatus).catch(() => undefined);
@@ -701,11 +708,17 @@ function App() {
         setStatus(e.payload);
         setPausing(null);
       }),
-      listen<Advice | null>("advice", (e) => setAdvice(e.payload)),
+      listen<Advice | null>("advice", (e) => {
+        latest.current = e.payload;
+        setAdvice(e.payload);
+      }),
       listen<EngineView>("engine", (e) => setEngine(e.payload)),
       listen<MortalView>("mortal", (e) => setMortal(e.payload)),
       listen<WinView>("win", (e) => setWin(e.payload)),
-      listen<TargetsView>("targets", (e) => setTargets(e.payload)),
+      listen<TargetsView>("targets", (e) => {
+        const answered = latest.current;
+        if (answered?.seq === e.payload.seq) setTargets({ view: e.payload, hand: handKey(answered) });
+      }),
       listen<DefenseView>("defense", (e) => setDefense(e.payload)),
       listen<Latency>("latency", (e) => setLatency(e.payload)),
       listen<Progress>("model-progress", (e) => {
@@ -771,7 +784,9 @@ function App() {
 
   const ai = advice && mortal?.seq === advice.seq ? mortal : null;
   const winNow = advice && win?.seq === advice.seq ? win : null;
-  const aims = advice && targets?.seq === advice.seq ? targets : null;
+  // A new advice with the same hand (another player discarded) keeps the last target
+  // hands until its own arrive, so the area does not blank for a moment each time.
+  const aims = advice && targets?.hand === handKey(advice) ? targets.view : null;
   const guard = advice && defense?.seq === advice.seq && defense.threats.length > 0 ? defense : null;
   // The target hands take the lower area when there are any; a tenpai hand waiting gets
   // its waits instead.

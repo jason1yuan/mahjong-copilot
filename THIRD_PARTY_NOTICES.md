@@ -23,10 +23,16 @@
 
 ## 决策模型 Mortal-S42
 
-- 位置：不随安装包分发，也不在仓库里。分发方式定下来之前（要先向上传者确认权重的来历，并考虑天凤牌谱条款），只在本机用：`ml/convert/export_mortal.py` 下载、转换并放进本机的应用数据目录，app 找到它才启用
+- 位置：不随安装包分发，也不在仓库里。app 首次启动时从我们的 Hugging Face 模型仓库 [xzhe121/Mortal-S42-onnx](https://huggingface.co/xzhe121/Mortal-S42-onnx)（修订版 `2f7ad48bc29dadd9805b1897f3c5b97b76c0d41a`）下载并校验哈希；那里附有上游原样的 `NOTICE` 和 `model-identity.json`、权重的 Apache-2.0 和网络结构代码的 AGPL-3.0 许可，以及来源和改动说明
 - 来源：Hugging Face 上的 [haor/Mortal-S42](https://huggingface.co/haor/Mortal-S42)，修订版 `524981f21a929e3c3b269f65af79b84163bd02ca`，`weights/s42-inference.pth`（Mortal v4 结构）
-- 改动：用 `ml/convert/export_mortal.py` 把编码器和 Q 值头一起转成 ONNX（opset 18），权重不变
-- 版权与许可：权重 Apache-2.0（上传者 haor）；转换时用到的网络结构代码 `mortal/model.py` 出自 [Equim-chan/Mortal](https://github.com/Equim-chan/Mortal)，AGPL-3.0-or-later，只在转换时下载使用，不放进仓库
+- 改动：用 `ml/convert/export_mortal.py` 把编码器和 Q 值头一起转成 ONNX（opset 18），权重不变；上传内容由 `ml/convert/prepare_upload.py mortal` 生成
+- 版权与许可：权重 Apache-2.0（上传者 haor，按其 Hugging Face 仓库声明的许可分发，2026-10-26 定）；上游 NOTICE 原文：
+
+  ```
+  Model weights: Apache-2.0 (https://www.apache.org/licenses/LICENSE-2.0).
+  ```
+
+  转换时用到的网络结构代码 `mortal/model.py` 出自 [Equim-chan/Mortal](https://github.com/Equim-chan/Mortal)，AGPL-3.0-or-later，只在转换时下载使用，不放进仓库
 - 训练数据：天凤牌谱
 
 ## ONNX Runtime

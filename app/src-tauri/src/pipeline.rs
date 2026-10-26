@@ -4,9 +4,9 @@
 //! to the advice being shown. Assembly only: the reading lives in perception, the advice
 //! in core.
 //!
-//! With the decision model (#22) in the models folder, it also asks Mortal what to do
-//! whenever the state engine has followed the table to a point where the player can act,
-//! and sends that as `mortal` right after the advice, which it comes before in the window.
+//! It also asks the decision model (#22), Mortal, what to do whenever the state engine
+//! has followed the table to a point where the player can act, and sends that as
+//! `mortal` right after the advice, which it comes before in the window.
 //!
 //! The dev build also saves frames for the table evaluation set (#8): a screenshot button
 //! and a switch that saves each frame changing the hand, into `recordings/live/`.
@@ -551,23 +551,23 @@ impl Pipeline {
     }
 
     /// Starts the pipeline once; later calls do nothing.
-    /// Starts watching with the tile classifier at `model` and, if given, the decision
-    /// model at `mortal`.
-    pub fn start(self: &Arc<Self>, app: AppHandle, model: PathBuf, mortal: Option<PathBuf>) {
+    /// Starts watching with the tile classifier at `model` and the decision model at
+    /// `mortal`.
+    pub fn start(self: &Arc<Self>, app: AppHandle, model: PathBuf, mortal: PathBuf) {
         if self.started.swap(true, Ordering::SeqCst) {
             return;
         }
         let pipeline = Arc::clone(self);
         let spawned = std::thread::Builder::new()
             .name("pipeline".into())
-            .spawn(move || pipeline.supervise(&app, &model, mortal.as_deref()));
+            .spawn(move || pipeline.supervise(&app, &model, &mortal));
         if let Err(err) = spawned {
             tracing::error!("could not start the pipeline: {err}");
         }
     }
 
     /// Finds the game window, watches it until capture stops, and starts over.
-    fn supervise(self: &Arc<Self>, app: &AppHandle, model: &Path, mortal: Option<&Path>) {
+    fn supervise(self: &Arc<Self>, app: &AppHandle, model: &Path, mortal: &Path) {
         mahjong_core::analysis::warm_up();
         let (environment, profiles) = match (ort::init().build(), profile::builtin()) {
             (Ok(environment), Ok(profiles)) => (environment, profiles),
@@ -588,14 +588,13 @@ impl Pipeline {
                 );
             }
         };
-        if let Some(path) = mortal {
-            match Mortal::load(&environment, path).and_then(|mut m| m.warm_up().map(|()| m)) {
-                Ok(m) => {
-                    tracing::info!(path = %path.display(), "decision model loaded");
-                    *lock(&self.mortal) = Some(m);
-                }
-                Err(err) => tracing::warn!("the decision model did not load: {err}"),
+        // Without the decision model the panel still shows the rule-based advice.
+        match Mortal::load(&environment, mortal).and_then(|mut m| m.warm_up().map(|()| m)) {
+            Ok(m) => {
+                tracing::info!(path = %mortal.display(), "decision model loaded");
+                *lock(&self.mortal) = Some(m);
             }
+            Err(err) => tracing::warn!("the decision model did not load: {err}"),
         }
         // Labels are read in a helper process, this executable started again, which is
         // replaced when the system's text recognition breaks down (#49).

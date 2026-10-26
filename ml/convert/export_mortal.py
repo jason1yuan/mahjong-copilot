@@ -14,14 +14,15 @@ with illegal actions at -inf, as the PyTorch engine gives them. Then:
    dump_observations -- ml/models/mortal-s42/observations.bin <logs...>`. Same best
    action everywhere, legal-action Q within a small tolerance.
 2. The first points' Q go to `ml/models/mortal-s42/reference.bin` for the Rust test.
-3. `--install DIR` copies the model into the app's models folder (local only: the model
-   is not published until distribution is settled).
+3. `--install DIR` copies the model to `DIR/mortal-s42.onnx`. The app downloads its own
+   copy (see models/src/lib.rs), so this is only for trying a new export by hand.
 
-Nothing here is committed: weights, model, observations and reference stay local.
+Nothing here is committed: weights, model, observations and reference stay local. The
+model is published from our own Hugging Face repository; prepare_upload.py assembles it.
 
 Run from the repository root:
     ml/.venv/bin/python -I ml/convert/export_mortal.py
-    ml/.venv/bin/python -I ml/convert/export_mortal.py --install "$HOME/Library/Application Support/io.github.jason1yuan.mahjongcopilot/models"
+    ml/.venv/bin/python -I ml/convert/export_mortal.py --install /tmp/models
 """
 
 from __future__ import annotations

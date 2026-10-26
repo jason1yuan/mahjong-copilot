@@ -1220,3 +1220,130 @@ body {
   display: block;
   width: 26px;
 }
+
+/* First start (#17). */
+.onboarding {
+  padding: 4px 15px 6px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.steps {
+  display: flex;
+  gap: 14px;
+  margin: 6px 0 12px;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.steps .current {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.steps .done {
+  color: var(--green);
+}
+
+.step-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--chip);
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.steps .current .step-dot {
+  background: var(--red);
+  color: #fff;
+}
+
+.onboard-step h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.onboard-step p {
+  margin: 0 0 8px;
+  line-height: 1.55;
+}
+
+.howto {
+  margin: 0 0 10px;
+  padding-left: 20px;
+  line-height: 1.7;
+}
+
+.onboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+
+.onboard-actions button,
+.window-list button {
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--chip);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.onboard-actions button.primary {
+  border-color: var(--red);
+  background: var(--red);
+  color: #fff;
+}
+
+.onboard-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.onboard-error {
+  color: var(--red);
+}
+
+.progress {
+  height: 6px;
+  margin: 8px 0 6px;
+  border-radius: 3px;
+  background: var(--chip);
+  overflow: hidden;
+}
+
+.progress i {
+  display: block;
+  height: 100%;
+  background: var(--green);
+}
+
+.window-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.window-list button {
+  width: 100%;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

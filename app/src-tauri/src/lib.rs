@@ -106,6 +106,61 @@ fn advice_shown(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>, seq: u64, mo
     pipeline.shown(&app, seq, mortal);
 }
 
+/// Whether the app may capture the screen; checking shows no prompt (#17).
+#[tauri::command]
+fn screen_access() -> bool {
+    mahjong_perception::capture::has_screen_access()
+}
+
+/// Asks for screen capture: the system's prompt the first time (#17).
+#[tauri::command]
+fn request_screen_access() -> bool {
+    mahjong_perception::capture::request_screen_access()
+}
+
+/// Opens System Settings at Screen Recording (#17).
+#[tauri::command]
+fn open_screen_settings() -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
+            .spawn()
+            .map(|_| ())
+            .map_err(|err| err.to_string())
+    }
+    #[cfg(not(target_os = "macos"))]
+    Err("only on macOS".into())
+}
+
+/// Starts the app again: a screen recording grant takes effect only then (#17).
+#[tauri::command]
+fn relaunch(app: AppHandle) {
+    app.restart();
+}
+
+/// The windows on screen by app and title, to pick the game from (#17). Listing windows
+/// asks the window server, so it runs off the main thread, which moves and sizes the panel.
+#[tauri::command(async)]
+fn window_choices() -> Vec<pipeline::WindowChoice> {
+    pipeline::window_choices()
+}
+
+/// The game window as it would be found now, `None` when there is none (#17). Off the main
+/// thread, as [`window_choices`]; the guide asks every two seconds.
+#[tauri::command(async)]
+fn game_window(
+    pipeline: State<'_, Arc<Pipeline>>,
+) -> Result<Option<pipeline::WindowChoice>, String> {
+    Ok(pipeline.game_window())
+}
+
+/// The player picked the game window (#17).
+#[tauri::command]
+fn choose_window(pipeline: State<'_, Arc<Pipeline>>, id: u32) {
+    pipeline.choose_window(id);
+}
+
 /// Pauses (`true`) or resumes recognition (#16).
 #[tauri::command]
 fn set_paused(pipeline: State<'_, Arc<Pipeline>>, paused: bool) {
@@ -193,6 +248,13 @@ pub fn run() -> tauri::Result<()> {
             advice_shown,
             set_paused,
             correct_tile,
+            screen_access,
+            request_screen_access,
+            open_screen_settings,
+            relaunch,
+            window_choices,
+            game_window,
+            choose_window,
             debug_recording,
             save_frame,
             set_recording

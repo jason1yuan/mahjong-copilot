@@ -5,7 +5,8 @@
 //!
 //! - Faces are found as described in [`crate::faces`]; a sideways one is the riichi
 //!   declaration, turned upright before it is read.
-//! - Faces that touch are split by width.
+//! - Faces that touch are split by width, and by height where a tile of the next row
+//!   joins the one above it.
 //! - A row goes on only while each face starts where the last one ended, and a row starts
 //!   only after a full one, so avatars and labels beside a short river are left out.
 //!
@@ -31,6 +32,11 @@ const READ_WIDTH: f64 = 13.0;
 const MARGIN: f64 = 0.3;
 /// How far a face may start from where the last one ended and still continue the row.
 const MAX_GAP: f64 = 0.45;
+/// A face this many times as tall as the upright ones is two tiles, one row above the
+/// other, joined through the light side between them.
+const STACKED: f64 = 1.75;
+/// ...and less than this many: anything taller is not two tiles.
+const MAX_STACKED: f64 = 2.4;
 /// Least pixels per tile width a river is rectified at.
 const MIN_SCALE: f64 = 8.0;
 /// Most pixels per tile width: the classifier and the cache shrink tiles further anyway,
@@ -96,25 +102,40 @@ pub fn find_tiles(view: &RiverView, layout: &RiverLayout, face: TileFace) -> Vec
     let mut found = Vec::new();
     for c in &found_faces.faces {
         let w = f64::from(c.width());
-        let row = ((f64::from(c.top + c.bottom) / 2.0 / s - MARGIN) / layout.row_pitch).floor();
-        if !(0.0..ROWS as f64).contains(&row) {
-            continue;
-        }
         let sideways = found_faces.is_sideways(c);
-        let parts = if sideways {
-            1
+        let (parts, stacked) = if sideways {
+            (1, 1)
         } else {
-            (w / s).round().max(1.0) as u32
+            let parts = (w / s).round().max(1.0) as u32;
+            // Two tiles, one above the other: one tile wide and about two tall. Clearly so,
+            // as a short face beside the river (an avatar) can lower the median a tile's
+            // height is measured against; and no wider or taller, as the hand the game
+            // draws reaching in to discard is a light patch several tiles across.
+            let tall = f64::from(c.height()) / found_faces.upright_height;
+            let stacked = if parts == 1 && (STACKED..MAX_STACKED).contains(&tall) {
+                2
+            } else {
+                1
+            };
+            (parts, stacked)
         };
-        for k in 0..parts {
-            found.push(RiverSlot {
-                left: c.left + (c.right - c.left) * k / parts,
-                top: c.top,
-                right: c.left + (c.right - c.left) * (k + 1) / parts,
-                bottom: c.bottom,
-                row: row as usize,
-                sideways,
-            });
+        for j in 0..stacked {
+            let top = c.top + (c.bottom - c.top) * j / stacked;
+            let bottom = c.top + (c.bottom - c.top) * (j + 1) / stacked;
+            let row = ((f64::from(top + bottom) / 2.0 / s - MARGIN) / layout.row_pitch).floor();
+            if !(0.0..ROWS as f64).contains(&row) {
+                continue;
+            }
+            for k in 0..parts {
+                found.push(RiverSlot {
+                    left: c.left + (c.right - c.left) * k / parts,
+                    top,
+                    right: c.left + (c.right - c.left) * (k + 1) / parts,
+                    bottom,
+                    row: row as usize,
+                    sideways,
+                });
+            }
         }
     }
 
@@ -263,6 +284,49 @@ mod tests {
         fill(image, x + 2, y + 22, 14, 1, dark);
         fill(image, x + 2, y + 2, 1, 21, dark);
         fill(image, x + 15, y + 2, 1, 21, dark);
+    }
+
+    #[test]
+    fn a_tile_joined_to_the_one_above_starts_the_next_row() {
+        // A recorded frame lost a whole river this way: the first tile of the second row
+        // joined the first of the first through its light side, one face two tiles tall,
+        // and the first row seemed to start a tile late.
+        let mut image = RgbImage::from_pixel(260, 94, TABLE);
+        for k in 0..6 {
+            fill(&mut image, 10 + 20 * k, row_top(0), 18, 25, FACE);
+        }
+        fill(&mut image, 10, row_top(1), 18, 25, FACE);
+        fill(
+            &mut image,
+            10,
+            row_top(0) + 25,
+            18,
+            row_top(1) - row_top(0) - 25,
+            FACE,
+        );
+        fill(&mut image, 30, row_top(1), 18, 25, FACE);
+        let view = RiverView { image, scale: S };
+        let slots = find_tiles(&view, &layout(), face());
+        let rows: Vec<usize> = slots.iter().map(|s| s.row).collect();
+        assert_eq!(rows, [0, 0, 0, 0, 0, 0, 1, 1]);
+        assert!(
+            slots[0].bottom - slots[0].top < 30 && slots[6].bottom - slots[6].top < 30,
+            "{slots:?}"
+        );
+    }
+
+    #[test]
+    fn the_discarding_hand_is_not_split_into_tiles() {
+        // The game draws a hand reaching into the river to discard: a light patch several
+        // tiles wide and tall over the first tiles, which is no part of the river.
+        let mut image = RgbImage::from_pixel(260, 94, TABLE);
+        for k in 0..2 {
+            fill(&mut image, 10 + 20 * k, row_top(0), 18, 25, FACE);
+        }
+        fill(&mut image, 10, 0, 100, 94, FACE);
+        let view = RiverView { image, scale: S };
+        let slots = find_tiles(&view, &layout(), face());
+        assert!(slots.is_empty(), "{slots:?}");
     }
 
     #[test]

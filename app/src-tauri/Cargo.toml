@@ -24,7 +24,7 @@ mahjong-core.workspace = true
 mahjong-models.workspace = true
 mahjong-perception.workspace = true
 # ⌥ Space to show and hide the panel (#2); official Tauri plugin, MIT OR Apache-2.0.
-tauri-plugin-global-shortcut = "=2.4.0"
+tauri-plugin-global-shortcut = "=2.4.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # Makes the window a panel that does not take focus from the game (#2); MIT OR Apache-2.0.

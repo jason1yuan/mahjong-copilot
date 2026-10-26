@@ -73,6 +73,8 @@
 
 提交前上面三条 cargo 命令和类型检查都要通过。
 
+发布：把 `app/src-tauri/tauri.conf.json` 的 `version` 改成新版本号并合并到 `main`，CI 自动打包签名正式版 DMG 并发布 Release；开发版不进 Release：发版时一起打包，或在 Actions 页面手动触发「Dev build」，存成构建产物（保存 30 天）。见 [docs/release.md](docs/release.md)。本地打开发版：在 `app/` 里 `npm run tauri build -- --config src-tauri/tauri.dev.conf.json --features dev-tools`。
+
 `third_party/libriichi` 的上游测试不在 workspace 里，升级或改动它之后，在根目录单独跑：
 
 - `CARGO_TARGET_DIR=target cargo test --manifest-path third_party/libriichi/Cargo.toml`

@@ -1,0 +1,42 @@
+# Imports the project's self-signed code signing certificate (docs/signing.md) into a
+# temporary keychain and trusts it for code signing, as the packaging Mac does. The
+# keychain lives in the runner's temporary folder, which is wiped after the job.
+name: Import the signing certificate
+description: Imports the self-signed certificate from the repository secrets.
+inputs:
+  p12-base64:
+    description: The exported .p12, base64-encoded.
+    required: true
+  password:
+    description: Its export password.
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        P12_BASE64: ${{ inputs.p12-base64 }}
+        P12_PASSWORD: ${{ inputs.password }}
+      run: |
+        set -euo pipefail
+        keychain="$RUNNER_TEMP/signing.keychain-db"
+        keychain_password=$(openssl rand -hex 24)
+        echo "$P12_BASE64" | base64 --decode > "$RUNNER_TEMP/signing.p12"
+        security create-keychain -p "$keychain_password" "$keychain"
+        security set-keychain-settings -lut 3600 "$keychain"
+        security unlock-keychain -p "$keychain_password" "$keychain"
+        security import "$RUNNER_TEMP/signing.p12" -k "$keychain" -P "$P12_PASSWORD" -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain"
+        security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+        # Self-signed: trust it for code signing on this runner. OpenSSL 3 needs -legacy
+        # for a .p12 exported by Keychain Access; older ones do not know the flag.
+        if ! openssl pkcs12 -in "$RUNNER_TEMP/signing.p12" -passin env:P12_PASSWORD -nokeys -legacy \
+          -out "$RUNNER_TEMP/signing.pem" 2>/dev/null; then
+          openssl pkcs12 -in "$RUNNER_TEMP/signing.p12" -passin env:P12_PASSWORD -nokeys \
+            -out "$RUNNER_TEMP/signing.pem"
+        fi
+        openssl x509 -in "$RUNNER_TEMP/signing.pem" -outform der -out "$RUNNER_TEMP/signing.cer"
+        sudo security add-trusted-cert -d -r trustRoot -p codeSign \
+          -k /Library/Keychains/System.keychain "$RUNNER_TEMP/signing.cer"
+        rm "$RUNNER_TEMP/signing.p12" "$RUNNER_TEMP/signing.pem"
+        security find-identity -v -p codesigning "$keychain" | grep "Mahjong Copilot Self-Signed"

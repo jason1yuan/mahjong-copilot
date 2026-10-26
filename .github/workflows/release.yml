@@ -1,0 +1,120 @@
+# Publishes a release when a new version reaches main (#19): changing "version" in
+# app/src-tauri/tauri.conf.json and merging it is the whole release step. Builds and signs
+# the app players install with the project's self-signed certificate (docs/signing.md).
+# The dev app is not released; dev-build.yml builds it on the same push, as an artifact.
+#
+# Needs these repository secrets, added by the certificate's owner (docs/release.md):
+#   SIGNING_CERTIFICATE_P12_BASE64  the exported .p12, base64-encoded
+#   SIGNING_CERTIFICATE_PASSWORD    its export password
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - app/src-tauri/tauri.conf.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version
+        id: version
+        run: |
+          version=$(jq -r .version app/src-tauri/tauri.conf.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if gh release view "v$version" >/dev/null 2>&1; then
+            echo "v$version is already released"
+            echo "new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - uses: actions/setup-node@v4
+        if: steps.version.outputs.new == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.version.outputs.new == 'true'
+
+      - uses: Swatinem/rust-cache@v2
+        if: steps.version.outputs.new == 'true'
+
+      - uses: ./.github/actions/signing
+        if: steps.version.outputs.new == 'true'
+        with:
+          p12-base64: ${{ secrets.SIGNING_CERTIFICATE_P12_BASE64 }}
+          password: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
+
+      - name: Install the front end
+        if: steps.version.outputs.new == 'true'
+        working-directory: app
+        run: npm ci
+
+      - name: Test
+        if: steps.version.outputs.new == 'true'
+        run: cargo test --workspace
+
+      - name: Build
+        if: steps.version.outputs.new == 'true'
+        working-directory: app
+        run: |
+          npm run tauri build
+          mkdir -p "$RUNNER_TEMP/out"
+          cp "../target/release/bundle/dmg/Mahjong Copilot_${{ steps.version.outputs.version }}_aarch64.dmg" \
+            "$RUNNER_TEMP/out/Mahjong-Copilot_${{ steps.version.outputs.version }}_aarch64.dmg"
+
+      - name: Check the signature
+        if: steps.version.outputs.new == 'true'
+        run: |
+          codesign --verify --deep --strict "target/release/bundle/macos/Mahjong Copilot.app"
+          codesign -dr - "target/release/bundle/macos/Mahjong Copilot.app"
+
+      - name: Release notes
+        if: steps.version.outputs.new == 'true'
+        run: |
+          version=${{ steps.version.outputs.version }}
+          {
+            # The template's install section, then the checksum; GitHub adds the merged
+            # pull requests after them.
+            sed -n '/^## 安装/,/^## 这个版本的改动/p' docs/release-notes.md \
+              | sed '$d' \
+              | sed "s/Mahjong Copilot_<版本>_aarch64.dmg/Mahjong-Copilot_${version}_aarch64.dmg/"
+            echo "## 校验（SHA-256）"
+            echo
+            echo '```'
+            (cd "$RUNNER_TEMP/out" && shasum -a 256 *.dmg)
+            echo '```'
+            echo
+            echo "## 许可"
+            echo
+            echo "AGPL-3.0-or-later。第三方代码和模型的来源与许可见仓库里的 \`THIRD_PARTY_NOTICES.md\`；决策模型的权重为 Apache-2.0，来自 Hugging Face 上的 haor/Mortal-S42。"
+            echo
+          } > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+
+      - name: Publish
+        if: steps.version.outputs.new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=${{ steps.version.outputs.version }}
+          gh release create "v$version" "$RUNNER_TEMP"/out/*.dmg \
+            --target "$GITHUB_SHA" \
+            --title "Mahjong Copilot $version" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            --generate-notes

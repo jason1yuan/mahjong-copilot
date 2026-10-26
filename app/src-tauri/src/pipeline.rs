@@ -9,7 +9,8 @@
 //! `mortal` right after the advice, which it comes before in the window.
 //!
 //! The dev build also saves frames for the table evaluation set (#8): a screenshot button
-//! and a switch that saves each frame changing the hand, into `recordings/live/`.
+//! and a switch that saves each frame changing the hand, into `recordings/live/`. So does
+//! the packaged dev app (the `dev-tools` feature), into its own data folder.
 
 use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
@@ -483,9 +484,20 @@ pub struct EngineView {
     pub stuck: u32,
 }
 
-/// `recordings/live/` in the repository, which git ignores. The dev build runs from the
-/// repository, two levels above this crate.
-fn recordings_dir() -> PathBuf {
+/// Whether the dev tools are on: under `tauri dev`, or in the packaged dev app.
+fn dev_tools() -> bool {
+    tauri::is_dev() || cfg!(feature = "dev-tools")
+}
+
+/// Where frames are saved. Under `tauri dev`, `recordings/live/` in the repository, which
+/// git ignores: the dev build runs from the repository, two levels above this crate. The
+/// packaged dev app has no repository: its data folder's `recordings/live/`.
+fn recordings_dir(app: &AppHandle) -> PathBuf {
+    if !tauri::is_dev()
+        && let Ok(data) = app.path().app_data_dir()
+    {
+        return data.join("recordings/live");
+    }
     let crate_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
     crate_dir
         .ancestors()
@@ -1112,11 +1124,11 @@ impl Pipeline {
         }
     }
 
-    pub fn recording(&self) -> Option<Recording> {
-        tauri::is_dev().then(|| Recording {
+    pub fn recording(&self, app: &AppHandle) -> Option<Recording> {
+        dev_tools().then(|| Recording {
             on: self.recording.load(Ordering::Relaxed),
             saved: self.saved.load(Ordering::Relaxed),
-            dir: recordings_dir().display().to_string(),
+            dir: recordings_dir(app).display().to_string(),
         })
     }
 
@@ -1141,12 +1153,12 @@ impl Pipeline {
         if let Some(tap) = lock(&self.tap).as_ref() {
             tap.record(recorder);
         }
-        self.recording()
+        self.recording(app)
             .ok_or_else(|| "only in the dev build".into())
     }
 
     fn recorder(&self, app: &AppHandle) -> Result<Arc<Recorder>, String> {
-        if !tauri::is_dev() {
+        if !dev_tools() {
             return Err("only in the dev build".into());
         }
         let mut recorder = lock(&self.recorder);
@@ -1154,8 +1166,9 @@ impl Pipeline {
             return Ok(Arc::clone(recorder));
         }
         let saved = Arc::clone(&self.saved);
+        let dir = recordings_dir(app);
         let app = app.clone();
-        let started = Recorder::start(recordings_dir(), move |path, count| {
+        let started = Recorder::start(dir, move |path, count| {
             saved.store(count, Ordering::Relaxed);
             tracing::info!(path = %path.display(), "saved a frame");
             // Best effort: the count is only for the debug row.

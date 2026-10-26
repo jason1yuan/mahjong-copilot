@@ -176,10 +176,11 @@ fn correct_tile(
     pipeline.correct(&app, index, tile)
 }
 
-/// The dev build's debug recording (#8); `None` in a packaged app, which has none.
+/// The dev build's debug recording (#8); `None` in the packaged app, which has none (the
+/// packaged dev app does).
 #[tauri::command]
-fn debug_recording(pipeline: State<'_, Arc<Pipeline>>) -> Option<Recording> {
-    pipeline.recording()
+fn debug_recording(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>) -> Option<Recording> {
+    pipeline.recording(&app)
 }
 
 /// Saves the game window's newest frame into `recordings/live/` (dev build only).

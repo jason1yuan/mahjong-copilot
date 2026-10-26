@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Mahjong Copilot Dev",
+  "identifier": "io.github.jason1yuan.mahjongcopilot.dev",
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "麻将 Copilot Dev",
+        "width": 560,
+        "height": 250,
+        "minWidth": 360,
+        "minHeight": 60,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "shadow": false
+      }
+    ]
+  }
+}

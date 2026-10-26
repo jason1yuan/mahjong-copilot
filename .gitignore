@@ -36,3 +36,7 @@ ml/runs/
 
 # 本地录屏素材
 recordings/
+
+# Signing certificates and their private keys (docs/signing.md): never in git.
+*.p12
+*.cer

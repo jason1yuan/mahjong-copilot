@@ -41,7 +41,15 @@
       "icons/icon.ico"
     ],
     "macOS": {
-      "minimumSystemVersion": "14.0"
+      "minimumSystemVersion": "14.0",
+      "signingIdentity": "Mahjong Copilot Self-Signed",
+      "hardenedRuntime": true,
+      "dmg": {
+        "background": "dmg/background.png",
+        "windowSize": { "width": 660, "height": 440 },
+        "appPosition": { "x": 170, "y": 150 },
+        "applicationFolderPosition": { "x": 490, "y": 150 }
+      }
     }
   }
 }

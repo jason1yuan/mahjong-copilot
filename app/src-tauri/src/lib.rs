@@ -173,8 +173,11 @@ pub fn run() -> tauri::Result<()> {
     let builder = tauri::Builder::default();
     #[cfg(target_os = "macos")]
     let builder = builder.plugin(tauri_nspanel::init());
+    // Recognition starts paused: the player starts it when a game begins (#16).
+    let pipeline = Arc::new(Pipeline::default());
+    pipeline.set_paused(true);
     builder
-        .manage(Arc::new(Pipeline::default()))
+        .manage(pipeline)
         .setup(|app| {
             if let Err(err) = panel::set_up(app.handle()) {
                 tracing::warn!("setting up the panel: {err:#}");

@@ -92,7 +92,7 @@ jobs:
           codesign --verify --deep --strict "target/release/bundle/macos/Mahjong Copilot Dev.app"
           codesign -dr - "target/release/bundle/macos/Mahjong Copilot Dev.app"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.name.outputs.build == 'true'
         with:
           name: ${{ steps.name.outputs.artifact }}

@@ -538,6 +538,19 @@ flowchart LR
   - app 启动时在后台下载缺少的模型，发出 `model-progress`、`models-ready`、`models-error` 事件，引导界面（#17）据此显示进度和重试。认牌模型 345MB，实测约 13 秒下完并校验；安装包本身约 100MB，牌图和适配包内置。
 - 首次打开：因为没有经过苹果公证，系统会拦截一次。用户在"系统设置 → 隐私与安全性"底部点"仍要打开"并确认，之后就能正常使用。app 被拦截时自己还没运行，所以这三步说明画在 DMG 窗口的背景图上，下载页也写一份。
 - 始终用同一张自签名证书签名（不用临时签名），这样屏幕录制权限能跨版本保留。证书导出为 .p12 备份，丢了的话所有用户都要重新授权。
+- 实现（#19）：
+  - 证书：自签名代码签名证书 `Mahjong Copilot Self-Signed`，有效期十年。创建、设为信任、导出 .p12 备份的步骤见 [signing.md](signing.md)；`.p12` 和 `.cer` 被 `.gitignore` 排除。
+  - 打包：`tauri.conf.json` 设 `signingIdentity` 和 hardened runtime，`npm run tauri build` 的最后一步签名，app 和 DMG 都签。ONNX Runtime 静态链接、读字的辅助进程是同一个可执行文件，所以没有单独的动态库，hardened runtime 的库校验不受自签名影响。
+  - 结果：
+    - `codesign --verify --deep --strict` 通过；
+    - 指定要求是「bundle id + 证书指纹」，两个版本完全相同；
+    - app 26MB，DMG 10.6MB，不含模型，比原先预计的约 100MB 小得多。
+  - 实测（这台 Mac）：
+    - 带下载隔离标记的 DMG 装进「应用程序」后，第一次打开提示「Apple 无法验证它是否含有恶意软件」（不是「已损坏」），按三步打开后正常运行；
+    - v0.1.0 授权屏幕录制后覆盖安装 v0.1.1，不用重新授权就能认牌；
+    - 运行时 app 和辅助进程都没有网络连接。
+  - DMG 窗口背景图（`app/src-tauri/dmg/background.png`）印着首次打开的三步。但 macOS 26 以后的 Finder 可能不显示 DMG 背景（这台 macOS 27 上就没显示，图和布置文件其实都在 DMG 里），所以三步同时写在 README 和发布说明模板 [release-notes.md](release-notes.md) 里。
+  - 还没做：在另一台干净的 Mac 上从浏览器下载验证。
 - 以后想去掉首次打开这一步，再加入 Apple Developer Program（个人即可，每年 99 美元），换成开发者证书签名并公证。代价是所有用户需要重新授权一次屏幕录制。
 - Windows（P2）：安装包没签名时 SmartScreen 会拦一次，用户点"更多信息 → 仍要运行"即可，下载页写明这一步。
 - app 启动后的引导四步：

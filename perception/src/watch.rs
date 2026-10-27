@@ -203,12 +203,14 @@ impl Watcher {
                 last: None,
                 last_table: None,
                 hand_crops: Vec::new(),
+                misfits: 0,
             };
             let mut on_event = on_event;
             std::thread::Builder::new()
                 .name("watcher".into())
                 .spawn(move || {
                     let mut seen = 0;
+                    let mut last_stuck: Option<Instant> = None;
                     while !stop.load(Ordering::Relaxed) {
                         for (index, tile) in corrections.take() {
                             state.teach(index, tile);
@@ -232,26 +234,44 @@ impl Watcher {
                             continue;
                         }
                         let frame = latest.latest();
-                        if let Some(view) = frame.view()
-                            && let Some(event) = state.read(&view)
-                        {
-                            let recorder = lock(&recorder).clone();
-                            let Some(recorder) = recorder else {
-                                drop(frame);
-                                on_event(event);
-                                continue;
-                            };
-                            // Advice first, so recording never delays it; then copy the
-                            // frame that was read before capture can replace it.
-                            on_event(event);
-                            let image = view.to_rgb();
-                            drop(frame);
-                            if !recorder.save("auto", image) {
-                                tracing::warn!(
-                                    dropped = recorder.dropped(),
-                                    "recording: earlier frames are still being written; skipped one"
-                                );
+                        let Some(view) = frame.view() else {
+                            continue;
+                        };
+                        let event = state.read(&view);
+                        let recorder = lock(&recorder).clone();
+                        // The recording keeps the frames read; while the hand keeps not
+                        // fitting its melds, nothing is read, so it keeps one of those now
+                        // and then too: they are the frames to debug from (#77).
+                        let label = match &event {
+                            Some(_) => Some("auto"),
+                            None if state.misfits >= MISFITS_RECORDED
+                                && last_stuck
+                                    .is_none_or(|t: Instant| t.elapsed() >= STUCK_RECORD_EVERY) =>
+                            {
+                                last_stuck = Some(Instant::now());
+                                Some("stuck")
                             }
+                            None => None,
+                        };
+                        let Some(recorder) = recorder.filter(|_| label.is_some()) else {
+                            drop(frame);
+                            if let Some(event) = event {
+                                on_event(event);
+                            }
+                            continue;
+                        };
+                        // Advice first, so recording never delays it; then copy the frame
+                        // that was read before capture can replace it.
+                        if let Some(event) = event {
+                            on_event(event);
+                        }
+                        let image = view.to_rgb();
+                        drop(frame);
+                        if !recorder.save(label.unwrap_or("auto"), image) {
+                            tracing::warn!(
+                                dropped = recorder.dropped(),
+                                "recording: earlier frames are still being written; skipped one"
+                            );
                         }
                     }
                     if let Err(err) = session.stop() {
@@ -303,6 +323,12 @@ fn hand_fits(tiles: usize, melds: usize) -> bool {
     tiles == waiting || tiles == waiting + 1
 }
 
+/// Frames in a row with a hand that does not fit its melds before the recording keeps
+/// them anyway...
+const MISFITS_RECORDED: u32 = 3;
+/// ...one in this long.
+const STUCK_RECORD_EVERY: Duration = Duration::from_secs(5);
+
 /// More than this share of a hand's tiles unsure means it is not a hand.
 const MAX_UNSURE: f32 = 0.5;
 
@@ -334,6 +360,9 @@ struct State {
     last_table: Option<Snapshot>,
     /// The hand's tile pictures as last read, for corrections.
     hand_crops: Vec<RgbImage>,
+    /// Frames in a row whose hand did not fit the melds: a few is an animation, many is a
+    /// misread meld (#77).
+    misfits: u32,
 }
 
 impl State {
@@ -435,12 +464,17 @@ impl State {
         if let Some(table) = &table
             && !hand_fits(tiles.len(), table.melds[Seat::Own.index()].len())
         {
-            tracing::debug!(
+            self.misfits += 1;
+            // Logged at info, as frames dropped here look like a hang from outside (#77).
+            tracing::info!(
                 tiles = tiles.len(),
+                melds = table.melds[Seat::Own.index()].len(),
+                frames = self.misfits,
                 "the hand does not fit the melds; waiting for it to settle"
             );
             return None;
         }
+        self.misfits = 0;
 
         // From now on watch the hand's rows, reaching up for raised tiles, and the table
         // above them.

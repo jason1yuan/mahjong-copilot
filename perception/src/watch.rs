@@ -323,6 +323,10 @@ fn hand_fits(tiles: usize, melds: usize) -> bool {
     tiles == waiting || tiles == waiting + 1
 }
 
+/// Frames in a row with a hand that does not fit its melds before its tile size is found
+/// afresh.
+const FORGET_AFTER_MISFITS: u32 = 5;
+
 /// Frames in a row with a hand that does not fit its melds before the recording keeps
 /// them anyway...
 const MISFITS_RECORDED: u32 = 3;
@@ -472,6 +476,12 @@ impl State {
                 frames = self.misfits,
                 "the hand does not fit the melds; waiting for it to settle"
             );
+            // Longer than an animation: the hand may be cut with a wrong tile size, locked
+            // on a results screen's bigger tiles, into a count that never fits. Find it
+            // afresh; a right lock is found again.
+            if self.misfits >= FORGET_AFTER_MISFITS {
+                self.tracker.forget();
+            }
             return None;
         }
         self.misfits = 0;

@@ -704,6 +704,26 @@ mod tests {
     }
 
     #[test]
+    fn a_tile_size_locked_on_bigger_tiles_misreads_until_forgotten() {
+        // A results screen's bigger tiles, seen for a few frames, became the locked size;
+        // the next hand then split into too few tiles, a count still plausible, so the
+        // lock was never dropped and the hand never fitted its melds again.
+        let mut tracker = HandTracker::new();
+        let big = table(800, 580, 0, &row(100, 10, 48, 500), 48, 72);
+        fn frame(data: &[u8]) -> FrameView<'_> {
+            FrameView::new(800, 580, 800 * 4, data, 1.0).unwrap()
+        }
+        let locked = tracker.find(&frame(&big), FACE).unwrap();
+        assert_eq!(locked.concealed.len(), 10);
+        let hand = table(800, 580, 0, &row(100, 13, 40, 500), 40, 60);
+        let wrong = tracker.find(&frame(&hand), FACE).unwrap();
+        assert!(wrong.concealed.len() < 13, "{}", wrong.concealed.len());
+        tracker.forget();
+        let right = tracker.find(&frame(&hand), FACE).unwrap();
+        assert_eq!(right.concealed.len(), 13);
+    }
+
+    #[test]
     fn a_drawn_white_dragon_is_found() {
         // The white dragon's face is blank: no symbol to tell it from a plain strip.
         let (w, h) = (40, 60);

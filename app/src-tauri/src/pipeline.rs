@@ -545,6 +545,13 @@ fn ms(d: Duration) -> f64 {
     d.as_secs_f64() * 1e3
 }
 
+impl Pipeline {
+    /// Whether the decision model loaded and gives advice (#22).
+    pub fn mortal_loaded(&self) -> bool {
+        lock(&self.mortal).is_some()
+    }
+}
+
 fn lock<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     // Plain bookkeeping: a panic elsewhere cannot leave it inconsistent in a harmful way.
     m.lock().unwrap_or_else(PoisonError::into_inner)

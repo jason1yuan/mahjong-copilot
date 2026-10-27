@@ -504,8 +504,8 @@ function CallCard({ advice, ai }: { advice: Advice; ai: MortalView | null }) {
   }
   const called = call?.called ?? m?.tile ?? null;
   const stay = call
-    ? `不鸣 · ${shantenText(call.stayShanten)} · ${call.stayUkeireCount} 张`
-    : "不鸣";
+    ? `跳过 · ${shantenText(call.stayShanten)} · ${call.stayUkeireCount} 张`
+    : "跳过";
   // Every call button shown gets an answer (#79): Mortal's choice says yes to one and no
   // to the rest; without Mortal, the rule layer's stance, and no view on a kan.
   const stances = advice.callStances.map((s) => ({
@@ -540,10 +540,8 @@ function CallCard({ advice, ai }: { advice: Advice; ai: MortalView | null }) {
           <div className="decision">
             <div className="decision-top">
               {m || call ? (
-                <>
-                  <span className="no">✗</span>
-                  <span className="verb">不鸣</span>
-                </>
+                // The game's own button for letting the discard go (#94).
+                <span className="verb">跳过</span>
               ) : (
                 // Only a kan on offer and no Mortal: nothing to go by (#79).
                 <span className="verb">没有建议</span>

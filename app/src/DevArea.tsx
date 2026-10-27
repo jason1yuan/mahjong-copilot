@@ -1,8 +1,9 @@
-// The dev build's debug area: latency, what the reading and the engine made of the table,
-// the game log's latest events, the table as read, and the recording tools. A packaged
+// The dev build's debug area: the tools and a one-line status always in sight, then
+// folded sections (latency, the game as read, the game log's latest events, the table as
+// read, the version and models), each opened on demand and remembered. A packaged release
 // app has no debug recording, so it never shows this.
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getVersion } from "@tauri-apps/api/app";
@@ -20,7 +21,7 @@ const SCENES: Record<EngineView["last"], string> = {
   impossible: "读错了",
 };
 
-// Whether a section is folded, kept per viewer; the panel works without it.
+// Whether a section is open, kept per viewer; the panel works without it.
 function remembered(key: string): boolean {
   try {
     return localStorage.getItem(key) === "1";
@@ -29,24 +30,31 @@ function remembered(key: string): boolean {
   }
 }
 
-function remember(key: string, folded: boolean) {
+function remember(key: string, open: boolean) {
   try {
-    localStorage.setItem(key, folded ? "1" : "0");
+    localStorage.setItem(key, open ? "1" : "0");
   } catch {
     // Storage is a convenience only.
   }
 }
 
-function useFold(key: string): [boolean, () => void] {
-  const [folded, setFolded] = useState(() => remembered(key));
-  return [
-    folded,
-    () =>
-      setFolded((f) => {
-        remember(key, !f);
-        return !f;
-      }),
-  ];
+// A section folded until opened; whether it is open is remembered.
+function Fold({ id, title, children }: { id: string; title: string; children: ReactNode }) {
+  const key = `dev-open-${id}`;
+  const [open, setOpen] = useState(() => remembered(key));
+  const toggle = () =>
+    setOpen((o) => {
+      remember(key, !o);
+      return !o;
+    });
+  return (
+    <>
+      <button type="button" className="dev-sub" onClick={toggle} aria-expanded={open}>
+        {open ? "▾" : "▸"} {title}
+      </button>
+      {open && children}
+    </>
+  );
 }
 
 function short(mjai: string): string {
@@ -130,8 +138,6 @@ export function DevArea({ initial, advice, engine, latency, ai }: Props) {
   const [sheet, setSheet] = useState(false);
   const [version, setVersion] = useState("");
   const [build, setBuild] = useState<BuildInfo | null>(null);
-  const [folded, toggle] = useFold("dev-folded");
-  const [tableFolded, toggleTable] = useFold("dev-table-folded");
 
   useEffect(() => {
     getVersion()
@@ -211,149 +217,148 @@ export function DevArea({ initial, advice, engine, latency, ai }: Props) {
   const game = advice?.game;
   const scores = game?.scores ?? null;
 
+  const mortal = build?.models.find((m) => m.loaded !== null)?.loaded ?? null;
+  const summary = [
+    `最后一帧 ${engine ? SCENES[engine.last] : "—"}`,
+    ...(engine && engine.stuck > 0 ? [`连续 ${engine.stuck} 帧没跟上`] : []),
+    latency ? `延迟 ${latency.lastMs.toFixed(0)} ms · P95 ${latency.p95Ms.toFixed(0)}` : "延迟 —",
+    mortal === null ? "Mortal —" : mortal ? "Mortal 已加载" : "Mortal 未加载",
+    ...(doubts > 0 ? [`${doubts} 张拿不准`] : []),
+  ];
+
   return (
     <section className="dev">
-      <button type="button" className="dev-head" onClick={toggle}>
+      <div className="dev-head">
         <span className="dev-badge">DEV</span>
         <span>开发版 · 调试数据</span>
         <span className="num dev-version">
           {version && `v${version}-dev`}
-          {build && ` · ${build.commit}`} {folded ? "▸" : "▾"}
+          {build && ` · ${build.commit}`}
         </span>
-      </button>
-      {!folded && (
-        <>
-          {build && (
-            <>
-              <h3>版本与模型</h3>
-              <div className="dev-grid">
-                <Row label="版本" value={`v${build.version} · ${build.commit} · ${build.profile}`} />
-                {build.models.map((m) => (
-                  <Row
-                    key={m.file}
-                    label={`${m.role}模型`}
-                    title={`SHA-256 ${m.sha256}`}
-                    value={`${m.file} · 修订 ${m.revision.slice(0, 7)} · SHA-256 ${m.sha256.slice(0, 12)}… · ${(m.size / 1e6).toFixed(1)} MB · ${m.present ? "已下载" : "未下载"}${m.loaded === null ? "" : m.loaded ? " · 已加载" : " · 未加载"}`}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+      </div>
 
-          <h3>延迟 · 稳定帧 → 建议显示</h3>
-          {latency ? (
-            <div className="dev-latency">
-              <span className="big num">
-                {latency.lastMs.toFixed(0)}
-                <small> ms</small>
-              </span>
-              <span className="num">
-                P50 {latency.p50Ms.toFixed(0)} · P95 {latency.p95Ms.toFixed(0)} · 预算 {BUDGET_MS}（{latency.count} 次）
-              </span>
-              {latency.buttons && (
-                <span className="num">
-                  有按钮时 P95 {latency.buttons.p95Ms.toFixed(0)}（{latency.buttons.count} 次）
-                  {latency.buttonsMortal &&
-                    ` · Mortal P95 ${latency.buttonsMortal.p95Ms.toFixed(0)}（${latency.buttonsMortal.count} 次）`}
-                </span>
-              )}
-            </div>
-          ) : (
-            <p className="dev-empty">还没有数据</p>
-          )}
-          {steps.length > 0 && (
-            <div className="dev-bars">
-              {steps.map(([label, ms]) => (
-                <Bar key={label} label={label} ms={ms} max={slowest} />
-              ))}
-              {ai && <Bar label="Mortal" ms={ai.decideMs} max={slowest} />}
-            </div>
-          )}
+      <div className="dev-tools">
+        <button type="button" onClick={shoot}>
+          截图
+        </button>
+        <button type="button" className={recording.on ? "on" : ""} onClick={() => record(!recording.on)}>
+          连续录制
+        </button>
+        <button type="button" className={sheet ? "on" : ""} onClick={() => setSheet((s) => !s)}>
+          牌图
+        </button>
+        <button type="button" onClick={replayOnboarding}>
+          重看引导
+        </button>
+        <button type="button" onClick={openFolder} title="录制的画面、日志和牌谱">
+          打开文件夹
+        </button>
+        <span className="dev-saved" title={recording.dir}>
+          已存 {recording.saved} 张{recording.dropped > 0 ? ` · 丢了 ${recording.dropped} 张` : ""}
+        </span>
+      </div>
+      {shot && <p className="dev-shot num">已存：{shot}</p>}
+      {error && <p className="dev-error">截图或录制失败：{error}</p>}
+      {sheet && <TileSheet />}
 
-          <h3>识别与牌局状态</h3>
-          <div className="dev-grid">
-            <Row label="最后一帧" value={engine ? SCENES[engine.last] : "—"} />
-            <Row label="不确定牌" value={`${doubts}`} />
-            <Row
-              label="宝牌指示"
-              value={`${advice?.dora.map((d) => short(d.tile)).join(" ") || "—"}${advice?.seen !== null && advice?.seen !== undefined ? ` · 已见 ${advice.seen} 张` : ""}`}
-            />
-            <Row
-              label="供托 / 本场"
-              value={`${game?.riichiSticks ?? "—"} / ${game?.honba ?? "—"}`}
-            />
-            <Row label="牌谱事件" value={engine ? `${engine.events}` : "—"} />
-            <Row
-              label="补出 / 缺口"
-              value={engine ? `${engine.filled ? "是" : "否"} / ${engine.gaps}` : "—"}
-            />
-          </div>
+      <p className="dev-summary num">{summary.join(" · ")}</p>
 
-          {scores && (
-            <>
-              <h3>四家分数 · 合计 {scores.reduce((a, b) => a + b, 0)}</h3>
-              <div className="dev-scores">
-                {SEAT_ORDER.map((seat, i) => (
-                  <div key={seat}>
-                    <span>{seat}</span>
-                    <b className="num">{scores[i]}</b>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {engine && engine.recent.length > 0 && (
-            <>
-              <h3>牌谱事件流 · mjai</h3>
-              <div className="dev-events num">
-                {engine.recent.map((line) => (
-                  <div key={line}>{line}</div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {advice?.table && (
-            <>
-              <button type="button" className="dev-sub" onClick={toggleTable}>
-                读牌视图 · 四家牌河和副露 {tableFolded ? "▸" : "▾"}
-              </button>
-              {!tableFolded && <TableDebug table={advice.table} />}
-            </>
-          )}
-
-          <h3>工具</h3>
-          <div className="dev-tools">
-            <button type="button" onClick={shoot}>
-              截图
-            </button>
-            <button type="button" className={recording.on ? "on" : ""} onClick={() => record(!recording.on)}>
-              连续录制
-            </button>
-            <button type="button" className={sheet ? "on" : ""} onClick={() => setSheet((s) => !s)}>
-              牌图
-            </button>
-            <button type="button" onClick={replayOnboarding}>
-              重看引导
-            </button>
-            <button type="button" onClick={openFolder} title="录制的画面、日志和牌谱">
-              打开文件夹
-            </button>
-            <span className="dev-saved" title={recording.dir}>
-              已存 {recording.saved} 张{recording.dropped > 0 ? ` · 丢了 ${recording.dropped} 张` : ""}
+      <Fold id="latency" title="延迟 · 稳定帧 → 建议显示">
+        {latency ? (
+          <div className="dev-latency">
+            <span className="big num">
+              {latency.lastMs.toFixed(0)}
+              <small> ms</small>
             </span>
+            <span className="num">
+              P50 {latency.p50Ms.toFixed(0)} · P95 {latency.p95Ms.toFixed(0)} · 预算 {BUDGET_MS}（{latency.count} 次）
+            </span>
+            {latency.buttons && (
+              <span className="num">
+                有按钮时 P95 {latency.buttons.p95Ms.toFixed(0)}（{latency.buttons.count} 次）
+                {latency.buttonsMortal &&
+                  ` · Mortal P95 ${latency.buttonsMortal.p95Ms.toFixed(0)}（${latency.buttonsMortal.count} 次）`}
+              </span>
+            )}
           </div>
-          {shot && <p className="dev-shot num">已存：{shot}</p>}
-          {error && <p className="dev-error">截图或录制失败：{error}</p>}
-          {sheet && <TileSheet />}
-          {advice && doubts > 0 && (
-            <p className="dev-empty">
-              拿不准：{advice.tiles.filter((v) => v.doubt).map((v) => name(v.tile)).join(" ")}
-            </p>
-          )}
-        </>
-      )}
+        ) : (
+          <p className="dev-empty">还没有数据</p>
+        )}
+        {steps.length > 0 && (
+          <div className="dev-bars">
+            {steps.map(([label, ms]) => (
+              <Bar key={label} label={label} ms={ms} max={slowest} />
+            ))}
+            {ai && <Bar label="Mortal" ms={ai.decideMs} max={slowest} />}
+          </div>
+        )}
+      </Fold>
+
+      <Fold id="game" title="牌局 · 识别状态和分数">
+        <div className="dev-grid">
+          <Row label="最后一帧" value={engine ? SCENES[engine.last] : "—"} />
+          <Row label="不确定牌" value={`${doubts}`} />
+          <Row
+            label="宝牌指示"
+            value={`${advice?.dora.map((d) => short(d.tile)).join(" ") || "—"}${advice?.seen !== null && advice?.seen !== undefined ? ` · 已见 ${advice.seen} 张` : ""}`}
+          />
+          <Row label="供托 / 本场" value={`${game?.riichiSticks ?? "—"} / ${game?.honba ?? "—"}`} />
+          <Row label="牌谱事件" value={engine ? `${engine.events}` : "—"} />
+          <Row label="补出 / 缺口" value={engine ? `${engine.filled ? "是" : "否"} / ${engine.gaps}` : "—"} />
+        </div>
+        {advice && doubts > 0 && (
+          <p className="dev-empty">
+            拿不准：{advice.tiles.filter((v) => v.doubt).map((v) => name(v.tile)).join(" ")}
+          </p>
+        )}
+        {scores && (
+          <>
+            <h3>四家分数 · 合计 {scores.reduce((a, b) => a + b, 0)}</h3>
+            <div className="dev-scores">
+              {SEAT_ORDER.map((seat, i) => (
+                <div key={seat}>
+                  <span>{seat}</span>
+                  <b className="num">{scores[i]}</b>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </Fold>
+
+      <Fold id="events" title="牌谱事件流 · mjai">
+        {engine && engine.recent.length > 0 ? (
+          <div className="dev-events num">
+            {engine.recent.map((line) => (
+              <div key={line}>{line}</div>
+            ))}
+          </div>
+        ) : (
+          <p className="dev-empty">还没有事件</p>
+        )}
+      </Fold>
+
+      <Fold id="table" title="读牌视图 · 四家牌河和副露">
+        {advice?.table ? <TableDebug table={advice.table} /> : <p className="dev-empty">还没有读到牌桌</p>}
+      </Fold>
+
+      <Fold id="build" title="版本与模型">
+        {build ? (
+          <div className="dev-grid">
+            <Row label="版本" value={`v${build.version} · ${build.commit} · ${build.profile}`} />
+            {build.models.map((m) => (
+              <Row
+                key={m.file}
+                label={`${m.role}模型`}
+                title={`SHA-256 ${m.sha256}`}
+                value={`${m.file} · 修订 ${m.revision.slice(0, 7)} · SHA-256 ${m.sha256.slice(0, 12)}… · ${(m.size / 1e6).toFixed(1)} MB · ${m.present ? "已下载" : "未下载"}${m.loaded === null ? "" : m.loaded ? " · 已加载" : " · 未加载"}`}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="dev-empty">读不到版本信息</p>
+        )}
+      </Fold>
     </section>
   );
 }

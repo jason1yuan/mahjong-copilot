@@ -166,7 +166,7 @@ export type Latency = {
 };
 export type Progress = { name: string; downloaded: number; total: number };
 // The dev build's debug recording (#8); null in a packaged app.
-export type Recording = { on: boolean; saved: number; dir: string };
+export type Recording = { on: boolean; saved: number; dropped: number; dir: string };
 // The build and the models it runs on, for the dev area (`build_info`).
 export type ModelInfo = {
   role: string;

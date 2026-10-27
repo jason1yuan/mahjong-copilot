@@ -205,6 +205,12 @@ function plan(advice: Advice, ai: MortalView | null, win: WinView | null): Plan 
         others = [];
       }
     }
+    // A concealed or added kan on offer always gets an answer (#77): Mortal's choice not to
+    // make it is said, and the rule layer, which has no view on kans, says so.
+    const kanOffered = advice.game?.buttons.includes("kan") ?? false;
+    if (kanOffered && headline && ai?.best.kind !== "kan") {
+      headline = ai ? `不杠 · ${headline}` : `${headline} · 杠：没有建议`;
+    }
     return { ...base, discard, option: optionFor(advice, discard), others, headline };
   }
   const called = advice.call?.called ?? (mortalCall && ai?.best.kind !== "pass" ? ai?.best.tile : null) ?? null;

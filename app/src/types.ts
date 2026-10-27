@@ -59,6 +59,9 @@ export type CallView = {
   options: CallOptionView[];
   take: number | null;
 };
+// The rule layer's stance on one call button shown (#79); `take` is null when it has no
+// view (a kan, or a discard it could not tell).
+export type StanceView = { kind: "chi" | "pon" | "kan"; take: boolean | null };
 export type Advice = {
   seq: number;
   tiles: TileView[];
@@ -75,6 +78,7 @@ export type Advice = {
   table: TableView | null;
   game: GameView | null;
   call: CallView | null;
+  callStances: StanceView[];
   times: {
     settleMs: number;
     findMs: number;

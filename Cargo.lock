@@ -2032,7 +2032,7 @@ checksum = "e20f57f9918e5bd7bc58c22cdd70a6afc7375d4dd9683af5f2b34bd3d2bba619"
 
 [[package]]
 name = "mahjong-copilot"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "mahjong-core",
@@ -2051,7 +2051,7 @@ dependencies = [
 
 [[package]]
 name = "mahjong-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "libriichi-algo",
  "ort",
@@ -2062,7 +2062,7 @@ dependencies = [
 
 [[package]]
 name = "mahjong-models"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "sha2 0.11.1",
  "thiserror 2.0.21",
@@ -2072,7 +2072,7 @@ dependencies = [
 
 [[package]]
 name = "mahjong-perception"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "image",
  "libc",

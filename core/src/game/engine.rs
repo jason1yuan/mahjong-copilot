@@ -279,6 +279,18 @@ impl Engine {
             return Err(Rejected::Covered);
         }
         if self.starts_round(scene) {
+            // A scene part-way through a round, with a later label, that the current round
+            // still explains is the same round with its label misread: one frame read
+            // 東3局 as 南3局, and the real next round then looked like an earlier one.
+            if !is_empty(scene)
+                && let Some(round) = self.round.as_mut()
+                && !read_short(&round.model, scene)
+                && let Some(observed) = explain_scene(round, scene)
+            {
+                round.unexplained = 0;
+                round.note_scores(scene);
+                return Ok(observed);
+            }
             return self.begin_round(scene);
         }
         let Some(round) = self.round.as_mut() else {
@@ -293,8 +305,10 @@ impl Engine {
             if round.unexplained < RESYNC_AFTER {
                 return Err(Rejected::Unexplained);
             }
-            // The scenes stopped making sense: fill the round in again from this one.
-            let (label, honba) = (round.label, round.honba);
+            // The scenes stopped making sense: fill the round in again from this one, and
+            // take its label too, as the round's may be the misread one.
+            let label = scene.round.unwrap_or(round.label);
+            let honba = scene.honba.or(round.honba);
             let (events, model, state, me) = fill(scene).ok_or(Rejected::Unexplained)?;
             let n = events.len();
             *round = Round {

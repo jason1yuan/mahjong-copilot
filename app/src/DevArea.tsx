@@ -250,14 +250,18 @@ export function DevArea({ initial, advice, engine, latency, ai }: Props) {
         <button type="button" onClick={replayOnboarding}>
           重看引导
         </button>
-        <button type="button" onClick={openFolder} title="录制的画面、日志和牌谱">
+        <button type="button" onClick={openFolder} title={`截图、日志和牌谱都在这里：${recording.dir.replace(/\/live$/, "")}`}>
           打开文件夹
         </button>
         <span className="dev-saved" title={recording.dir}>
           已存 {recording.saved} 张{recording.dropped > 0 ? ` · 丢了 ${recording.dropped} 张` : ""}
         </span>
       </div>
-      {shot && <p className="dev-shot num">已存：{shot}</p>}
+      {shot && (
+        <p className="dev-shot num" title={shot}>
+          已存：{shot.split("/").pop()}
+        </p>
+      )}
       {error && <p className="dev-error">截图或录制失败：{error}</p>}
       {sheet && <TileSheet />}
 

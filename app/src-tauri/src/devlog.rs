@@ -1,5 +1,6 @@
 //! The dev app's log file (#80): what the log says also goes to `logs/<UTC date>.log` in
-//! the app's data folder, so a packaged dev app leaves a record to debug from. Only the
+//! the dev tools' debug folder, beside the frames and game logs, so a dev app leaves a
+//! record to debug from. Only the
 //! dev tools turn it on; the release app logs to stderr alone. Lines go to a writer thread
 //! through a bounded queue and are dropped when it is full, so logging never blocks the
 //! capture → recognition → advice path. Frames are never logged.

@@ -250,8 +250,8 @@ fn debug_recording(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>) -> Option
     pipeline.recording(&app)
 }
 
-/// Saves the game window's newest frame into `recordings/live/` (dev build only) and
-/// returns its file name. It may wait for earlier frames to be written: off the UI thread.
+/// Saves the game window's newest frame into the debug folder's `live/` (dev build only)
+/// and returns its path. It may wait for earlier frames to be written: off the UI thread.
 #[tauri::command]
 async fn save_frame(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>) -> Result<String, String> {
     let pipeline = Arc::clone(&pipeline);
@@ -260,13 +260,14 @@ async fn save_frame(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>) -> Resul
         .map_err(|err| err.to_string())?
 }
 
-/// Opens the dev app's data folder (#80): recordings, logs, game logs and models.
+/// Opens the dev tools' debug folder (#80): frames, logs and game logs together.
 #[tauri::command]
 fn open_dev_folder(app: AppHandle) -> Result<(), String> {
     if !pipeline::dev_tools() {
         return Err("only in the dev build".into());
     }
-    let dir = app.path().app_data_dir().map_err(|err| err.to_string())?;
+    let dir = pipeline::debug_dir(&app);
+    std::fs::create_dir_all(&dir).map_err(|err| err.to_string())?;
     open_folder(&dir).map_err(|err| err.to_string())
 }
 
@@ -336,17 +337,14 @@ pub fn run() -> tauri::Result<()> {
         .manage(pipeline)
         .setup(|app| {
             if pipeline::dev_tools() {
-                match app.path().app_data_dir().map(|d| d.join("logs")) {
-                    Ok(dir) => match devlog::start(&dir) {
-                        Ok(file) => tracing::info!(
-                            file = %file.display(),
-                            version = %app.package_info().version,
-                            commit = env!("BUILD_COMMIT"),
-                            "dev log started"
-                        ),
-                        Err(err) => tracing::warn!("starting the dev log: {err}"),
-                    },
-                    Err(err) => tracing::warn!("no folder for the dev log: {err}"),
+                match devlog::start(&pipeline::debug_dir(app.handle()).join("logs")) {
+                    Ok(file) => tracing::info!(
+                        file = %file.display(),
+                        version = %app.package_info().version,
+                        commit = env!("BUILD_COMMIT"),
+                        "dev log started"
+                    ),
+                    Err(err) => tracing::warn!("starting the dev log: {err}"),
                 }
             }
             if let Err(err) = panel::set_up(app.handle()) {

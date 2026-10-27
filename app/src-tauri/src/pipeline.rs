@@ -491,21 +491,34 @@ pub fn dev_tools() -> bool {
     tauri::is_dev() || cfg!(feature = "dev-tools")
 }
 
-/// Where frames are saved. Under `tauri dev`, `recordings/live/` in the repository, which
-/// git ignores: the dev build runs from the repository, two levels above this crate. The
-/// packaged dev app has no repository: its data folder's `recordings/live/`.
-fn recordings_dir(app: &AppHandle) -> PathBuf {
-    if !tauri::is_dev()
-        && let Ok(data) = app.path().app_data_dir()
-    {
-        return data.join("recordings/live");
-    }
+/// The dev tools' one folder for what they keep: `live/` frames, `logs/` the log files and
+/// `game-logs/` the game logs. Dev builds are built in the repository (two levels above
+/// this crate), and its `recordings/`, which git ignores, is used while it is there; else
+/// the app's data folder's `recordings/`.
+pub fn debug_dir(app: &AppHandle) -> PathBuf {
     let crate_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-    crate_dir
-        .ancestors()
-        .nth(2)
-        .unwrap_or(crate_dir)
-        .join("recordings/live")
+    let repository = crate_dir.ancestors().nth(2).unwrap_or(crate_dir);
+    if repository.join(".git").exists() {
+        return repository.join("recordings");
+    }
+    app.path().app_data_dir().map_or_else(
+        |_| repository.join("recordings"),
+        |data| data.join("recordings"),
+    )
+}
+
+/// Where frames are saved: the debug folder's `live/`.
+fn recordings_dir(app: &AppHandle) -> PathBuf {
+    debug_dir(app).join("live")
+}
+
+/// Where game logs are saved: in the dev tools' debug folder, beside the frames and logs;
+/// else the app's data folder, as the player's own record.
+fn game_logs_dir(app: &AppHandle) -> Option<PathBuf> {
+    if dev_tools() {
+        return Some(debug_dir(app).join("game-logs"));
+    }
+    app.path().app_data_dir().ok().map(|d| d.join("game-logs"))
 }
 
 /// Writes the current game's log, and the one before when a new game has just begun
@@ -852,9 +865,8 @@ impl Pipeline {
             let stamp = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map_or(0, |d| d.as_millis());
-            if let Ok(dir) = app.path().app_data_dir() {
-                game.files
-                    .push(dir.join("game-logs").join(format!("{stamp}.mjson")));
+            if let Some(dir) = game_logs_dir(app) {
+                game.files.push(dir.join(format!("{stamp}.mjson")));
             }
         }
         // The log is saved as it grows (#80), not only when a round begins, so a round cut
@@ -1153,7 +1165,7 @@ impl Pipeline {
     }
 
     /// Saves the newest frame of the game window (dev build only), waiting for frames
-    /// still being written rather than dropping it (#80). Returns the file's name.
+    /// still being written rather than dropping it (#80). Returns the file's path.
     pub fn save_frame(&self, app: &AppHandle) -> Result<String, String> {
         let recorder = self.recorder(app)?;
         let tap = lock(&self.tap)
@@ -1164,9 +1176,7 @@ impl Pipeline {
             .save_waiting("manual", frame)
             .ok_or("the recorder has stopped")?;
         tracing::info!(path = %path.display(), "screenshot queued");
-        Ok(path
-            .file_name()
-            .map_or_else(String::new, |n| n.to_string_lossy().into_owned()))
+        Ok(path.display().to_string())
     }
 
     /// Starts or stops saving each frame that changes the hand (dev build only).

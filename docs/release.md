@@ -13,8 +13,8 @@
 
 带「开发」区域（调试信息、截图、连续录制）的开发版只给开发用，**不放到 GitHub 上**（2026-10-26 定）：GitHub 上只有正式版的 Release。开发和调试都在本机构建：
 
-- **平时调试**：在 `app/` 里运行 `npm run tauri dev`。截图和连续录制直接存进仓库的 `recordings/live/`（不进 git），日志在终端里。要测速度和跟牌，用优化编译：`npm run tauri dev -- --release`。
-- **要一个打包好的开发版**（比如装在「应用程序」里长时间实战）：在 `app/` 里运行 `npm run tauri build -- --config src-tauri/tauri.dev.conf.json --features dev-tools`，得到「Mahjong Copilot Dev」。它的 bundle id 是 `io.github.jason1yuan.mahjongcopilot.dev`，可以和正式版同时安装，需要单独授权屏幕录制、单独下载模型；录下的画面、日志和牌谱存在它自己的 app 数据目录里，「开发」区域的「打开文件夹」能直接打开。
+- **平时调试**：在 `app/` 里运行 `npm run tauri dev`。截图、连续录制、日志和牌谱都存在仓库的 `recordings/` 里（不进 git）：`live/` 是画面，`logs/` 是日志，`game-logs/` 是牌谱。「开发」区域的「打开文件夹」直接打开它。要测速度和跟牌，用优化编译：`npm run tauri dev -- --release`。
+- **要一个打包好的开发版**（比如装在「应用程序」里长时间实战）：在 `app/` 里运行 `npm run tauri build -- --config src-tauri/tauri.dev.conf.json --features dev-tools`，得到「Mahjong Copilot Dev」。它的 bundle id 是 `io.github.jason1yuan.mahjongcopilot.dev`，可以和正式版同时安装，需要单独授权屏幕录制、单独下载模型；在本机仓库里打包时，录下的画面、日志和牌谱同样存在仓库的 `recordings/` 里。
 
 ## 一次性设置：把签名证书交给 GitHub
 

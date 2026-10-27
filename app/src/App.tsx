@@ -205,6 +205,16 @@ function plan(advice: Advice, ai: MortalView | null, win: WinView | null): Plan 
         others = [];
       }
     }
+    // A riichi on offer always gets an answer too (#92): Mortal's choice to stay quiet
+    // (dama) is said, and the rule layer, which does not weigh riichi, says so.
+    const riichiOffered = advice.game?.buttons.includes("riichi") ?? false;
+    if (riichiOffered && headline) {
+      if (!ai) {
+        headline = `${headline} · 立直：没有建议`;
+      } else if (ai.best.kind === "discard") {
+        headline = `不立直 · ${headline}`;
+      }
+    }
     // A concealed or added kan on offer always gets an answer (#77): Mortal's choice not to
     // make it is said, and the rule layer, which has no view on kans, says so.
     const kanOffered = advice.game?.buttons.includes("kan") ?? false;

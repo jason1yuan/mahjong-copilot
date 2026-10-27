@@ -1035,9 +1035,11 @@ body {
 
 .dev-sub {
   display: block;
+  width: 100%;
   padding: 0;
   border: none;
   background: none;
+  text-align: left;
 }
 
 .dev-latency {
@@ -1152,6 +1154,13 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  margin-top: 8px;
+}
+
+/* One line always in sight: how the reading and the engine are doing. */
+.dev-summary {
+  margin: 8px 0 0;
+  color: var(--text);
 }
 
 .dev-tools button {

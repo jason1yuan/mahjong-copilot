@@ -27,6 +27,70 @@ fn models_dir(app: &AppHandle) -> tauri::Result<PathBuf> {
     Ok(app.path().app_data_dir()?.join("models"))
 }
 
+/// A model as the dev area shows it, to tell which one a build runs on.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ModelInfo {
+    role: &'static str,
+    file: &'static str,
+    /// The pinned revision of its Hugging Face repository.
+    revision: &'static str,
+    size: u64,
+    sha256: &'static str,
+    /// Downloaded and verified.
+    present: bool,
+    /// Loaded by the pipeline; `None` where that is not tracked.
+    loaded: Option<bool>,
+}
+
+/// What this build is and runs on, for the dev area's debug data.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct BuildInfo {
+    version: String,
+    commit: &'static str,
+    /// "release" or "debug".
+    profile: &'static str,
+    models: Vec<ModelInfo>,
+}
+
+/// The build's version and commit, and the models it pins and runs on.
+#[tauri::command]
+fn build_info(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>) -> Result<BuildInfo, String> {
+    let dir = models_dir(&app).map_err(|err| err.to_string())?;
+    let info = |role, model: &mahjong_models::ModelFile<'static>, loaded| ModelInfo {
+        role,
+        file: model.name,
+        revision: model
+            .url
+            .split("/resolve/")
+            .nth(1)
+            .and_then(|rest| rest.split('/').next())
+            .unwrap_or(""),
+        size: model.size,
+        sha256: model.sha256,
+        present: mahjong_models::is_ready(&dir, model),
+        loaded,
+    };
+    Ok(BuildInfo {
+        version: app.package_info().version.to_string(),
+        commit: env!("BUILD_COMMIT"),
+        profile: if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        },
+        models: vec![
+            info("认牌", &mahjong_models::TILE_CLASSIFIER, None),
+            info(
+                "决策",
+                &mahjong_models::DECISION_MODEL,
+                Some(pipeline.mortal_loaded()),
+            ),
+        ],
+    })
+}
+
 /// Whether every model is downloaded and verified.
 #[tauri::command]
 fn models_ready(app: AppHandle) -> Result<bool, String> {
@@ -255,7 +319,8 @@ pub fn run() -> tauri::Result<()> {
             choose_window,
             debug_recording,
             save_frame,
-            set_recording
+            set_recording,
+            build_info
         ])
         .build(tauri::generate_context!())?
         .run(|app, event| match event {

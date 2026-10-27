@@ -8,7 +8,7 @@ import { listen } from "@tauri-apps/api/event";
 import { getVersion } from "@tauri-apps/api/app";
 import { name, SEAT_ORDER } from "./format";
 import { ALL_TILES, tileLabel, tilePicture } from "./tile";
-import type { Advice, EngineView, Latency, MortalView, Recording, TableTile, TableView } from "./types";
+import type { Advice, BuildInfo, EngineView, Latency, MortalView, Recording, TableTile, TableView } from "./types";
 
 // From the screen going still to the advice shown (docs/design.md).
 const BUDGET_MS = 300;
@@ -73,9 +73,9 @@ function Bar({ label, ms, max }: { label: string; ms: number; max: number }) {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, title }: { label: string; value: string; title?: string }) {
   return (
-    <div className="dev-row">
+    <div className="dev-row" title={title}>
       <span>{label}</span>
       <span className="num">{value}</span>
     </div>
@@ -127,6 +127,7 @@ export function DevArea({ initial, advice, engine, latency, ai }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [sheet, setSheet] = useState(false);
   const [version, setVersion] = useState("");
+  const [build, setBuild] = useState<BuildInfo | null>(null);
   const [folded, toggle] = useFold("dev-folded");
   const [tableFolded, toggleTable] = useFold("dev-table-folded");
 
@@ -137,6 +138,20 @@ export function DevArea({ initial, advice, engine, latency, ai }: Props) {
     const unlisten = listen<number>("frame-saved", (e) => setRecording((r) => ({ ...r, saved: e.payload })));
     return () => {
       unlisten.then((stop) => stop());
+    };
+  }, []);
+
+  // The models load once downloaded and the pipeline starts: asked again when its status
+  // changes.
+  useEffect(() => {
+    const ask = () =>
+      invoke<BuildInfo>("build_info")
+        .then(setBuild)
+        .catch(() => undefined);
+    ask();
+    const unlisten = [listen("pipeline-status", ask), listen("models-ready", ask)];
+    return () => {
+      unlisten.forEach((p) => p.then((stop) => stop()));
     };
   }, []);
 
@@ -182,11 +197,29 @@ export function DevArea({ initial, advice, engine, latency, ai }: Props) {
         <span className="dev-badge">DEV</span>
         <span>开发版 · 调试数据</span>
         <span className="num dev-version">
-          {version && `v${version}-dev`} {folded ? "▸" : "▾"}
+          {version && `v${version}-dev`}
+          {build && ` · ${build.commit}`} {folded ? "▸" : "▾"}
         </span>
       </button>
       {!folded && (
         <>
+          {build && (
+            <>
+              <h3>版本与模型</h3>
+              <div className="dev-grid">
+                <Row label="版本" value={`v${build.version} · ${build.commit} · ${build.profile}`} />
+                {build.models.map((m) => (
+                  <Row
+                    key={m.file}
+                    label={`${m.role}模型`}
+                    title={`SHA-256 ${m.sha256}`}
+                    value={`${m.file} · 修订 ${m.revision.slice(0, 7)} · SHA-256 ${m.sha256.slice(0, 12)}… · ${(m.size / 1e6).toFixed(1)} MB · ${m.present ? "已下载" : "未下载"}${m.loaded === null ? "" : m.loaded ? " · 已加载" : " · 未加载"}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
           <h3>延迟 · 稳定帧 → 建议显示</h3>
           {latency ? (
             <div className="dev-latency">

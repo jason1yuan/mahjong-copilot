@@ -167,3 +167,14 @@ export type Latency = {
 export type Progress = { name: string; downloaded: number; total: number };
 // The dev build's debug recording (#8); null in a packaged app.
 export type Recording = { on: boolean; saved: number; dir: string };
+// The build and the models it runs on, for the dev area (`build_info`).
+export type ModelInfo = {
+  role: string;
+  file: string;
+  revision: string;
+  size: number;
+  sha256: string;
+  present: boolean;
+  loaded: boolean | null;
+};
+export type BuildInfo = { version: string; commit: string; profile: string; models: ModelInfo[] };

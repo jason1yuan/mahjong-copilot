@@ -1,6 +1,7 @@
 //! Tauri shell: creates the windows and wires perception and core together.
 //! Business logic belongs in `mahjong-core` / `mahjong-perception`, not here.
 
+mod devlog;
 mod panel;
 mod pipeline;
 
@@ -11,6 +12,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use pipeline::{Pipeline, Recording, Status};
 use tauri::{AppHandle, Emitter, Manager, State};
 use tracing_subscriber::EnvFilter;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
 /// Set while a model download runs, so a retry does not start a second one.
 static DOWNLOADING: AtomicBool = AtomicBool::new(false);
@@ -247,10 +250,39 @@ fn debug_recording(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>) -> Option
     pipeline.recording(&app)
 }
 
-/// Saves the game window's newest frame into `recordings/live/` (dev build only).
+/// Saves the game window's newest frame into `recordings/live/` (dev build only) and
+/// returns its file name. It may wait for earlier frames to be written: off the UI thread.
 #[tauri::command]
-fn save_frame(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>) -> Result<(), String> {
-    pipeline.save_frame(&app)
+async fn save_frame(app: AppHandle, pipeline: State<'_, Arc<Pipeline>>) -> Result<String, String> {
+    let pipeline = Arc::clone(&pipeline);
+    tauri::async_runtime::spawn_blocking(move || pipeline.save_frame(&app))
+        .await
+        .map_err(|err| err.to_string())?
+}
+
+/// Opens the dev app's data folder (#80): recordings, logs, game logs and models.
+#[tauri::command]
+fn open_dev_folder(app: AppHandle) -> Result<(), String> {
+    if !pipeline::dev_tools() {
+        return Err("only in the dev build".into());
+    }
+    let dir = app.path().app_data_dir().map_err(|err| err.to_string())?;
+    open_folder(&dir).map_err(|err| err.to_string())
+}
+
+#[cfg(target_os = "macos")]
+fn open_folder(dir: &std::path::Path) -> std::io::Result<()> {
+    std::process::Command::new("open")
+        .arg(dir)
+        .spawn()
+        .map(drop)
+}
+
+#[cfg(not(target_os = "macos"))]
+fn open_folder(_dir: &std::path::Path) -> std::io::Result<()> {
+    Err(std::io::Error::other(
+        "opening a folder is macOS only for now",
+    ))
 }
 
 /// Turns saving each frame that changes the hand on or off (dev build only).
@@ -263,12 +295,19 @@ fn set_recording(
     pipeline.set_recording(&app, on)
 }
 
+/// Logs to stderr, and in the dev app also to its log file once [`devlog::start`] runs.
 fn init_logging() {
-    tracing_subscriber::fmt()
-        .with_env_filter(
+    tracing_subscriber::registry()
+        .with(
             EnvFilter::try_from_default_env()
                 // ONNX Runtime logs every allocation at info.
                 .unwrap_or_else(|_| EnvFilter::new("info,ort=warn")),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_ansi(false)
+                .with_writer(devlog::DevLog),
         )
         .init();
 }
@@ -296,6 +335,20 @@ pub fn run() -> tauri::Result<()> {
     builder
         .manage(pipeline)
         .setup(|app| {
+            if pipeline::dev_tools() {
+                match app.path().app_data_dir().map(|d| d.join("logs")) {
+                    Ok(dir) => match devlog::start(&dir) {
+                        Ok(file) => tracing::info!(
+                            file = %file.display(),
+                            version = %app.package_info().version,
+                            commit = env!("BUILD_COMMIT"),
+                            "dev log started"
+                        ),
+                        Err(err) => tracing::warn!("starting the dev log: {err}"),
+                    },
+                    Err(err) => tracing::warn!("no folder for the dev log: {err}"),
+                }
+            }
             if let Err(err) = panel::set_up(app.handle()) {
                 tracing::warn!("setting up the panel: {err:#}");
             }
@@ -320,7 +373,8 @@ pub fn run() -> tauri::Result<()> {
             debug_recording,
             save_frame,
             set_recording,
-            build_info
+            build_info,
+            open_dev_folder
         ])
         .build(tauri::generate_context!())?
         .run(|app, event| match event {

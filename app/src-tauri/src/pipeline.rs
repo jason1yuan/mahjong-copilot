@@ -353,6 +353,8 @@ pub struct Recording {
     pub on: bool,
     /// Frames written since the app started.
     pub saved: u64,
+    /// Frames the continuous recording dropped while earlier ones were being written.
+    pub dropped: u64,
     pub dir: String,
 }
 
@@ -485,7 +487,7 @@ pub struct EngineView {
 }
 
 /// Whether the dev tools are on: under `tauri dev`, or in the packaged dev app.
-fn dev_tools() -> bool {
+pub fn dev_tools() -> bool {
     tauri::is_dev() || cfg!(feature = "dev-tools")
 }
 
@@ -773,6 +775,7 @@ impl Pipeline {
                     recognize_ms = advice.times.recognize_ms,
                     table_ms = advice.times.table_ms,
                     seen = advice.seen,
+                    buttons = ?advice.game.as_ref().map(|g| &g.buttons),
                     decide_ms = advice.times.decide_ms,
                     sent_ms = advice.times.sent_ms,
                     "advice"
@@ -828,20 +831,21 @@ impl Pipeline {
         };
         let scene = table.scene(&reading.tiles, reading.drawn);
         let mut game = lock(&self.game);
-        let (last, new_round, new_game) = match game.engine.observe(&scene) {
+        let (last, added, new_round, new_game) = match game.engine.observe(&scene) {
             Ok(observed) => {
                 let starts = |f: fn(&Event) -> bool| observed.events.iter().any(f);
                 (
                     "taken",
+                    observed.events.len(),
                     starts(|e| matches!(e, Event::StartKyoku { .. })) || observed.rewritten,
                     starts(|e| matches!(e, Event::StartGame { .. })),
                 )
             }
-            Err(Rejected::Covered | Rejected::NoRound) => ("covered", false, false),
-            Err(Rejected::Unexplained) => ("unexplained", false, false),
+            Err(Rejected::Covered | Rejected::NoRound) => ("covered", 0, false, false),
+            Err(Rejected::Unexplained) => ("unexplained", 0, false, false),
             Err(Rejected::Impossible(why)) => {
-                tracing::debug!("a scene that cannot be: {why}");
-                ("impossible", false, false)
+                tracing::info!("a scene that cannot be: {why}");
+                ("impossible", 0, false, false)
             }
         };
         if new_game {
@@ -853,7 +857,9 @@ impl Pipeline {
                     .push(dir.join("game-logs").join(format!("{stamp}.mjson")));
             }
         }
-        if new_round {
+        // The log is saved as it grows (#80), not only when a round begins, so a round cut
+        // short still leaves what was followed of it.
+        if new_round || added > 0 {
             save_games(&game, new_game);
         }
         let stuck = if last == "taken" {
@@ -862,6 +868,7 @@ impl Pipeline {
         } else {
             self.stuck.fetch_add(1, Ordering::Relaxed) + 1
         };
+        tracing::info!(scene = last, added, stuck, "engine");
         let games = game.engine.games();
         let current = games.last();
         let view = EngineView {
@@ -984,7 +991,12 @@ impl Pipeline {
             discards,
             decide_ms: ms(start.elapsed()),
         };
-        tracing::info!(kind = ?view.best.kind, decide_ms = view.decide_ms, "mortal");
+        tracing::info!(
+            kind = ?view.best.kind,
+            tile = ?view.best.tile.map(|t| t.to_string()),
+            decide_ms = view.decide_ms,
+            "mortal"
+        );
         if let Err(err) = app.emit("mortal", view) {
             tracing::warn!("sending the decision: {err}");
         }
@@ -1135,22 +1147,26 @@ impl Pipeline {
         dev_tools().then(|| Recording {
             on: self.recording.load(Ordering::Relaxed),
             saved: self.saved.load(Ordering::Relaxed),
+            dropped: lock(&self.recorder).as_ref().map_or(0, |r| r.dropped()),
             dir: recordings_dir(app).display().to_string(),
         })
     }
 
-    /// Saves the newest frame of the game window (dev build only).
-    pub fn save_frame(&self, app: &AppHandle) -> Result<(), String> {
+    /// Saves the newest frame of the game window (dev build only), waiting for frames
+    /// still being written rather than dropping it (#80). Returns the file's name.
+    pub fn save_frame(&self, app: &AppHandle) -> Result<String, String> {
         let recorder = self.recorder(app)?;
         let tap = lock(&self.tap)
             .clone()
             .ok_or("not watching a game window")?;
         let frame = tap.snapshot().ok_or("no frame captured yet")?;
-        if recorder.save("manual", frame) {
-            Ok(())
-        } else {
-            Err("still writing earlier frames".into())
-        }
+        let path = recorder
+            .save_waiting("manual", frame)
+            .ok_or("the recorder has stopped")?;
+        tracing::info!(path = %path.display(), "screenshot queued");
+        Ok(path
+            .file_name()
+            .map_or_else(String::new, |n| n.to_string_lossy().into_owned()))
     }
 
     /// Starts or stops saving each frame that changes the hand (dev build only).

@@ -4,6 +4,8 @@
 //! thread, off the capture → recognition → advice path.
 
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{self, SyncSender};
 use std::thread::JoinHandle;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -31,6 +33,8 @@ pub struct Recorder {
     dir: PathBuf,
     sender: Option<SyncSender<(PathBuf, RgbImage)>>,
     thread: Option<JoinHandle<()>>,
+    /// Frames [`Recorder::save`] dropped for a full queue.
+    dropped: Arc<AtomicU64>,
 }
 
 impl Recorder {
@@ -66,6 +70,7 @@ impl Recorder {
             dir,
             sender: Some(sender),
             thread: Some(thread),
+            dropped: Arc::new(AtomicU64::new(0)),
         })
     }
 
@@ -73,17 +78,40 @@ impl Recorder {
         &self.dir
     }
 
+    /// How many frames [`Recorder::save`] has dropped for a full queue.
+    pub fn dropped(&self) -> u64 {
+        self.dropped.load(Ordering::Relaxed)
+    }
+
+    fn path(&self, label: &str) -> PathBuf {
+        let ms = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_or(0, |d| d.as_millis());
+        self.dir.join(format!("{ms}-{label}.png"))
+    }
+
     /// Queues `frame` to be saved as `<unix ms>-<label>.png`. Returns false, dropping the
-    /// frame, when the queue is full.
+    /// frame and counting it, when the queue is full: for the continuous recording, which
+    /// must never hold up the watcher.
     pub fn save(&self, label: &str, frame: RgbImage) -> bool {
         let Some(sender) = &self.sender else {
             return false;
         };
-        let ms = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map_or(0, |d| d.as_millis());
-        let path = self.dir.join(format!("{ms}-{label}.png"));
-        sender.try_send((path, frame)).is_ok()
+        let queued = sender.try_send((self.path(label), frame)).is_ok();
+        if !queued {
+            self.dropped.fetch_add(1, Ordering::Relaxed);
+        }
+        queued
+    }
+
+    /// Queues `frame` like [`Recorder::save`], but waits for room instead of dropping it:
+    /// for a screenshot the player asked for. Returns the file it will be written to.
+    /// Blocks while earlier frames are written; call it off the UI thread.
+    pub fn save_waiting(&self, label: &str, frame: RgbImage) -> Option<PathBuf> {
+        let sender = self.sender.as_ref()?;
+        let path = self.path(label);
+        sender.send((path.clone(), frame)).ok()?;
+        Some(path)
     }
 }
 
@@ -125,6 +153,41 @@ mod tests {
         assert_eq!(*count, 1);
         assert!(path.to_string_lossy().ends_with("-manual.png"));
         assert_eq!(image::open(path).unwrap().to_rgb8(), frame);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_full_queue_drops_recorded_frames_but_not_a_screenshot() {
+        let dir = std::env::temp_dir().join(format!("mahjong-record-full-{}", std::process::id()));
+        // The writer stops after the first frame until told to go on, so the queue fills.
+        let (go, wait) = mpsc::channel::<()>();
+        let wait = Mutex::new(wait);
+        let recorder = Recorder::start(&dir, move |_, count| {
+            if count == 1 {
+                let _ = wait.lock().unwrap().recv();
+            }
+        })
+        .unwrap();
+        let frame = RgbImage::new(2, 2);
+        assert!(recorder.save("auto", frame.clone()));
+        // The first is being written; QUEUE more fill the queue, the next is dropped.
+        let mut queued = 0;
+        while recorder.save("auto", frame.clone()) {
+            queued += 1;
+            assert!(queued <= QUEUE + 1, "the queue never filled");
+        }
+        assert_eq!(recorder.dropped(), 1);
+        // A screenshot waits for room instead.
+        let shot = std::thread::scope(|s| {
+            let waiting = s.spawn(|| recorder.save_waiting("manual", frame.clone()));
+            std::thread::sleep(std::time::Duration::from_millis(50));
+            go.send(()).unwrap();
+            waiting.join().unwrap()
+        })
+        .unwrap();
+        assert!(shot.to_string_lossy().ends_with("-manual.png"));
+        drop(recorder);
+        assert!(shot.exists());
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }

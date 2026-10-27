@@ -125,6 +125,8 @@ type Props = {
 export function DevArea({ initial, advice, engine, latency, ai }: Props) {
   const [recording, setRecording] = useState(initial);
   const [error, setError] = useState<string | null>(null);
+  // The last screenshot's file, confirmed (#80).
+  const [shot, setShot] = useState<string | null>(null);
   const [sheet, setSheet] = useState(false);
   const [version, setVersion] = useState("");
   const [build, setBuild] = useState<BuildInfo | null>(null);
@@ -135,7 +137,13 @@ export function DevArea({ initial, advice, engine, latency, ai }: Props) {
     getVersion()
       .then(setVersion)
       .catch(() => undefined);
-    const unlisten = listen<number>("frame-saved", (e) => setRecording((r) => ({ ...r, saved: e.payload })));
+    // Each saved frame also refreshes how many the recording dropped.
+    const unlisten = listen<number>("frame-saved", (e) => {
+      setRecording((r) => ({ ...r, saved: e.payload }));
+      invoke<Recording | null>("debug_recording")
+        .then((r) => r && setRecording(r))
+        .catch(() => undefined);
+    });
     return () => {
       unlisten.then((stop) => stop());
     };
@@ -167,11 +175,23 @@ export function DevArea({ initial, advice, engine, latency, ai }: Props) {
   const report = (err: unknown) => setError(String(err));
   const shoot = () => {
     setError(null);
-    invoke("save_frame").catch(report);
+    setShot(null);
+    invoke<string>("save_frame")
+      .then((file) => {
+        setShot(file);
+        // The dropped count lives with the recording state.
+        return invoke<Recording | null>("debug_recording");
+      })
+      .then((r) => r && setRecording(r))
+      .catch(report);
   };
   const record = (on: boolean) => {
     setError(null);
     invoke<Recording>("set_recording", { on }).then(setRecording).catch(report);
+  };
+  const openFolder = () => {
+    setError(null);
+    invoke("open_dev_folder").catch(report);
   };
 
   const t = advice?.times;
@@ -317,11 +337,15 @@ export function DevArea({ initial, advice, engine, latency, ai }: Props) {
             <button type="button" onClick={replayOnboarding}>
               重看引导
             </button>
+            <button type="button" onClick={openFolder} title="录制的画面、日志和牌谱">
+              打开文件夹
+            </button>
             <span className="dev-saved" title={recording.dir}>
-              已存 {recording.saved} 张
+              已存 {recording.saved} 张{recording.dropped > 0 ? ` · 丢了 ${recording.dropped} 张` : ""}
             </span>
-            {error && <span className="dev-error">{error}</span>}
           </div>
+          {shot && <p className="dev-shot num">已存：{shot}</p>}
+          {error && <p className="dev-error">截图或录制失败：{error}</p>}
           {sheet && <TileSheet />}
           {advice && doubts > 0 && (
             <p className="dev-empty">

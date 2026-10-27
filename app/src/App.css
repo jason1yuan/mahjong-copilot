@@ -1175,6 +1175,13 @@ body {
 
 .dev-error {
   color: var(--red);
+  margin: 4px 0 0;
+  font-weight: 600;
+}
+
+.dev-shot {
+  margin: 4px 0 0;
+  color: var(--muted);
 }
 
 .dev-empty {

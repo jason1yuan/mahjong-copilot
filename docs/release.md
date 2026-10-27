@@ -11,15 +11,10 @@
 
 ## 开发版
 
-开发版「Mahjong Copilot Dev」带「开发」区域（调试信息、截图、连续录制），只给开发用，**不放进 Release**。
+带「开发」区域（调试信息、截图、连续录制）的开发版只给开发用，**不放到 GitHub 上**（2026-10-26 定）：GitHub 上只有正式版的 Release。开发和调试都在本机构建：
 
-- 什么时候打包（`.github/workflows/dev-build.yml`）：
-  - 版本号改动合并到 `main` 时，和正式版同时自动打包；
-  - 两个版本之间想要一个新的开发版时，在仓库的 Actions 页面选「Dev build」→「Run workflow」，选 `main`（或别的分支）手动打包。
-- 打包好的开发版签好名，作为那次运行的构建产物（artifact）保存 30 天。
-- 下载：仓库的 Actions 页面 →「Dev build」→ 选一次运行 → 页面底部 Artifacts 里的 `Mahjong-Copilot-Dev_<版本>_<提交>`。下载的是 zip，解开就是 DMG。只有对仓库有权限、登录了 GitHub 的人能下载，仓库公开以后也一样。
-- bundle id 是 `io.github.jason1yuan.mahjongcopilot.dev`，可以和正式版同时安装；需要单独授权屏幕录制、单独下载模型。录下的画面存在它自己的 app 数据目录的 `recordings/live/` 里。
-- 本机也可以自己打：在 `app/` 里运行 `npm run tauri build -- --config src-tauri/tauri.dev.conf.json --features dev-tools`。
+- **平时调试**：在 `app/` 里运行 `npm run tauri dev`。截图和连续录制直接存进仓库的 `recordings/live/`（不进 git），日志在终端里。要测速度和跟牌，用优化编译：`npm run tauri dev -- --release`。
+- **要一个打包好的开发版**（比如装在「应用程序」里长时间实战）：在 `app/` 里运行 `npm run tauri build -- --config src-tauri/tauri.dev.conf.json --features dev-tools`，得到「Mahjong Copilot Dev」。它的 bundle id 是 `io.github.jason1yuan.mahjongcopilot.dev`，可以和正式版同时安装，需要单独授权屏幕录制、单独下载模型；录下的画面、日志和牌谱存在它自己的 app 数据目录里，「开发」区域的「打开文件夹」能直接打开。
 
 ## 一次性设置：把签名证书交给 GitHub
 
@@ -36,7 +31,7 @@ CI 要用和本机同一张证书签名，用户升级后屏幕录制授权才�
    - `SIGNING_CERTIFICATE_PASSWORD`：导出 `.p12` 时设置的密码。
 3. 清空剪贴板（随便复制一段别的文字）。
 
-正式版和开发版两个工作流共用这两个 Secrets（`.github/actions/signing`）。CI 每次运行时把证书导入运行机器上的临时钥匙串，运行结束机器就被清掉；GitHub 不会在日志里显示 Secrets 的内容。
+发布工作流通过 `.github/actions/signing` 使用这两个 Secrets。CI 每次运行时把证书导入运行机器上的临时钥匙串，运行结束机器就被清掉；GitHub 不会在日志里显示 Secrets 的内容。
 
 ## 发布一个版本
 

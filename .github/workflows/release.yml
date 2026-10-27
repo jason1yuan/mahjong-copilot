@@ -1,7 +1,7 @@
 # Publishes a release when a new version reaches main (#19): changing "version" in
 # app/src-tauri/tauri.conf.json and merging it is the whole release step. Builds and signs
 # the app players install with the project's self-signed certificate (docs/signing.md).
-# The dev app is not released; dev-build.yml builds it on the same push, as an artifact.
+# Only the release app is published; the dev app is built locally (docs/release.md).
 #
 # Needs these repository secrets, added by the certificate's owner (docs/release.md):
 #   SIGNING_CERTIFICATE_P12_BASE64  the exported .p12, base64-encoded

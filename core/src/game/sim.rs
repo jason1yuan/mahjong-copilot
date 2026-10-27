@@ -872,6 +872,59 @@ fn a_tile_read_wrongly_once_is_corrected_later() {
 }
 
 #[test]
+fn a_round_label_misread_once_does_not_start_a_round() {
+    // A recorded game read 東3局 as 南3局 in one frame mid-round: the engine began a
+    // round 南3局 and then took the real next round, 東3局 1本場, for an earlier one, so it
+    // followed nothing until the game ended.
+    let south: Tile = "S".parse().unwrap();
+    let mut misread_games = 0;
+    for seed in 0..20 {
+        let game = play(seed, 2);
+        let mut moments: Vec<Moment> = game
+            .moments
+            .iter()
+            .map(|m| Moment {
+                scene: m.scene.clone(),
+                events: m.events,
+                keep: m.keep,
+            })
+            .collect();
+        // A scene in the middle of the first round, with something discarded already.
+        let first_round = moments
+            .iter()
+            .position(|m| m.scene.round != moments[0].scene.round)
+            .unwrap_or(moments.len());
+        let Some(i) = (1..first_round.saturating_sub(1))
+            .find(|&i| moments[i].scene.rivers.iter().map(Vec::len).sum::<usize>() > 4)
+        else {
+            continue;
+        };
+        if let Some(label) = moments[i].scene.round.as_mut() {
+            label.wind = south;
+        }
+        misread_games += 1;
+        let kept: Vec<&Moment> = moments.iter().collect();
+        let mut engine = Engine::new();
+        for moment in &kept {
+            match engine.observe(&moment.scene) {
+                Ok(_) | Err(Rejected::Unexplained | Rejected::Covered) => {}
+                Err(err) => panic!("seed {seed}: {err}"),
+            }
+        }
+        engine.end_game();
+        assert_eq!(
+            comparable(&engine.events()),
+            expected(&game, &kept),
+            "seed {seed}"
+        );
+    }
+    assert!(
+        misread_games > 10,
+        "only {misread_games} games had a scene to misread"
+    );
+}
+
+#[test]
 fn games_in_a_row_are_logged_one_after_another() {
     // Seeds 5 and 9 watch the same seat (seed % 4).
     let (first, second) = (play(5, 2), play(9, 2));

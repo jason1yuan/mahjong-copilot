@@ -29,6 +29,9 @@ use crate::table::{Seat, Table};
 const MAX_GAP: f64 = 0.45;
 /// Share of a place that must be tile-coloured, not table, for a face-down tile.
 const MIN_BACK: f64 = 0.6;
+/// Most share of face colour in a face-down tile: the light rim round Mahjong Soul's backs
+/// is found as a face, but most of what it holds is back (#77).
+const MAX_FACE_IN_BACK: f64 = 0.3;
 /// Least share of a face's height within the strip's row for it to continue the strip.
 const MIN_ROW_SHARE: f64 = 0.5;
 /// Most space, in tile widths, between a tile added to a kan and the sideways tile under it.
@@ -119,11 +122,18 @@ pub fn find_strip(view: &MeldView, layout: &MeldLayout, face: TileFace) -> Vec<M
             f64::from(f.width().max(f.height())) <= MAX_SIZE * s
                 && !found.faces.iter().any(|o| stacked(f, o))
         })
-        .map(|f| MeldSlot {
-            face: *f,
-            back: false,
-            sideways: false,
-            added: found.faces.iter().find(|o| stacked(o, f)).copied(),
+        .map(|f| {
+            // A light rim round a face-down tile is found as a face; what it holds is back.
+            let back = back_share(&view.image, f) >= MIN_BACK
+                && face_share(&view.image, f, face) <= MAX_FACE_IN_BACK;
+            MeldSlot {
+                face: *f,
+                back,
+                sideways: false,
+                added: (!back)
+                    .then(|| found.faces.iter().find(|o| stacked(o, f)).copied())
+                    .flatten(),
+            }
         })
         .collect();
     slots.sort_by_key(|slot| std::cmp::Reverse(slot.face.right));
@@ -316,6 +326,25 @@ fn back_share(image: &RgbImage, area: &Face) -> f64 {
         }
     }
     f64::from(back) / f64::from(all.max(1))
+}
+
+/// Share of the box in face colour: light and grey, as the profile has it.
+fn face_share(image: &RgbImage, area: &Face, face: TileFace) -> f64 {
+    let (w, h) = image.dimensions();
+    let (right, bottom) = (area.right.min(w), area.bottom.min(h));
+    let mut light = 0u32;
+    let mut all = 0u32;
+    for y in area.top..bottom {
+        for x in area.left..right {
+            let [r, g, b] = image.get_pixel(x, y).0;
+            let (hi, lo) = (r.max(g).max(b), r.min(g).min(b));
+            all += 1;
+            if hi >= face.min_brightness && hi - lo <= face.max_spread {
+                light += 1;
+            }
+        }
+    }
+    f64::from(light) / f64::from(all.max(1))
 }
 
 /// The face's picture, upright.
@@ -528,6 +557,36 @@ mod tests {
         let strip = find_strip(&view, &layout(), face());
         let backs: Vec<bool> = strip.iter().map(|t| t.back).collect();
         assert_eq!(backs, [true, false, false, true]);
+    }
+
+    #[test]
+    fn a_face_down_tile_with_a_light_rim_is_still_face_down() {
+        // Mahjong Soul's backs are green inside a light rim, which is found as a face: a
+        // recorded concealed kan was read as one back and three faces, so no meld (#77).
+        let mut image = band();
+        fill(&mut image, 232, 20, 18, 26, BACK);
+        fill(&mut image, 213, 20, 18, 26, FACE);
+        fill(&mut image, 194, 20, 18, 26, FACE);
+        fill(&mut image, 175, 20, 18, 26, FACE);
+        fill(&mut image, 176, 21, 16, 24, BACK);
+        let view = MeldView { image, scale: S };
+        let strip = find_strip(&view, &layout(), face());
+        let backs: Vec<bool> = strip.iter().map(|t| t.back).collect();
+        assert_eq!(backs, [true, false, false, true]);
+    }
+
+    #[test]
+    fn a_face_tinted_pink_is_not_face_down() {
+        // The game tints tiles of the kind under the mouse; that tint is no back.
+        let pink = Rgb([215, 176, 173]);
+        let mut image = band();
+        fill(&mut image, 232, 20, 18, 26, pink);
+        fill(&mut image, 205, 27, 26, 19, pink);
+        fill(&mut image, 186, 20, 18, 26, pink);
+        let view = MeldView { image, scale: S };
+        let strip = find_strip(&view, &layout(), face());
+        let backs: Vec<bool> = strip.iter().map(|t| t.back).collect();
+        assert_eq!(backs, [false, false, false]);
     }
 
     fn tile(name: &str, sideways: bool) -> MeldTile {

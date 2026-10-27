@@ -248,6 +248,7 @@ impl Watcher {
                             drop(frame);
                             if !recorder.save("auto", image) {
                                 tracing::warn!(
+                                    dropped = recorder.dropped(),
                                     "recording: earlier frames are still being written; skipped one"
                                 );
                             }

@@ -830,6 +830,7 @@ body {
   color: var(--muted);
 }
 
+.yes.small,
 .no.small {
   width: 20px;
   height: 20px;
@@ -872,6 +873,17 @@ body {
 .card-alt .small {
   font-weight: 600;
   color: var(--text);
+}
+
+/* One answer per call button on offer (#79), e.g. ✗ 吃 · ✗ 碰 · 杠：没有建议. */
+.call-stances {
+  flex-wrap: wrap;
+}
+
+.call-stances .stance {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .card .source {

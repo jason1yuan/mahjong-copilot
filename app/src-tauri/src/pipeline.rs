@@ -144,7 +144,40 @@ pub struct Advice {
     /// Whether and how to call the discard on offer (#11); `None` without a chi or pon
     /// button.
     pub call: Option<CallView>,
+    /// The rule layer's stance on each call button shown for another player's discard,
+    /// chi, pon, kan in that order (#79): the window answers every one of them.
+    pub call_stances: Vec<StanceView>,
     pub times: StepTimes,
+}
+
+/// Where the rule layer stands on one call button shown (#79).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StanceView {
+    /// `chi`, `pon` or `kan`.
+    pub kind: &'static str,
+    /// Whether to make it; `None` when the rule layer has no view: a kan, which it does
+    /// not weigh, or a discard it could not tell (no call advice).
+    pub take: Option<bool>,
+}
+
+/// The rule layer's stance on each of the chi, pon and kan buttons shown.
+fn stances(buttons: &[Button], call: Option<&CallView>) -> Vec<StanceView> {
+    let taken = call
+        .and_then(|c| c.take.and_then(|i| c.options.get(i)))
+        .map(|o| o.kind);
+    [
+        (Button::Chi, "chi"),
+        (Button::Pon, "pon"),
+        (Button::Kan, "kan"),
+    ]
+    .into_iter()
+    .filter(|(button, _)| buttons.contains(button))
+    .map(|(_, kind)| StanceView {
+        kind,
+        take: (kind != "kan" && call.is_some()).then(|| taken == Some(kind)),
+    })
+    .collect()
 }
 
 /// Call advice (#11) for the window.
@@ -1038,6 +1071,7 @@ impl Pipeline {
             table: reading.table.as_ref().map(TableView::of),
             game: reading.table.as_ref().map(GameView::of),
             call: None,
+            call_stances: Vec::new(),
             times: StepTimes {
                 settle_ms: ms(reading.timings.settled - reading.timings.still_since),
                 find_ms: ms(reading.timings.find),
@@ -1073,6 +1107,7 @@ impl Pipeline {
             advice.ukeire_count = Some(outlook.ukeire_count);
             if let Some(table) = &reading.table {
                 advice.call = call_view(&hand, table, &visible);
+                advice.call_stances = stances(&table.buttons, advice.call.as_ref());
             }
         }
         advice.times.decide_ms = ms(start.elapsed());
@@ -1337,6 +1372,53 @@ mod tests {
     use mahjong_perception::{Recognition, Source};
 
     use super::*;
+
+    fn call(take: Option<usize>) -> CallView {
+        let t = |name: &str| name.parse::<Tile>().unwrap();
+        let option = |kind, with: [&str; 2]| CallOptionView {
+            kind,
+            with: with.map(t),
+            discard: t("9p"),
+            shanten: 1,
+            ukeire_count: 20,
+            yaku: Vec::new(),
+        };
+        CallView {
+            called: t("3m"),
+            from: Some("left"),
+            stay_shanten: 1,
+            stay_ukeire_count: 30,
+            options: vec![option("chi", ["1m", "2m"]), option("pon", ["3m", "3m"])],
+            take,
+        }
+    }
+
+    #[test]
+    fn every_call_button_gets_a_stance() {
+        // Chi and pon on offer, the rule layer lets both go: both are answered no, not
+        // only the first option (#79).
+        let both = stances(&[Button::Chi, Button::Pon], Some(&call(None)));
+        let kinds: Vec<_> = both.iter().map(|s| (s.kind, s.take)).collect();
+        assert_eq!(kinds, [("chi", Some(false)), ("pon", Some(false))]);
+        // Taking the pon says no to the chi.
+        let pon = stances(&[Button::Chi, Button::Pon], Some(&call(Some(1))));
+        let kinds: Vec<_> = pon.iter().map(|s| (s.kind, s.take)).collect();
+        assert_eq!(kinds, [("chi", Some(false)), ("pon", Some(true))]);
+        // A kan beside them has no rule-layer view; nor has anything without call advice.
+        let kan = stances(&[Button::Pon, Button::Kan], Some(&call(Some(1))));
+        let kinds: Vec<_> = kan.iter().map(|s| (s.kind, s.take)).collect();
+        assert_eq!(kinds, [("pon", Some(true)), ("kan", None)]);
+        let unread = stances(&[Button::Kan], None);
+        assert_eq!(
+            unread,
+            [StanceView {
+                kind: "kan",
+                take: None
+            }]
+        );
+        // Buttons that are not calls give no stance.
+        assert!(stances(&[Button::Ron, Button::Riichi], None).is_empty());
+    }
 
     #[test]
     fn seen_tiles_never_make_more_than_four_with_the_hand() {

@@ -214,7 +214,7 @@ function plan(advice: Advice, ai: MortalView | null, win: WinView | null): Plan 
     return { ...base, discard, option: optionFor(advice, discard), others, headline };
   }
   const called = advice.call?.called ?? (mortalCall && ai?.best.kind !== "pass" ? ai?.best.tile : null) ?? null;
-  if (advice.call || (mortalCall && callButtons)) {
+  if (advice.call || callButtons) {
     const seat = advice.call?.from ? SEATS[advice.call.from] : "";
     return {
       ...base,
@@ -496,7 +496,13 @@ function CallCard({ advice, ai }: { advice: Advice; ai: MortalView | null }) {
   const stay = call
     ? `不鸣 · ${shantenText(call.stayShanten)} · ${call.stayUkeireCount} 张`
     : "不鸣";
-  const alternative = !take && call && call.options.length > 0 ? call.options[0] : null;
+  // Every call button shown gets an answer (#79): Mortal's choice says yes to one and no
+  // to the rest; without Mortal, the rule layer's stance, and no view on a kan.
+  const stances = advice.callStances.map((s) => ({
+    kind: s.kind,
+    take: m ? m.kind === s.kind : s.take,
+  }));
+  const others = stances.filter((s) => !(take && s.kind === take.kind));
   return (
     <div className="card call-card">
       <div className="card-main">
@@ -523,27 +529,39 @@ function CallCard({ advice, ai }: { advice: Advice; ai: MortalView | null }) {
         ) : (
           <div className="decision">
             <div className="decision-top">
-              <span className="no">✗</span>
-              <span className="verb">不鸣</span>
+              {m || call ? (
+                <>
+                  <span className="no">✗</span>
+                  <span className="verb">不鸣</span>
+                </>
+              ) : (
+                // Only a kan on offer and no Mortal: nothing to go by (#79).
+                <span className="verb">没有建议</span>
+              )}
             </div>
             <span className="decision-sub">{call ? `${shantenText(call.stayShanten)} · ${call.stayUkeireCount} 张` : ""}</span>
           </div>
         )}
       </div>
-      {(take || alternative) && (
-        <div className="card-alt">
-          {take ? (
-            <>
+      {(take || others.length > 0) && (
+        <div className="card-alt call-stances">
+          {others.map((s) => (
+            <span key={s.kind} className="stance">
+              {s.take === null ? (
+                <>{CALLS[s.kind]}：没有建议</>
+              ) : (
+                <>
+                  <span className={`small ${s.take ? "yes" : "no"}`}>{s.take ? "✓" : "✗"}</span>
+                  {CALLS[s.kind]}
+                </>
+              )}
+            </span>
+          ))}
+          {take && (
+            <span className="stance">
               <span className="no small">✗</span>
               {stay}
-            </>
-          ) : (
-            alternative && (
-              <>
-                <span className="small">{CALLS[alternative.kind]}</span>
-                {alternative.with.map(name).join("")} {callLine(alternative)}
-              </>
-            )
+            </span>
           )}
         </div>
       )}

@@ -66,8 +66,9 @@
 
 ## 应用图标
 
-- 位置：`app/src-tauri/icons/`
-- 来源：Tauri 项目模板自带的默认图标（MIT / Apache-2.0），之后会换成自己的图标
+- 位置：`app/src-tauri/icons/`，源图 [app/app-icon.svg](app/app-icon.svg)
+- 来源：我们自己画的（绿色圆角方形底板上一张红中），没有用第三方图片、字体或游戏素材；「中」字用几何图形画成，不依赖字体。和项目一起按 AGPL-3.0-or-later 分发
+- 各尺寸在 `app/` 里用 `npm run icons` 从源图生成（`tauri icon`，再去掉 `.icns` 里 16、32 px 的小图）
 
 ## 牌图 lietxia/mahjong_graphic
 

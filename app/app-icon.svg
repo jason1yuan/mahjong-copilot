@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mahjong Copilot app icon, drawn for this project (no fonts, no third-party artwork).
+     A red-dragon tile on a green plate. Layout follows Apple's macOS icon template:
+     1024 canvas, 824 rounded-square plate inset by 100, drop shadow inside the margin.
+     Regenerate every size in src-tauri/icons/ with `npm run icons` in app/. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f9163"/>
+      <stop offset="1" stop-color="#185a3a"/>
+    </linearGradient>
+    <radialGradient id="light" cx="0.5" cy="0.38" r="0.55">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.14"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffdf7"/>
+      <stop offset="1" stop-color="#efe8d8"/>
+    </linearGradient>
+    <filter id="plateShadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    <filter id="tileShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <clipPath id="plateClip">
+      <rect x="100" y="100" width="824" height="824" rx="185.4"/>
+    </clipPath>
+  </defs>
+
+  <!-- Plate -->
+  <rect x="100" y="100" width="824" height="824" rx="185.4" fill="url(#plate)" filter="url(#plateShadow)"/>
+  <g clip-path="url(#plateClip)">
+    <rect x="100" y="100" width="824" height="824" fill="url(#light)"/>
+
+    <!-- Tile: soft shadow, then the gold back, the ivory side and the face -->
+    <rect x="320" y="252" width="384" height="594" rx="52" fill="#000" opacity="0.38" filter="url(#tileShadow)"/>
+    <rect x="312" y="212" width="400" height="594" rx="52" fill="#e0a53a"/>
+    <rect x="312" y="212" width="400" height="564" rx="52" fill="#d9cfb6"/>
+    <rect x="312" y="212" width="400" height="540" rx="52" fill="url(#face)"/>
+    <rect x="314" y="214" width="396" height="536" rx="50" fill="none" stroke="#fff" stroke-width="4" stroke-opacity="0.9"/>
+
+    <!-- Red dragon, as plain geometry: a box with a vertical stroke through it -->
+    <path fill="#d6343a" fill-rule="evenodd"
+          d="M386,390 H638 Q652,390 652,404 V560 Q652,574 638,574 H386 Q372,574 372,560 V404 Q372,390 386,390 Z
+             M426,444 V520 H598 V444 Z"/>
+    <rect x="483" y="282" width="58" height="400" rx="17.5" fill="#d6343a"/>
+  </g>
+
+  <!-- Top sheen and a faint rim so the plate edge holds on dark backgrounds -->
+  <rect x="100" y="100" width="824" height="412" rx="185.4" fill="url(#sheen)"/>
+  <rect x="101.5" y="101.5" width="821" height="821" rx="183.9" fill="none" stroke="#fff" stroke-opacity="0.10" stroke-width="3"/>
+</svg>

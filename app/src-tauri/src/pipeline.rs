@@ -19,7 +19,7 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, Instant};
 
-use mahjong_core::calls::{self, CallAdvice, CallContext, CallKind, Yaku};
+use mahjong_core::calls::{self, CallAdvice, CallContext, CallKind, Offer, Yaku};
 use mahjong_core::defense::{self, Defense, Own};
 use mahjong_core::game::{Engine, Event, MarkKind, PlayerState, Rejected};
 use mahjong_core::mortal::{Kind, Mortal, Suggestion};
@@ -147,6 +147,10 @@ pub struct Advice {
     /// The rule layer's stance on each call button shown for another player's discard,
     /// chi, pon, kan in that order (#79): the window answers every one of them.
     pub call_stances: Vec<StanceView>,
+    /// The call advice and stances are kept from the frame that offered the call: its
+    /// buttons are gone while the player picks the tiles to call with in the game's box
+    /// (#82).
+    pub choosing: bool,
     pub times: StepTimes,
 }
 
@@ -178,6 +182,66 @@ fn stances(buttons: &[Button], call: Option<&CallView>) -> Vec<StanceView> {
         take: (kind != "kan" && call.is_some()).then(|| taken == Some(kind)),
     })
     .collect()
+}
+
+/// A call offered on an earlier frame, and what the window showed for it (#82).
+struct HeldCall {
+    offer: Offer,
+    /// The advice that offered it.
+    seq: u64,
+    call: Option<CallView>,
+    stances: Vec<StanceView>,
+    /// Mortal's decision for that advice, once it came.
+    mortal: Option<MortalView>,
+}
+
+/// Keeps the call advice up while the player picks which tiles to call with (#82): the
+/// game hides its buttons as soon as one is pressed, which would close the call card, and
+/// shows a box of the ways to call when there is more than one.
+#[derive(Default)]
+struct CallHold(Option<HeldCall>);
+
+impl CallHold {
+    /// A frame with call buttons: what to hold, when the game may ask for the tiles.
+    fn offered(&mut self, held: Option<HeldCall>) {
+        self.0 = held;
+    }
+
+    /// A frame without call buttons whose hand waits on a discard: the call still being
+    /// made, while the table is as it was when offered. Once the table moves (the call
+    /// made, or let go and someone else acted), it is let go for good.
+    fn waiting(
+        &mut self,
+        hand: &[Tile],
+        melds: usize,
+        latest: [Option<Tile>; 3],
+    ) -> Option<&HeldCall> {
+        if self
+            .0
+            .as_ref()
+            .is_some_and(|h| !h.offer.still_open(hand, melds, latest))
+        {
+            self.0 = None;
+        }
+        self.0.as_ref()
+    }
+
+    fn clear(&mut self) {
+        self.0 = None;
+    }
+
+    /// Keeps Mortal's decision on the held offer, to show again beside its advice.
+    fn decided(&mut self, view: &MortalView) {
+        if let Some(held) = self.0.as_mut().filter(|h| h.seq == view.seq) {
+            held.mortal = Some(view.clone());
+        }
+    }
+}
+
+/// Each other player's latest discard: right, across, left.
+fn latest_discards(table: &Snapshot) -> [Option<Tile>; 3] {
+    [Seat::Right, Seat::Across, Seat::Left]
+        .map(|seat| table.rivers[seat.index()].last().map(|t| t.tile.tile))
 }
 
 /// Call advice (#11) for the window.
@@ -425,6 +489,8 @@ pub struct Pipeline {
     game: Mutex<GameRecord>,
     /// The decision model (#22), when it is in the models folder.
     mortal: Mutex<Option<Mortal>>,
+    /// The call being made while the game asks which tiles to call with (#82).
+    call_hold: Mutex<CallHold>,
 }
 
 /// What the win on offer is worth (#11), for advice `seq`, sent as `win`.
@@ -829,7 +895,11 @@ impl Pipeline {
                 let seq = advice.seq;
                 let shanten = advice.shanten;
                 let ukeire = advice.ukeire_count;
+                let choosing = advice.choosing;
                 let sent = app.emit("advice", advice);
+                if choosing {
+                    self.resend_held_decision(app, seq);
+                }
                 let points = self.aim(app, seq, &reading);
                 let followed = self.follow(app, &reading);
                 if let (Some((events, me)), Some(shanten)) = (&followed.round, shanten) {
@@ -1042,6 +1112,7 @@ impl Pipeline {
             decide_ms = view.decide_ms,
             "mortal"
         );
+        lock(&self.call_hold).decided(&view);
         if let Err(err) = app.emit("mortal", view) {
             tracing::warn!("sending the decision: {err}");
         }
@@ -1072,6 +1143,7 @@ impl Pipeline {
             game: reading.table.as_ref().map(GameView::of),
             call: None,
             call_stances: Vec::new(),
+            choosing: false,
             times: StepTimes {
                 settle_ms: ms(reading.timings.settled - reading.timings.still_since),
                 find_ms: ms(reading.timings.find),
@@ -1106,9 +1178,11 @@ impl Pipeline {
             advice.ukeire = tiles_left(&outlook.ukeire, &hand, &visible);
             advice.ukeire_count = Some(outlook.ukeire_count);
             if let Some(table) = &reading.table {
-                advice.call = call_view(&hand, table, &visible);
-                advice.call_stances = stances(&table.buttons, advice.call.as_ref());
+                self.advise_call(&mut advice, &hand, table, &visible);
             }
+        }
+        if advice.call.is_none() {
+            lock(&self.call_hold).clear();
         }
         advice.times.decide_ms = ms(start.elapsed());
         advice.times.sent_ms = ms(reading.timings.still_since.elapsed());
@@ -1128,6 +1202,56 @@ impl Pipeline {
             },
         );
         advice
+    }
+
+    /// The call advice for a hand waiting on another player's discard: on a frame with call
+    /// buttons, for the discard they offer; without them, the advice held from that frame
+    /// while the player picks the tiles to call with (#82).
+    fn advise_call(
+        &self,
+        advice: &mut Advice,
+        hand: &[Tile],
+        table: &Snapshot,
+        visible: &TileCounts,
+    ) {
+        let shown = |b: Button| table.buttons.contains(&b);
+        let melds = table.melds[Seat::Own.index()].len();
+        let latest = latest_discards(table);
+        let mut hold = lock(&self.call_hold);
+        if shown(Button::Chi) || shown(Button::Pon) || shown(Button::Kan) {
+            advice.call = call_view(hand, table, visible);
+            advice.call_stances = stances(&table.buttons, advice.call.as_ref());
+            let asks = advice.call.as_ref().is_some_and(|c| {
+                calls::choice_shown(hand, c.called, shown(Button::Chi), shown(Button::Pon))
+            });
+            hold.offered(asks.then(|| HeldCall {
+                offer: Offer::new(hand, melds, latest),
+                seq: advice.seq,
+                call: advice.call.clone(),
+                stances: advice.call_stances.clone(),
+                mortal: None,
+            }));
+        } else if let Some(held) = hold.waiting(hand, melds, latest) {
+            advice.call = held.call.clone();
+            advice.call_stances = held.stances.clone();
+            advice.choosing = true;
+        }
+    }
+
+    /// Sends Mortal's decision on the held call again for advice `seq`, which shows that
+    /// call while the player picks the tiles (#82): the window pairs a decision with the
+    /// advice of the same number.
+    fn resend_held_decision(&self, app: &AppHandle, seq: u64) {
+        let view = lock(&self.call_hold)
+            .0
+            .as_ref()
+            .and_then(|h| h.mortal.clone())
+            .map(|m| MortalView { seq, ..m });
+        if let Some(view) = view
+            && let Err(err) = app.emit("mortal", view)
+        {
+            tracing::warn!("sending the decision: {err}");
+        }
     }
 
     /// The window drew advice `seq`, or Mortal's decision for it: record still screen →
@@ -1265,8 +1389,7 @@ fn call_view(hand: &[Tile], table: &Snapshot, visible: &TileCounts) -> Option<Ca
     let shown = |b: Button| table.buttons.contains(&b);
     let (chi, pon) = (shown(Button::Chi), shown(Button::Pon));
     let win = shown(Button::Ron) || shown(Button::Tsumo);
-    let latest = [Seat::Right, Seat::Across, Seat::Left]
-        .map(|seat| table.rivers[seat.index()].last().map(|t| t.tile.tile));
+    let latest = latest_discards(table);
     let called = calls::offered(latest, hand, chi, pon, win)?;
     let seats: Vec<&'static str> = ["right", "across", "left"]
         .into_iter()
@@ -1420,15 +1543,112 @@ mod tests {
         assert!(stances(&[Button::Ron, Button::Riichi], None).is_empty());
     }
 
-    #[test]
-    fn seen_tiles_never_make_more_than_four_with_the_hand() {
-        let tile = |name: &str| Recognition {
+    fn recognized(name: &str) -> Recognition {
+        Recognition {
             tile: name.parse().unwrap(),
             confidence: 0.99,
             source: Source::Classifier,
             doubt: None,
             alternatives: [None; 2],
-        };
+        }
+    }
+
+    fn discarded(name: &str) -> RiverTile {
+        RiverTile {
+            tile: recognized(name),
+            sideways: false,
+        }
+    }
+
+    fn blank_advice(seq: u64) -> Advice {
+        Advice {
+            seq,
+            tiles: Vec::new(),
+            drawn: false,
+            discard: None,
+            options: Vec::new(),
+            shanten: None,
+            ukeire: Vec::new(),
+            ukeire_count: None,
+            dora: Vec::new(),
+            seen: None,
+            table: None,
+            game: None,
+            call: None,
+            call_stances: Vec::new(),
+            choosing: false,
+            times: StepTimes {
+                settle_ms: 0.0,
+                find_ms: 0.0,
+                recognize_ms: 0.0,
+                table_ms: 0.0,
+                decide_ms: 0.0,
+                sent_ms: 0.0,
+            },
+        }
+    }
+
+    #[test]
+    fn the_call_advice_stays_up_while_the_tiles_are_picked() {
+        // 3m from the left with 2m 3m 4m 5m in hand: a chi with 2m-4m or with 4m-5m, so
+        // once the chi button is pressed the game hides its buttons and asks which, with
+        // the table as it was (#82).
+        let hand = parse_tiles("2m 3m 4m 5m 9p 9p E E S W N P F").unwrap();
+        let mut table = Snapshot::default();
+        table.rivers[Seat::Left.index()] = vec![discarded("3m")];
+        table.buttons = vec![Button::Chi];
+        let visible = seen_counts(&hand, Some(&table));
+        let pipeline = Pipeline::default();
+        let mut offered = blank_advice(1);
+        pipeline.advise_call(&mut offered, &hand, &table, &visible);
+        assert!(offered.call.is_some() && !offered.choosing);
+        assert_eq!(offered.call_stances.len(), 1);
+
+        table.buttons.clear();
+        for seq in [2, 3] {
+            let mut picking = blank_advice(seq);
+            pipeline.advise_call(&mut picking, &hand, &table, &visible);
+            assert!(picking.choosing, "frame {seq}");
+            assert_eq!(
+                picking.call.as_ref().map(|c| c.called),
+                offered.call.as_ref().map(|c| c.called)
+            );
+            assert_eq!(picking.call_stances, offered.call_stances);
+        }
+
+        // Let go, and the next player discarded: the advice is gone for good.
+        table.rivers[Seat::Right.index()] = vec![discarded("7p")];
+        let mut moved = blank_advice(4);
+        pipeline.advise_call(&mut moved, &hand, &table, &visible);
+        assert!(moved.call.is_none() && !moved.choosing);
+        table.rivers[Seat::Right.index()].clear();
+        let mut again = blank_advice(5);
+        pipeline.advise_call(&mut again, &hand, &table, &visible);
+        assert!(again.call.is_none());
+    }
+
+    #[test]
+    fn a_call_made_in_one_way_holds_nothing() {
+        // 6m with only 4m-5m in hand: pressing chi makes it at once, so a frame without the
+        // buttons is the call let go, not tiles being picked.
+        let hand = parse_tiles("2m 3m 4m 5m 9p 9p E E S W N P F").unwrap();
+        let mut table = Snapshot::default();
+        table.rivers[Seat::Left.index()] = vec![discarded("6m")];
+        table.buttons = vec![Button::Chi];
+        let visible = seen_counts(&hand, Some(&table));
+        let pipeline = Pipeline::default();
+        let mut offered = blank_advice(1);
+        pipeline.advise_call(&mut offered, &hand, &table, &visible);
+        assert!(offered.call.is_some());
+        table.buttons.clear();
+        let mut after = blank_advice(2);
+        pipeline.advise_call(&mut after, &hand, &table, &visible);
+        assert!(after.call.is_none() && !after.choosing);
+    }
+
+    #[test]
+    fn seen_tiles_never_make_more_than_four_with_the_hand() {
+        let tile = recognized;
         let mut table = Snapshot::default();
         // Three East discarded, one misread too many, and a red five.
         table.rivers[2] = ["E", "E", "E", "5pr"]

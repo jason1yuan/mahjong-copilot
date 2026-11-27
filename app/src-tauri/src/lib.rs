@@ -376,7 +376,13 @@ pub fn run() -> tauri::Result<()> {
         ])
         .build(tauri::generate_context!())?
         .run(|app, event| match event {
-            tauri::RunEvent::ExitRequested { .. } => panel::before_exit(app),
+            tauri::RunEvent::ExitRequested { .. } => {
+                // The game being logged ends with the app (#107).
+                if let Some(pipeline) = app.try_state::<Arc<Pipeline>>() {
+                    pipeline.finish();
+                }
+                panel::before_exit(app);
+            }
             #[cfg(target_os = "macos")]
             tauri::RunEvent::Reopen { .. } => panel::reopen(app),
             _ => {}

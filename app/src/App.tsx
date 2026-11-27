@@ -871,6 +871,7 @@ function App() {
   if (statusLine && advice) notes.push(statusLine);
   if (engine?.filled) notes.push("这一局是中途开始看的，前面是补出的，Mortal 的建议可能偏弱");
   if (engine && engine.gaps > 0) notes.push(`${engine.gaps} 段没看清，已按画面补上`);
+  if (engine && engine.unseen > 0) notes.push(`识别暂停期间牌局往下走了，有 ${engine.unseen} 段没看到`);
   const doubts = advice?.tiles.filter((v) => v.doubt).length ?? 0;
   if (doubts > 0) notes.push(`${doubts} 张牌拿不准（标 ?）`);
 

@@ -1040,3 +1040,149 @@ fn a_long_gap_is_filled_in_and_then_followed() {
 fn is_start(scene: &Scene) -> bool {
     scene.rivers.iter().all(Vec::is_empty) && scene.melds.iter().all(Vec::is_empty)
 }
+
+/// Each round's first moment in `game`.
+fn round_starts(game: &Game) -> Vec<usize> {
+    (0..game.moments.len())
+        .filter(|&i| {
+            i == 0
+                || game.moments[i].scene.round != game.moments[i - 1].scene.round
+                || game.moments[i].scene.honba != game.moments[i - 1].scene.honba
+        })
+        .collect()
+}
+
+/// Feeds `before` to a new engine, suspends it as a pause would (#107), then feeds
+/// `after`: scenes it cannot explain are allowed. Ends the game.
+fn run_paused(before: &[&Moment], after: &[&Moment]) -> Engine {
+    let mut engine = Engine::new();
+    let feed = |engine: &mut Engine, moments: &[&Moment]| {
+        for (i, moment) in moments.iter().enumerate() {
+            match engine.observe(&moment.scene) {
+                Ok(_) | Err(Rejected::Unexplained | Rejected::Covered) => {}
+                Err(err) => panic!("moment {i}: {err}"),
+            }
+        }
+    };
+    feed(&mut engine, before);
+    engine.suspend();
+    feed(&mut engine, after);
+    engine.end_game();
+    engine
+}
+
+#[test]
+fn a_pause_within_a_round_is_not_seen_in_the_log() {
+    // Recognition paused for a few moments and resumed in the same round: the engine
+    // follows on as if frames were only missed, in one game (#107).
+    for seed in 0..10 {
+        let game = play(seed, 2);
+        let starts = round_starts(&game);
+        let end = starts.get(1).copied().unwrap_or(game.moments.len());
+        // Two moments in a row inside the first round that may be skipped.
+        let Some(pause) = (2..end.saturating_sub(3))
+            .find(|&i| !game.moments[i].keep && !game.moments[i + 1].keep)
+        else {
+            continue;
+        };
+        let before: Vec<&Moment> = game.moments[..pause].iter().collect();
+        let after: Vec<&Moment> = game.moments[pause + 2..].iter().collect();
+        let engine = run_paused(&before, &after);
+        let kept: Vec<&Moment> = before.iter().chain(&after).copied().collect();
+        assert_eq!(engine.games().len(), 1, "seed {seed}");
+        assert_eq!(
+            comparable(&engine.events()),
+            expected(&game, &kept),
+            "seed {seed}"
+        );
+    }
+}
+
+#[test]
+fn a_pause_over_rounds_keeps_one_game_and_marks_it() {
+    // Paused in the first round and resumed in the third: still one game, the first round
+    // ends with no ending known and the stretch is marked unseen (#107).
+    let mut checked = 0;
+    for seed in 0..10 {
+        let game = play(seed, 3);
+        let starts = round_starts(&game);
+        if starts.len() < 3 {
+            continue;
+        }
+        let before: Vec<&Moment> = game.moments[..starts[0] + 3].iter().collect();
+        let after: Vec<&Moment> = game.moments[starts[2]..].iter().collect();
+        let engine = run_paused(&before, &after);
+        let games = engine.games();
+        assert_eq!(games.len(), 1, "seed {seed}");
+        let log = &games[0];
+        assert!(matches!(log.events.first(), Some(Event::StartGame { .. })));
+        assert!(matches!(log.events.last(), Some(Event::EndGame)));
+        assert!(
+            log.marks.iter().any(|m| m.kind == super::MarkKind::Unseen),
+            "seed {seed}"
+        );
+        // The rounds seen are both in the log.
+        let rounds = log
+            .events
+            .iter()
+            .filter(|e| matches!(e, Event::StartKyoku { .. }))
+            .count();
+        assert_eq!(rounds, 2, "seed {seed}");
+        checked += 1;
+    }
+    assert!(checked >= 5, "{checked}");
+}
+
+#[test]
+fn a_new_game_after_a_pause_is_logged_apart() {
+    // Seeds 5 and 9 watch the same seat. Paused in the first game's second round, back in
+    // the second game's first round: two games.
+    let (first, second) = (play(5, 2), play(9, 2));
+    assert_eq!(first.me, second.me);
+    let starts = round_starts(&first);
+    let before: Vec<&Moment> = first.moments[..starts[1] + 2].iter().collect();
+    let after: Vec<&Moment> = second.moments.iter().collect();
+    let games = run_paused(&before, &after).games();
+    assert_eq!(games.len(), 2);
+    for game in &games {
+        assert!(matches!(game.events.first(), Some(Event::StartGame { .. })));
+        assert!(matches!(game.events.last(), Some(Event::EndGame)));
+    }
+}
+
+#[test]
+fn another_seat_or_an_earlier_round_after_a_pause_is_a_new_game() {
+    // Back in a later round of a game where the player sits elsewhere (seeds 5 and 6
+    // watch different seats): a new game, though the round alone would fit.
+    let (first, other_seat) = (play(5, 3), play(6, 3));
+    assert_ne!(first.me, other_seat.me);
+    let starts = round_starts(&other_seat);
+    let before: Vec<&Moment> = first.moments[..3].iter().collect();
+    let after: Vec<&Moment> = other_seat.moments[starts[starts.len() - 1]..]
+        .iter()
+        .collect();
+    assert_eq!(run_paused(&before, &after).games().len(), 2);
+
+    // Same seat (seeds 5 and 9), back in a round earlier than the one left that is not a
+    // game's first: a new game.
+    let same_seat = play(9, 3);
+    let order = |s: &Scene| {
+        let l = s.round.unwrap();
+        let wind = ["E", "S", "W", "N"]
+            .iter()
+            .position(|w| *w == l.wind.to_string());
+        (wind, l.number, s.honba.unwrap_or(0))
+    };
+    let left_at = first.moments.len() - 2;
+    let left = order(&first.moments[left_at].scene);
+    let Some(back) = same_seat
+        .moments
+        .iter()
+        .position(|m| order(&m.scene) < left && order(&m.scene) > (Some(0), 1, 0))
+    else {
+        panic!("no earlier round to come back to");
+    };
+    let before: Vec<&Moment> = first.moments[..left_at].iter().collect();
+    let after: Vec<&Moment> = same_seat.moments[back..].iter().collect();
+    assert_eq!(run_paused(&before, &after).games().len(), 2);
+}

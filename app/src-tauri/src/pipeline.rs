@@ -238,6 +238,12 @@ impl CallHold {
     }
 }
 
+fn send_defense(app: &AppHandle, seq: u64, defense: Defense) {
+    if let Err(err) = app.emit("defense", DefenseView { seq, defense }) {
+        tracing::warn!("sending the defense: {err}");
+    }
+}
+
 /// Each other player's latest discard: right, across, left.
 fn latest_discards(table: &Snapshot) -> [Option<Tile>; 3] {
     [Seat::Right, Seat::Across, Seat::Left]
@@ -880,7 +886,7 @@ impl Pipeline {
         let sent = match event {
             WatchEvent::Hand(reading) => {
                 *lock(&self.last_reading) = Some((*reading).clone());
-                let advice = self.advise(&reading);
+                let (advice, read_defense) = self.advise(&reading);
                 tracing::info!(
                     tiles = advice.tiles.len(),
                     find_ms = advice.times.find_ms,
@@ -909,6 +915,10 @@ impl Pipeline {
                         points,
                     };
                     self.defend(app, seq, &reading, events, *me, &own);
+                } else if let Some(defense) = read_defense {
+                    // The engine is not following the round: the defense read off the
+                    // table, which the efficiency-only discard already follows (#105).
+                    send_defense(app, seq, defense);
                 }
                 if let Some(state) = followed.state {
                     if let Some(value) = scoring::value(&state) {
@@ -1044,13 +1054,7 @@ impl Pipeline {
     ) {
         let hand: Vec<Tile> = reading.tiles.iter().map(|r| r.tile).collect();
         let visible = seen_counts(&hand, reading.table.as_ref());
-        let view = DefenseView {
-            seq,
-            defense: defense::assess(events, me, &hand, &visible, own),
-        };
-        if let Err(err) = app.emit("defense", view) {
-            tracing::warn!("sending the defense: {err}");
-        }
+        send_defense(app, seq, defense::assess(events, me, &hand, &visible, own));
     }
 
     /// Searches the target hands, or values the waits, for advice `seq` and sends them,
@@ -1118,10 +1122,23 @@ impl Pipeline {
         }
     }
 
-    fn advise(&self, reading: &HandReading) -> Advice {
+    /// The rule layer's advice on the hand, and the defense read off the table for when
+    /// the state engine does not follow it (#105). Without Mortal, the discard follows that
+    /// defense's verdict.
+    fn advise(&self, reading: &HandReading) -> (Advice, Option<Defense>) {
         let start = Instant::now();
         let hand: Vec<Tile> = reading.tiles.iter().map(|r| r.tile).collect();
         let visible = seen_counts(&hand, reading.table.as_ref());
+        let scene = reading
+            .table
+            .as_ref()
+            .map(|t| t.scene(&reading.tiles, reading.drawn));
+        let read_defense = |own: Own| {
+            scene
+                .as_ref()
+                .map(|s| defense::assess_scene(s, &hand, &visible, &own))
+        };
+        let mut defense = None;
         let mut advice = Advice {
             seq: self.seq.fetch_add(1, Ordering::Relaxed) + 1,
             tiles: reading.tiles.iter().map(view).collect(),
@@ -1157,8 +1174,18 @@ impl Pipeline {
             if let Ok(options) = rank_discards(&hand, &visible)
                 && let Some(best) = options.first()
             {
+                defense = read_defense(Own {
+                    shanten: best.shanten,
+                    ukeire: best.ukeire_count,
+                    points: None,
+                });
+                let pick = defense
+                    .as_ref()
+                    .and_then(|d| defense::guarded(&options, d))
+                    .and_then(|i| options.get(i))
+                    .unwrap_or(best);
                 // Point at the drawn tile when it is the one to cut.
-                advice.discard = hand.iter().rposition(|t| *t == best.discard);
+                advice.discard = hand.iter().rposition(|t| *t == pick.discard);
                 advice.shanten = Some(best.shanten);
                 advice.ukeire = tiles_left(&best.ukeire, &hand, &visible);
                 advice.ukeire_count = Some(best.ukeire_count);
@@ -1177,6 +1204,11 @@ impl Pipeline {
             advice.shanten = Some(outlook.shanten);
             advice.ukeire = tiles_left(&outlook.ukeire, &hand, &visible);
             advice.ukeire_count = Some(outlook.ukeire_count);
+            defense = read_defense(Own {
+                shanten: outlook.shanten,
+                ukeire: outlook.ukeire_count,
+                points: None,
+            });
             if let Some(table) = &reading.table {
                 self.advise_call(&mut advice, &hand, table, &visible);
             }
@@ -1201,7 +1233,7 @@ impl Pipeline {
                 mortal: false,
             },
         );
-        advice
+        (advice, defense)
     }
 
     /// The call advice for a hand waiting on another player's discard: on a frame with call
@@ -1625,6 +1657,54 @@ mod tests {
         let mut again = blank_advice(5);
         pipeline.advise_call(&mut again, &hand, &table, &visible);
         assert!(again.call.is_none());
+    }
+
+    fn reading(hand: &str, table: Snapshot) -> HandReading {
+        let now = Instant::now();
+        HandReading {
+            tiles: hand.split(' ').map(recognized).collect(),
+            boxes: Vec::new(),
+            drawn: false,
+            table: Some(table),
+            frame: (1920, 1080),
+            text_failing: false,
+            timings: mahjong_perception::Timings {
+                still_since: now,
+                settled: now,
+                find: Duration::ZERO,
+                recognize: Duration::ZERO,
+                table: Duration::ZERO,
+            },
+        }
+    }
+
+    #[test]
+    fn without_the_engine_the_discard_still_defends() {
+        // The right player is in riichi and the hand is far from ready: the fastest discard
+        // is a lone honor, but folding cuts the riichi player's own 4m (#105). Nothing here
+        // goes through the state engine.
+        let hand = "4m 5m 6m 1p 2p 3p 5s 7s 9s E S W N P";
+        let cut = |advice: &Advice| advice.discard.map(|i| advice.tiles[i].tile.to_string());
+        let mut table = Snapshot::default();
+        table.rivers[Seat::Right.index()] = vec![
+            discarded("4m"),
+            RiverTile {
+                tile: recognized("8p"),
+                sideways: true,
+            },
+        ];
+        let pipeline = Pipeline::default();
+        let (advice, read) = pipeline.advise(&reading(hand, table.clone()));
+        assert_eq!(cut(&advice), Some("4m".into()));
+        let read = read.unwrap();
+        assert_eq!(read.verdict, Some(defense::Verdict::Fold));
+        assert!(read.threats.iter().any(|t| t.seat == 1 && t.riichi));
+
+        // No riichi: nothing to defend against, the fastest discard.
+        table.rivers[Seat::Right.index()][1].sideways = false;
+        let (advice, read) = pipeline.advise(&reading(hand, table));
+        assert_ne!(cut(&advice), Some("4m".into()));
+        assert!(read.is_some_and(|d| d.threats.is_empty()));
     }
 
     #[test]

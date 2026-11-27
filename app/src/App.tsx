@@ -156,7 +156,12 @@ function optionFor(advice: Advice, tile: string | null): OptionView | null {
 function plan(advice: Advice, ai: MortalView | null, win: WinView | null): Plan {
   const mustDiscard = advice.tiles.length % 3 === 2;
   const ruleDiscard = advice.discard !== null ? advice.tiles[advice.discard].tile : null;
-  const ruleOthers = advice.options.slice(1, 3).map((o) => o.discard);
+  // The next candidates after the rule layer's discard, which may not be the fastest when
+  // it defends (#105).
+  const ruleOthers = advice.options
+    .filter((o) => o.discard !== ruleDiscard)
+    .slice(0, 2)
+    .map((o) => o.discard);
   const callButtons = advice.game?.buttons.some((b) => b === "chi" || b === "pon" || b === "kan") ?? false;
   const mortalCall = ai !== null && ["chi", "pon", "kan", "pass"].includes(ai.best.kind) && !mustDiscard;
   const base: Plan = {
@@ -643,7 +648,7 @@ function light(status: Status | null, advice: Advice | null, engine: EngineView 
   if (!advice) return { color: "gray", why: ["等待手牌出现"] };
   const red: string[] = [];
   if (engine?.textFailing) red.push("文字识别失效，读不到局数和分数");
-  if (engine && engine.stuck >= STUCK) red.push(`连续 ${engine.stuck} 帧没跟上牌局，只有牌效建议`);
+  if (engine && engine.stuck >= STUCK) red.push(`连续 ${engine.stuck} 帧没跟上牌局，只有牌效和防守建议`);
   if (red.length > 0) return { color: "red", why: red };
   const yellow: string[] = [];
   const doubts = advice.tiles.filter((v) => v.doubt).length;
@@ -974,7 +979,9 @@ function App() {
                         </>
                       )}
                 </span>
-                {lamp.color === "red" && !ai && <span className="rules-only">只按牌效：引擎没跟上牌局</span>}
+                {lamp.color === "red" && !ai && (
+                  <span className="rules-only">{guard ? "只按牌效和防守" : "只按牌效"}：引擎没跟上牌局</span>
+                )}
                 {p.discard && p.others.length > 0 && (
                   <span className="legend">
                     <span className="second">▬ 候选2</span>

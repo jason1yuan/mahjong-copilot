@@ -15,6 +15,9 @@
 //! - Verdict, against at least one threat: push when tenpai with four or more tiles to
 //!   win on or a hand worth a mangan; play carefully when tenpai otherwise, or one step
 //!   away with a mangan in reach; fold otherwise. Mortal decides the play; this explains.
+//!   Without Mortal, the efficiency-only discard follows the verdict ([`guarded`]).
+//! - The round comes from the state engine's log; when the engine is not following, from
+//!   the table as read off the screen ([`assess_scene`], #105).
 //!
 //! Seats are counted from the player in turn order: 1 right, 2 across, 3 left.
 
@@ -22,7 +25,8 @@ use riichi::mjai::Event;
 use riichi::tile::Tile as RTile;
 use serde::Serialize;
 
-use crate::analysis::{self, TileCounts};
+use crate::analysis::{self, DiscardOption, TileCounts};
+use crate::game::Scene;
 use crate::tile::{KINDS, Tile};
 
 /// Points of a mangan for a non-dealer: worth pushing for.
@@ -105,12 +109,14 @@ pub struct Own {
     pub points: Option<i32>,
 }
 
-/// What a seat did this round, from the log.
+/// What a seat did this round, from the log or read off the table.
 #[derive(Clone, Debug, Default)]
 struct Seat {
     discards: Vec<u8>,
-    /// Index in the round's discards of the riichi declaration's discard.
-    riichi_at: Option<usize>,
+    riichi: bool,
+    /// Kinds discarded by anyone after this seat's riichi declaration: it is furiten on
+    /// them.
+    passed: Vec<u8>,
     calls: u8,
     /// Called a value honor or a dora.
     valuable_call: bool,
@@ -140,6 +146,7 @@ pub fn assess(events: &[Event], me: u8, hand: &[Tile], visible: &TileCounts, own
     let mut seats: [Seat; 4] = Default::default();
     // Every discard of the round in order, by absolute seat.
     let mut order: Vec<(u8, u8)> = Vec::new();
+    let mut riichi_at: [Option<usize>; 4] = [None; 4];
     let mut dora: Vec<u8> = Vec::new();
     let mut declaring = [false; 4];
     let mut value_honors = vec![31u8, 32, 33];
@@ -153,6 +160,7 @@ pub fn assess(events: &[Event], me: u8, hand: &[Tile], visible: &TileCounts, own
             } => {
                 seats = Default::default();
                 order.clear();
+                riichi_at = [None; 4];
                 dora.clear();
                 declaring = [false; 4];
                 value_honors = vec![31, 32, 33];
@@ -170,7 +178,7 @@ pub fn assess(events: &[Event], me: u8, hand: &[Tile], visible: &TileCounts, own
                 let a = usize::from(*actor);
                 if declaring[a] {
                     declaring[a] = false;
-                    seats[a].riichi_at = Some(order.len());
+                    riichi_at[a] = Some(order.len());
                 }
                 seats[a].discards.push(k);
                 order.push((*actor, k));
@@ -190,13 +198,86 @@ pub fn assess(events: &[Event], me: u8, hand: &[Tile], visible: &TileCounts, own
             _ => {}
         }
     }
+    for (seat, at) in seats.iter_mut().zip(riichi_at) {
+        if let Some(at) = at {
+            seat.riichi = true;
+            seat.passed = order[at..].iter().map(|&(_, k)| k).collect();
+        }
+    }
+    rate(&seats, me, &dora, hand, visible, own)
+}
 
+/// How dangerous each tile in `hand` is, and the verdict, from the table as read off the
+/// screen (#105): for when the state engine is not following the round and there is no
+/// log. Its seats are relative, the player's is 0.
+///
+/// The screen does not show the order of discards between seats, which tells what was
+/// discarded after a riichi. A discard counts as after it only when it is certainly so:
+/// later in its own river than the declaration by a turn, and by one more for every call
+/// on the table, since calls skip turns. A riichi whose declaration was just called away
+/// is not seen until that player's next discard lies sideways.
+pub fn assess_scene(scene: &Scene, hand: &[Tile], visible: &TileCounts, own: &Own) -> Defense {
+    let dora: Vec<u8> = scene.dora.iter().map(|t| indicated(t.kind())).collect();
+    let mut value_honors = vec![31u8, 32, 33];
+    value_honors.extend(scene.round.map(|r| r.wind.kind()));
+    value_honors.extend(scene.dealer.map(|dealer| 27 + (4 - dealer) % 4));
+    let calls: usize = scene
+        .melds
+        .iter()
+        .map(|m| m.iter().filter(|m| m.called().is_some()).count())
+        .sum();
+    let mut seats: [Seat; 4] = Default::default();
+    for (seat, (river, melds)) in seats.iter_mut().zip(scene.rivers.iter().zip(&scene.melds)) {
+        seat.discards = river.iter().map(|t| t.tile.kind()).collect();
+        for meld in melds {
+            let Some(called) = meld.called() else {
+                continue;
+            };
+            seat.calls += 1;
+            // A pon or kan, not a chi: all of one kind.
+            let set = meld
+                .tiles
+                .iter()
+                .flatten()
+                .all(|t| t.kind() == called.kind());
+            if dora.contains(&called.kind()) || (set && value_honors.contains(&called.kind())) {
+                seat.valuable_call = true;
+            }
+        }
+    }
+    // The turn order of the round starts at the dealer; without it, every seat counts as
+    // having played before the riichi in its go-around.
+    let turn = |s: usize| scene.dealer.map(|d| (s + 4 - usize::from(d)) % 4);
+    for (r, seat) in seats.iter_mut().enumerate() {
+        let Some(at) = scene.rivers[r].iter().position(|t| t.sideways) else {
+            continue;
+        };
+        let mut passed = seat.discards[at..].to_vec();
+        for (s, river) in scene.rivers.iter().enumerate().filter(|&(s, _)| s != r) {
+            let after_in_go_around = matches!((turn(s), turn(r)), (Some(a), Some(b)) if a > b);
+            let from = at + calls + usize::from(!after_in_go_around);
+            passed.extend(river.iter().skip(from).map(|t| t.tile.kind()));
+        }
+        seat.riichi = true;
+        seat.passed = passed;
+    }
+    rate(&seats, 0, &dora, hand, visible, own)
+}
+
+fn rate(
+    seats: &[Seat; 4],
+    me: u8,
+    dora: &[u8],
+    hand: &[Tile],
+    visible: &TileCounts,
+    own: &Own,
+) -> Defense {
     // Value honors for an open threat are its own, but the player's are a fair guess
     // (dragons are the same for all); the check above is a rough one.
     let threats: Vec<Threat> = (1..4u8)
         .filter_map(|rel| {
             let s = &seats[usize::from((me + rel) % 4)];
-            let riichi = s.riichi_at.is_some();
+            let riichi = s.riichi;
             let open = s.calls >= 3 || (s.calls >= 2 && s.valuable_call);
             (riichi || open).then_some(Threat {
                 seat: rel,
@@ -222,9 +303,8 @@ pub fn assess(events: &[Event], me: u8, hand: &[Tile], visible: &TileCounts, own
         let worst = threats
             .iter()
             .map(|t| {
-                let seat = &seats[usize::from((me + t.seat) % 4)];
-                let safe: Vec<u8> = safe_against(seat, &order);
-                danger(k, &safe, &seen, &dora)
+                let safe = safe_against(&seats[usize::from((me + t.seat) % 4)]);
+                danger(k, &safe, &seen, dora)
             })
             .max_by_key(|d| (d.level, !matches!(d.reason, Reason::Genbutsu)))
             .unwrap_or_else(|| unreachable!("threats is not empty"));
@@ -247,11 +327,9 @@ pub fn assess(events: &[Event], me: u8, hand: &[Tile], visible: &TileCounts, own
 
 /// Kinds safe against a seat: its own discards, and if in riichi everything discarded
 /// after its declaration.
-fn safe_against(seat: &Seat, order: &[(u8, u8)]) -> Vec<u8> {
+fn safe_against(seat: &Seat) -> Vec<u8> {
     let mut safe = seat.discards.clone();
-    if let Some(at) = seat.riichi_at {
-        safe.extend(order[at..].iter().map(|&(_, k)| k));
-    }
+    safe.extend(&seat.passed);
     safe.sort_unstable();
     safe.dedup();
     safe
@@ -346,6 +424,33 @@ fn number_danger(k: u8, safe: &[u8], seen: &TileCounts) -> (Level, Reason) {
         return (Level::Somewhat, Reason::Terminal);
     }
     (Level::Dangerous, Reason::Plain)
+}
+
+/// Which of `options`, ranked by speed best first, to cut when tile efficiency is all
+/// there is to go by (#105): with no decision model, the verdict still counts. Folding cuts
+/// the safest tile; playing carefully, the safest of those keeping the best shanten; on
+/// even danger, the faster one. Pushing, or nothing to defend against, cuts the fastest.
+/// `None` without options.
+pub fn guarded(options: &[DiscardOption], defense: &Defense) -> Option<usize> {
+    let best = options.first()?;
+    let keep = match defense.verdict {
+        Some(Verdict::Fold) => i8::MAX,
+        Some(Verdict::Careful) => best.shanten,
+        Some(Verdict::Push) | None => return Some(0),
+    };
+    let danger = |t: Tile| {
+        defense
+            .tiles
+            .iter()
+            .find(|d| d.tile.kind() == t.kind())
+            .map_or((Level::Dangerous, true), |d| (d.level, d.dora))
+    };
+    options
+        .iter()
+        .enumerate()
+        .filter(|(_, o)| o.shanten <= keep)
+        .min_by_key(|&(i, o)| (danger(o.discard), i))
+        .map(|(i, _)| i)
 }
 
 fn verdict(own: &Own) -> Verdict {
@@ -570,6 +675,177 @@ mod tests {
             }
         }
         assert!(checked > 20, "{checked}");
+    }
+
+    /// The table of `rates_tiles_against_a_riichi` as the screen shows it: each river in
+    /// order, the declaration lying sideways, the dealer the player.
+    fn riichi_scene() -> Scene {
+        let river = |tiles: &str, sideways: Option<usize>| -> Vec<crate::game::RiverTile> {
+            parse_tiles(tiles)
+                .unwrap()
+                .into_iter()
+                .enumerate()
+                .map(|(i, tile)| crate::game::RiverTile {
+                    tile,
+                    sideways: sideways == Some(i),
+                })
+                .collect()
+        };
+        Scene {
+            rivers: [
+                river("1p 2p", None),
+                river("4m 8p", Some(1)),
+                river("9s 3s", None),
+                river("W", None),
+            ],
+            dora: parse_tiles("C").unwrap(),
+            round: Some(crate::game::RoundLabel {
+                wind: "E".parse().unwrap(),
+                number: 1,
+            }),
+            dealer: Some(0),
+            ..Scene::default()
+        }
+    }
+
+    fn visible_on(scene: &Scene) -> TileCounts {
+        let mut v = [0u8; 34];
+        for t in scene.rivers.iter().flatten() {
+            v[usize::from(t.tile.kind())] += 1;
+        }
+        v
+    }
+
+    /// With the engine behind there is no log (#105): the danger is read off the table,
+    /// and comes out as from the log.
+    #[test]
+    fn rates_tiles_against_a_riichi_read_off_the_table() {
+        let scene = riichi_scene();
+        let hand = parse_tiles("1m 4m 7m 5p 3s 9s E E 6p").unwrap();
+        let d = assess_scene(&scene, &hand, &visible_on(&scene), &own(2, 10, None));
+        assert_eq!(
+            d.threats,
+            [Threat {
+                seat: 1,
+                riichi: true,
+                calls: 0
+            }]
+        );
+        let l = levels(&d);
+        let get = |t: &str| l.iter().find(|(x, _, _)| x == t).unwrap().clone();
+        assert_eq!(get("4m").1, Level::Safe, "its own discard");
+        // Across plays after the right player, so its second discard came after the
+        // declaration.
+        assert_eq!(
+            get("3s"),
+            ("3s".into(), Level::Safe, Reason::Genbutsu),
+            "passed after riichi"
+        );
+        assert_eq!(get("1m"), ("1m".into(), Level::Somewhat, Reason::Suji));
+        assert_eq!(get("5p").1, Level::Dangerous);
+        assert_eq!(d.verdict, Some(Verdict::Fold));
+    }
+
+    /// A call on the table may have skipped a turn, so a discard beside the declaration
+    /// no longer counts as passed after it.
+    #[test]
+    fn calls_make_passed_tiles_uncertain() {
+        let mut scene = riichi_scene();
+        let t = |s: &str| Some(s.parse::<Tile>().unwrap());
+        scene.melds[3] = vec![crate::game::MeldView {
+            tiles: vec![t("3m"), t("4m"), t("5m")],
+            sideways: Some(0),
+            added: None,
+        }];
+        let hand = parse_tiles("3s 5p").unwrap();
+        let d = assess_scene(&scene, &hand, &visible_on(&scene), &own(2, 10, None));
+        let three = d.tiles.iter().find(|x| x.tile.to_string() == "3s").unwrap();
+        assert_ne!(three.level, Level::Safe);
+    }
+
+    /// In the simulated games, the table read off the screen finds the same riichi players
+    /// as the log, and never calls a tile safe that the log does not. The one riichi it
+    /// cannot see is one whose declaration was just called away: nothing lies sideways
+    /// until that player's next discard.
+    #[test]
+    fn the_screen_is_never_bolder_than_the_log() {
+        let mut checked = 0;
+        for seed in 0..20 {
+            let game = crate::game::sim::play(seed, 2);
+            for moment in &game.moments {
+                let log = &game.log[..moment.events];
+                let start = log
+                    .iter()
+                    .rposition(|e| matches!(e, Event::StartKyoku { .. }))
+                    .unwrap_or(0);
+                let hand = moment.scene.own_tiles();
+                let mut visible = [0u8; 34];
+                for t in moment.scene.seen() {
+                    visible[usize::from(t.kind())] += 1;
+                }
+                for t in &hand {
+                    visible[usize::from(t.kind())] -= 1;
+                }
+                let from_log = assess(&log[start..], game.me, &hand, &visible, &own(2, 0, None));
+                let read = assess_scene(&moment.scene, &hand, &visible, &own(2, 0, None));
+                let riichi = |d: &Defense| -> Vec<u8> {
+                    d.threats
+                        .iter()
+                        .filter(|t| t.riichi)
+                        .map(|t| t.seat)
+                        .collect()
+                };
+                let (seen, logged) = (riichi(&read), riichi(&from_log));
+                assert!(seen.iter().all(|s| logged.contains(s)), "seed {seed}");
+                if seen != logged {
+                    for missed in logged.iter().filter(|s| !seen.contains(s)) {
+                        let river = &moment.scene.rivers[usize::from(*missed)];
+                        assert!(river.iter().all(|t| !t.sideways), "seed {seed}");
+                    }
+                    // A threat missed altogether: its tiles cannot be compared.
+                    continue;
+                }
+                for t in read.tiles.iter().filter(|t| t.level == Level::Safe) {
+                    let logged = from_log.tiles.iter().find(|x| x.tile == t.tile);
+                    assert!(
+                        logged.is_none_or(|x| x.level == Level::Safe),
+                        "seed {seed}: {} safe on screen only",
+                        t.tile
+                    );
+                }
+                checked += usize::from(!riichi(&read).is_empty());
+            }
+        }
+        assert!(checked > 20, "{checked}");
+    }
+
+    /// Without Mortal the efficiency-only discard follows the verdict (#105).
+    #[test]
+    fn the_efficiency_only_discard_follows_the_verdict() {
+        let option = |discard: &str, shanten: i8, ukeire_count: u8| DiscardOption {
+            discard: discard.parse().unwrap(),
+            shanten,
+            ukeire: Vec::new(),
+            ukeire_count,
+        };
+        // Fastest first: 5p keeps one-shanten with 20 draws, 1m with 16, 4m drops a step.
+        let options = [
+            option("5p", 1, 20),
+            option("1m", 1, 16),
+            option("4m", 2, 30),
+        ];
+        let rated = |verdict| {
+            let hand = parse_tiles("5p 1m 4m").unwrap();
+            let mut d = assess_scene(&riichi_scene(), &hand, &[0; 34], &own(2, 0, None));
+            d.verdict = verdict;
+            d
+        };
+        // 4m is the riichi player's own discard, 1m its suji, 5p plain.
+        assert_eq!(guarded(&options, &rated(Some(Verdict::Fold))), Some(2));
+        assert_eq!(guarded(&options, &rated(Some(Verdict::Careful))), Some(1));
+        assert_eq!(guarded(&options, &rated(Some(Verdict::Push))), Some(0));
+        assert_eq!(guarded(&options, &Defense::default()), Some(0));
+        assert_eq!(guarded(&[], &rated(Some(Verdict::Fold))), None);
     }
 
     #[test]

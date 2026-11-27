@@ -42,6 +42,8 @@ export type EngineView = {
   honba: number | null;
   filled: boolean;
   gaps: number;
+  // Times recognition paused or restarted while the game went on to a later round (#107).
+  unseen: number;
   last: "taken" | "covered" | "unexplained" | "impossible";
   // Text recognition fails even after starting it again: no round or scores (#49).
   textFailing: boolean;

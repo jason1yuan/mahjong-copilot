@@ -309,6 +309,7 @@ export function DevArea({ initial, advice, engine, latency, ai }: Props) {
           <Row label="供托 / 本场" value={`${game?.riichiSticks ?? "—"} / ${game?.honba ?? "—"}`} />
           <Row label="牌谱事件" value={engine ? `${engine.events}` : "—"} />
           <Row label="补出 / 缺口" value={engine ? `${engine.filled ? "是" : "否"} / ${engine.gaps}` : "—"} />
+          <Row label="暂停中没看到" value={engine ? `${engine.unseen} 段` : "—"} />
         </div>
         {advice && doubts > 0 && (
           <p className="dev-empty">

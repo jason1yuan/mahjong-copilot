@@ -48,6 +48,8 @@ const KEEP: usize = 200;
 const OPTIONS: usize = 3;
 /// Game log events sent for the dev area.
 const RECENT: usize = 3;
+/// No table seen for this long ends the game being logged (#107).
+const AWAY_ENDS_GAME: Duration = Duration::from_secs(10 * 60);
 
 /// What the pipeline is doing, for the window's status line.
 #[derive(Clone, Debug, Serialize)]
@@ -497,6 +499,8 @@ pub struct Pipeline {
     mortal: Mutex<Option<Mortal>>,
     /// The call being made while the game asks which tiles to call with (#82).
     call_hold: Mutex<CallHold>,
+    /// When a table with a round label was last read (#107).
+    table_seen: Mutex<Option<Instant>>,
 }
 
 /// What the win on offer is worth (#11), for advice `seq`, sent as `win`.
@@ -580,6 +584,9 @@ pub struct EngineView {
     pub filled: bool,
     /// Stretches of the game filled in again after the engine lost track.
     pub gaps: usize,
+    /// Times recognition paused or restarted while the game went on to a later round, so
+    /// that part of it was not seen (#107).
+    pub unseen: usize,
     /// How the last scene went: `taken`, `covered`, `unexplained` or `impossible`.
     pub last: &'static str,
     /// Text recognition fails even in a fresh helper: the round and scores cannot be read
@@ -630,13 +637,20 @@ fn game_logs_dir(app: &AppHandle) -> Option<PathBuf> {
 /// (`all`: every game's), as mjai JSON Lines with the marks beside them. Off the watcher
 /// thread: the files are small but disk writes can stall.
 fn save_games(game: &GameRecord, all: bool) {
+    let writes = game_writes(game, all);
+    std::thread::spawn(move || write_games(writes));
+}
+
+/// Each game log to write, the current game's only unless `all`: its file, its mjai lines
+/// and its marks.
+fn game_writes(game: &GameRecord, all: bool) -> Vec<(PathBuf, String, String)> {
     let games = game.engine.games();
     let from = if all {
         0
     } else {
         games.len().saturating_sub(1)
     };
-    let writes: Vec<(PathBuf, String, String)> = games
+    games
         .iter()
         .enumerate()
         .skip(from)
@@ -645,20 +659,21 @@ fn save_games(game: &GameRecord, all: bool) {
             let marks = serde_json::to_string(&log.marks).ok()?;
             Some((file, log.lines(), marks))
         })
-        .collect();
-    std::thread::spawn(move || {
-        for (file, lines, marks) in writes {
-            let marks_file = file.with_extension("marks.json");
-            let written = file
-                .parent()
-                .map_or(Ok(()), std::fs::create_dir_all)
-                .and_then(|()| std::fs::write(&file, lines))
-                .and_then(|()| std::fs::write(&marks_file, marks));
-            if let Err(err) = written {
-                tracing::warn!("saving the game log {}: {err}", file.display());
-            }
+        .collect()
+}
+
+fn write_games(writes: Vec<(PathBuf, String, String)>) {
+    for (file, lines, marks) in writes {
+        let marks_file = file.with_extension("marks.json");
+        let written = file
+            .parent()
+            .map_or(Ok(()), std::fs::create_dir_all)
+            .and_then(|()| std::fs::write(&file, lines))
+            .and_then(|()| std::fs::write(&marks_file, marks));
+        if let Err(err) = written {
+            tracing::warn!("saving the game log {}: {err}", file.display());
         }
-    });
+    }
 }
 
 fn ms(d: Duration) -> f64 {
@@ -841,18 +856,38 @@ impl Pipeline {
         *lock(&self.chosen) = Some(id);
     }
 
+    /// Ends the game being logged when no table has been seen for a long time (#107): the
+    /// player has most likely left it, and its log should not stay open.
+    fn end_game_if_away(&self) {
+        let away = lock(&self.table_seen).is_some_and(|t| t.elapsed() >= AWAY_ENDS_GAME);
+        if !away {
+            return;
+        }
+        lock(&self.table_seen).take();
+        let mut game = lock(&self.game);
+        if game.engine.in_game() {
+            game.engine.end_game();
+            save_games(&game, true);
+            tracing::info!("no table for a long time: the game ended");
+        }
+    }
+
+    /// The app is quitting: ends the game being logged and writes the logs before it goes.
+    pub fn finish(&self) {
+        let mut game = lock(&self.game);
+        game.engine.end_game();
+        write_games(game_writes(&game, true));
+    }
+
     /// Pauses or resumes recognition (#16); the supervisor stops or restarts the watcher.
     pub fn set_paused(&self, paused: bool) {
         self.paused.store(paused, Ordering::Relaxed);
     }
 
-    /// Recognition just paused: ends the game being logged, saves it and clears the panel.
+    /// Recognition just paused: keeps the game being logged open (#107), since the player
+    /// may resume in the same game, and clears the panel.
     fn pause_game(&self, app: &AppHandle) {
-        {
-            let mut game = lock(&self.game);
-            game.engine.end_game();
-            save_games(&game, true);
-        }
+        lock(&self.game).engine.suspend();
         lock(&self.last_reading).take();
         self.stuck.store(0, Ordering::Relaxed);
         if let Err(err) = app.emit("advice", None::<Advice>) {
@@ -931,11 +966,13 @@ impl Pipeline {
                 }
                 sent
             }
-            WatchEvent::NoHand => app.emit("advice", None::<Advice>),
+            WatchEvent::NoHand => {
+                self.end_game_if_away();
+                app.emit("advice", None::<Advice>)
+            }
+            // The capture restarts with the window: the game goes on meanwhile (#107).
             WatchEvent::Stopped => {
-                let mut game = lock(&self.game);
-                game.engine.end_game();
-                save_games(&game, true);
+                lock(&self.game).engine.suspend();
                 Ok(())
             }
         };
@@ -956,6 +993,10 @@ impl Pipeline {
             };
         };
         let scene = table.scene(&reading.tiles, reading.drawn);
+        self.end_game_if_away();
+        if scene.round.is_some() {
+            *lock(&self.table_seen) = Some(Instant::now());
+        }
         let mut game = lock(&self.game);
         let (last, added, new_round, new_game) = match game.engine.observe(&scene) {
             Ok(observed) => {
@@ -1007,6 +1048,12 @@ impl Pipeline {
             filled: game.engine.filled(),
             gaps: current.map_or(0, |g| {
                 g.marks.iter().filter(|m| m.kind == MarkKind::Gap).count()
+            }),
+            unseen: current.map_or(0, |g| {
+                g.marks
+                    .iter()
+                    .filter(|m| m.kind == MarkKind::Unseen)
+                    .count()
             }),
             last,
             text_failing: reading.text_failing,
@@ -1705,6 +1752,34 @@ mod tests {
         let (advice, read) = pipeline.advise(&reading(hand, table));
         assert_ne!(cut(&advice), Some("4m".into()));
         assert!(read.is_some_and(|d| d.threats.is_empty()));
+    }
+
+    #[test]
+    fn a_long_time_without_a_table_ends_the_game() {
+        // A round's start seen: a game is being logged (#107).
+        let scene = mahjong_core::game::Scene {
+            hand: parse_tiles("1m 2m 3m 4p 5p 6p 7s 8s 9s E E S S").unwrap(),
+            round: Some(mahjong_core::game::RoundLabel {
+                wind: "E".parse().unwrap(),
+                number: 1,
+            }),
+            dealer: Some(0),
+            honba: Some(0),
+            dora: parse_tiles("C").unwrap(),
+            ..Default::default()
+        };
+        let pipeline = Pipeline::default();
+        lock(&pipeline.game).engine.observe(&scene).unwrap();
+        // A pause keeps it open, however long, until a table shows again.
+        lock(&pipeline.game).engine.suspend();
+        *lock(&pipeline.table_seen) = Some(Instant::now());
+        pipeline.end_game_if_away();
+        assert!(lock(&pipeline.game).engine.in_game());
+        // No table for longer than that: it ends.
+        *lock(&pipeline.table_seen) =
+            Instant::now().checked_sub(AWAY_ENDS_GAME + Duration::from_secs(1));
+        pipeline.end_game_if_away();
+        assert!(!lock(&pipeline.game).engine.in_game());
     }
 
     #[test]

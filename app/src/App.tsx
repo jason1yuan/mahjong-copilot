@@ -535,6 +535,8 @@ function CallCard({ advice, ai }: { advice: Advice; ai: MortalView | null }) {
               </span>
             </div>
             <span className="decision-sub">{take.option ? callLine(take.option) : take.kind === "kan" ? "→ 杠后摸岭上牌" : ""}</span>
+            {/* The game asks which tiles to call with (#82): point at the set to pick. */}
+            {advice.choosing && <span className="choosing">在选牌框里选这一组</span>}
           </div>
         ) : (
           <div className="decision">

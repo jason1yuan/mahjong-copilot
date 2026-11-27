@@ -859,6 +859,13 @@ body {
   color: var(--green-text);
 }
 
+/* While the game's box asks which tiles to call with (#82). */
+.choosing {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .card-alt {
   display: flex;
   align-items: center;

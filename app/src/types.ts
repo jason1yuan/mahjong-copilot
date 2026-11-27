@@ -79,6 +79,9 @@ export type Advice = {
   game: GameView | null;
   call: CallView | null;
   callStances: StanceView[];
+  // The call advice is kept from the frame that offered the call, whose buttons are gone
+  // while the player picks the tiles in the game's box (#82).
+  choosing: boolean;
   times: {
     settleMs: number;
     findMs: number;

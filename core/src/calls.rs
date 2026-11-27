@@ -182,6 +182,75 @@ pub fn offered(
     }
 }
 
+/// Whether the game asks which tiles to call with (#82): it does when a call on offer (a
+/// chi only when `chi`, a pon only when `pon`) can be made with more than one set of tiles
+/// from the hand, a red five counting apart from a plain one, since which goes into the
+/// meld changes the hand.
+pub fn choice_shown(hand: &[Tile], called: Tile, chi: bool, pon: bool) -> bool {
+    let kind = called.kind();
+    if pon && sets(hand, [kind, kind]) > 1 {
+        return true;
+    }
+    if !chi || called.is_honor() {
+        return false;
+    }
+    let rank = kind % 9;
+    let runs: usize = [(-2i8, -1i8), (-1, 1), (1, 2)]
+        .into_iter()
+        .filter(|(a, b)| (0..9).contains(&(rank as i8 + a)) && (0..9).contains(&(rank as i8 + b)))
+        .map(|(a, b)| sets(hand, [(kind as i8 + a) as u8, (kind as i8 + b) as u8]))
+        .sum();
+    runs > 1
+}
+
+/// How many different pairs of tiles of kinds `pair` the hand holds, telling a red five
+/// from a plain one.
+fn sets(hand: &[Tile], pair: [u8; 2]) -> usize {
+    let mut found: Vec<[Tile; 2]> = Vec::new();
+    for (i, a) in hand.iter().enumerate() {
+        for (j, b) in hand.iter().enumerate() {
+            if i != j && a.kind() == pair[0] && b.kind() == pair[1] {
+                let mut set = [*a, *b];
+                set.sort();
+                if !found.contains(&set) {
+                    found.push(set);
+                }
+            }
+        }
+    }
+    found.len()
+}
+
+/// The table when call buttons were shown (#82). Pressing one hides them, and the game
+/// shows a box to pick the tiles when there is more than one way to call; until the call is
+/// made, or let go and someone else acts, the table stays as it was.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Offer {
+    hand: Vec<Tile>,
+    melds: usize,
+    latest: [Option<Tile>; 3],
+}
+
+impl Offer {
+    /// `hand` is the concealed hand, `melds` how many melds the player has, and `latest`
+    /// each other player's latest discard (right, across, left).
+    pub fn new(hand: &[Tile], melds: usize, latest: [Option<Tile>; 3]) -> Self {
+        let mut hand = hand.to_vec();
+        hand.sort();
+        Self {
+            hand,
+            melds,
+            latest,
+        }
+    }
+
+    /// Whether the table still shows the offer: the same hand, no new meld and the same
+    /// latest discards.
+    pub fn still_open(&self, hand: &[Tile], melds: usize, latest: [Option<Tile>; 3]) -> bool {
+        *self == Self::new(hand, melds, latest)
+    }
+}
+
 /// Two tiles of kinds `pair` from `hand`, plain ones before red fives; `None` when the
 /// hand lacks them.
 fn pick(hand: &[Tile], pair: [u8; 2]) -> Option<[Tile; 2]> {
@@ -464,5 +533,39 @@ mod tests {
         assert_eq!(triplets_shanten(&counts, 3), 0);
         let counts = analysis::counts(&tiles("1m 2m 3m 4m 5m 6m 7m 8m 9m E"));
         assert_eq!(triplets_shanten(&counts, 3), 6);
+    }
+
+    #[test]
+    fn the_game_asks_which_tiles_only_when_there_is_a_choice() {
+        let hand = tiles("2m 3m 4m 5m 9p 9p E E S W N P F");
+        // 3m: a chi with 2m-4m or with 4m-5m, two ways.
+        assert!(choice_shown(&hand, tile("3m"), true, false));
+        // 6m chi only with 4-5: one way.
+        assert!(!choice_shown(&hand, tile("6m"), true, false));
+        // A pon with two plain tiles of the kind: one way, and a chi button does not
+        // count for an honor.
+        assert!(!choice_shown(&hand, tile("9p"), false, true));
+        assert!(!choice_shown(&hand, tile("E"), true, true));
+        // A red five beside a plain one makes two ways, for a pon and for a chi.
+        let fives = tiles("4p 5p 5p 5pr 1s 2s 3s 7s 8s 9s E S W");
+        assert!(choice_shown(&fives, tile("5p"), false, true));
+        assert!(choice_shown(&fives, tile("6p"), true, false));
+        // Without the button, no box: only a pon is offered.
+        assert!(!choice_shown(&hand, tile("3m"), false, true));
+    }
+
+    #[test]
+    fn an_offer_stays_open_until_the_table_moves() {
+        let hand = tiles("2m 3m 4m 5m 9p 9p E E S W N P F");
+        let latest = [Some(tile("1s")), None, Some(tile("3m"))];
+        let offer = Offer::new(&hand, 0, latest);
+        // The tiles being picked: the same hand, read in another order, and table.
+        let mut shuffled = hand.clone();
+        shuffled.reverse();
+        assert!(offer.still_open(&shuffled, 0, latest));
+        // The call made: two tiles left the hand and a meld came.
+        assert!(!offer.still_open(&hand[2..], 1, [latest[0], None, None]));
+        // Let go, and the next player discarded.
+        assert!(!offer.still_open(&hand, 0, [Some(tile("7p")), None, Some(tile("3m"))]));
     }
 }

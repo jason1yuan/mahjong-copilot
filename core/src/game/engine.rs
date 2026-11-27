@@ -82,6 +82,9 @@ pub enum MarkKind {
     Gap,
     /// The round's ending could not be told from the scores.
     UnknownEnding,
+    /// The table was out of sight here (recognition paused, or the capture restarted) and
+    /// the game went on: whole rounds may be missing (#107). Marks no events.
+    Unseen,
 }
 
 /// Events `first..last` of the log (indices into [`Engine::events`]) are of `kind`.
@@ -161,6 +164,14 @@ struct Round {
     unexplained: u8,
 }
 
+/// Where the game stood when the table went out of sight (#107).
+#[derive(Debug, Clone, Copy)]
+struct Away {
+    label: RoundLabel,
+    honba: u8,
+    me: u8,
+}
+
 /// The state engine for one game, or several in a row.
 #[derive(Default)]
 pub struct Engine {
@@ -171,6 +182,9 @@ pub struct Engine {
     round: Option<Round>,
     /// A game has started and not ended.
     in_game: bool,
+    /// The table went out of sight in this round; the next scene tells whether the game
+    /// goes on.
+    away: Option<Away>,
     /// How many times earlier events were corrected from a later scene.
     rewrites: u32,
 }
@@ -265,10 +279,57 @@ impl Engine {
     /// Ends the game (the table is gone): closes the round, with no ending known, and
     /// logs `end_game`.
     pub fn end_game(&mut self) {
+        self.away = None;
         self.close_round(None);
         if self.in_game {
             self.earlier.push(Event::EndGame);
             self.in_game = false;
+        }
+    }
+
+    /// Whether a game has started and not ended.
+    pub fn in_game(&self) -> bool {
+        self.in_game
+    }
+
+    /// The table goes out of sight for a while (#107): recognition paused, or the window's
+    /// capture restarted. Unlike [`Self::end_game`] the game stays open, and the next
+    /// scene with the round's label tells whether it is the same game going on.
+    pub fn suspend(&mut self) {
+        if let Some(round) = &self.round {
+            self.away = Some(Away {
+                label: round.label,
+                honba: round.honba.unwrap_or(0),
+                me: round.me,
+            });
+        }
+    }
+
+    /// The first scene with a label after the table was out of sight. It is the same game
+    /// going on when it shows the round left or a later one, with the player in the same
+    /// seat: a new game seats players afresh, so it most likely puts the player elsewhere.
+    /// Anything else, or a game's first round after a later one, is a new game, and the old
+    /// one ends. A later round closes the one left with its ending unknown, since any number
+    /// of rounds may have passed, and marks the stretch as unseen.
+    fn come_back(&mut self, away: Away, scene: &Scene) {
+        let (Some(label), Some(dealer)) = (scene.round, scene.dealer) else {
+            return;
+        };
+        let oya = label.number.saturating_sub(1) % 4;
+        let me = (oya + 4 - dealer % 4) % 4;
+        let now = order(label, scene.honba.unwrap_or(0));
+        let then = order(away.label, away.honba);
+        let fresh = starts_game(scene) && then > FIRST_ROUND;
+        if fresh || me != away.me || now < then {
+            self.end_game();
+        } else if now > then {
+            self.close_round(None);
+            let at = self.earlier.len();
+            self.marks.push(Mark {
+                first: at,
+                last: at,
+                kind: MarkKind::Unseen,
+            });
         }
     }
 
@@ -277,6 +338,9 @@ impl Engine {
         scene.check().map_err(Rejected::Impossible)?;
         if scene.round.is_none() || scene.dealer.is_none() {
             return Err(Rejected::Covered);
+        }
+        if let Some(away) = self.away.take() {
+            self.come_back(away, scene);
         }
         if self.starts_round(scene) {
             // A scene part-way through a round, with a later label, that the current round
@@ -347,16 +411,10 @@ impl Engine {
                 let (Some(label), Some(honba)) = (scene.round, scene.honba) else {
                     return false;
                 };
-                let order = |l: RoundLabel, h: u8| {
-                    let wind = ["E", "S", "W", "N"]
-                        .iter()
-                        .position(|w| *w == l.wind.to_string());
-                    (wind, l.number, h)
-                };
-                let later = order(label, honba) > order(round.label, round.honba.unwrap_or(0));
+                let then = order(round.label, round.honba.unwrap_or(0));
+                let later = order(label, honba) > then;
                 // 東1局 0本場 again after a later round: a new game.
-                let past_first = order(round.label, round.honba.unwrap_or(0)) > (Some(0), 1, 0);
-                later || (starts_game(scene) && past_first)
+                later || (starts_game(scene) && then > FIRST_ROUND)
             }
         }
     }
@@ -511,6 +569,19 @@ fn scores_of(scene: &Scene) -> Option<([i32; 4], u8)> {
 
 fn is_empty(scene: &Scene) -> bool {
     scene.rivers.iter().all(Vec::is_empty) && scene.melds.iter().all(Vec::is_empty)
+}
+
+/// A round's place in the game: wind, number, honba.
+type Order = (Option<usize>, u8, u8);
+
+/// 東1局 0本場.
+const FIRST_ROUND: Order = (Some(0), 1, 0);
+
+fn order(label: RoundLabel, honba: u8) -> Order {
+    let wind = ["E", "S", "W", "N"]
+        .iter()
+        .position(|w| *w == label.wind.to_string());
+    (wind, label.number, honba)
 }
 
 /// A game's first round: 東1局 0本場, everyone on the starting score.
